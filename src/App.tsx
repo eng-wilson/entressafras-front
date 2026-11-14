@@ -1,9 +1,13 @@
-import { useState } from 'react'
-import type { AppState } from './types'
+import { useEffect, useState } from 'react'
+import type { AppState, DadosTalhao, EstadoTalhoes, Talhao } from './types'
 import { Sidebar } from './components/Sidebar'
 import { Simulation } from './components/Simulation'
 import { Rotations } from './components/Rotations'
 import { Inspector } from './components/Inspector'
+import { Onboarding, type ModoOnboarding } from './onboarding/Onboarding'
+import { carregar, salvar } from './services/storage'
+import { reverso } from './services/geocoding'
+import { classeDaTextura } from './logic/solo'
 
 const DEFAULT: AppState = {
   idx: 10,
@@ -11,12 +15,65 @@ const DEFAULT: AppState = {
   pr: { risco: true, agua: false, solo: true, prod: false },
 }
 
+const novoId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}`)
+const mesmoContorno = (a: Talhao['contorno'], b: Talhao['contorno']) => JSON.stringify(a) === JSON.stringify(b)
+
 export default function App() {
   const [state, setState] = useState<AppState>(DEFAULT)
+  const [campos, setCampos] = useState<EstadoTalhoes>(carregar)
+  const [edicao, setEdicao] = useState<Exclude<ModoOnboarding, 'novo'> | null>(null)
   const setIdx  = (idx: number) => setState(s => ({ ...s, idx }))
   const setMode = (mode: 'cal'|'cmp') => setState(s => ({ ...s, mode }))
   const togglePr = (k: keyof AppState['pr']) =>
     setState(s => ({ ...s, pr: { ...s.pr, [k]: !s.pr[k] } }))
+
+  const talhao = campos.talhoes.find(t => t.id === campos.ativo) ?? null
+
+  useEffect(() => { salvar(campos) }, [campos])
+
+  // Nome da cidade do talhão: uma consulta quando o contorno é novo ou mudou.
+  const pendente = talhao && talhao.local === undefined ? talhao : null
+  const pId = pendente?.id, pLat = pendente?.centro.lat, pLon = pendente?.centro.lon
+  useEffect(() => {
+    if (!pId || pLat === undefined || pLon === undefined) return
+    let vivo = true
+    reverso({ lat: pLat, lon: pLon }).then(local => {
+      if (!vivo) return
+      setCampos(c => ({
+        ...c,
+        // '' marca "já consultado, sem nome": a Sidebar mostra as coordenadas e não tenta de novo.
+        talhoes: c.talhoes.map(t => (t.id === pId ? { ...t, local: local ?? '' } : t)),
+      }))
+    })
+    return () => { vivo = false }
+  }, [pId, pLat, pLon])
+
+  function concluir(d: DadosTalhao) {
+    if (talhao && edicao) {
+      const atualizado: Talhao = {
+        ...talhao, ...d,
+        classe: classeDaTextura(d.textura),
+        local: mesmoContorno(talhao.contorno, d.contorno) ? talhao.local : undefined,
+      }
+      setCampos(c => ({ ...c, talhoes: c.talhoes.map(t => (t.id === talhao.id ? atualizado : t)) }))
+      setEdicao(null)
+      return
+    }
+    const novo: Talhao = { ...d, id: novoId(), classe: classeDaTextura(d.textura) }
+    setCampos(c => ({ talhoes: [...c.talhoes, novo], ativo: novo.id }))
+  }
+
+  if (!talhao || edicao) {
+    return (
+      <Onboarding
+        key={edicao ?? 'novo'}
+        modo={talhao ? edicao ?? 'novo' : 'novo'}
+        talhao={talhao}
+        onConcluir={concluir}
+        onCancelar={talhao ? () => setEdicao(null) : undefined}
+      />
+    )
+  }
 
   return (
     <div className="app">
@@ -29,7 +86,7 @@ export default function App() {
           Como funciona
         </button>
       </header>
-      <Sidebar pr={state.pr} onToggle={togglePr} />
+      <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} onEditar={setEdicao} />
       <main className="main">
         <Simulation idx={state.idx} />
         <Rotations

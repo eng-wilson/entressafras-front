@@ -486,3 +486,8 @@
   .stw:hover .ct-tip,.stw:focus-visible .ct-tip{display:flex}
   .ct-tip.tip-r{left:auto;right:-6px;transform:none}
   .ct-tip.tip-r::before{left:auto;right:12px;margin-left:0}
+
+  /* itens da lista que abrem a edição do talhão (Sidebar) */
+  .item-btn{width:100%;text-align:left;border-radius:10px}
+  .item-btn:hover{background:rgba(0,0,0,.03)}
+  .item-btn:focus-visible{outline:3px solid rgba(30,122,60,.4);outline-offset:-3px}

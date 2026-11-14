@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
+import { comTalhaoSalvo } from './fixtures/talhao';
 
 // ---------------------------------------------------------------------------
 // Estado de cada cenário de teste
@@ -84,6 +85,9 @@ test.describe('ref: gera goldens da referência', () => {
 // ---------------------------------------------------------------------------
 
 test.describe('app: paridade com referência', () => {
+  // Sem talhão salvo o app abre no onboarding; a semente reproduz o talhão da referência.
+  test.beforeEach(({ page }) => comTalhaoSalvo(page));
+
   for (const state of STATES) {
     test(`app: ${state.id}`, async ({ page }) => {
       await page.goto('/');
