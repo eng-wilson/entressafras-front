@@ -1,3 +1,5 @@
+import { useClimaDecendios } from './hooks/useClimaDecendios'
+import { AvisoClima } from './components/AvisoClima'
 import { useEffect, useState } from 'react'
 import type { AppState, DadosTalhao, EstadoTalhoes, Talhao } from './types'
 import { Sidebar } from './components/Sidebar'
@@ -8,6 +10,9 @@ import { Onboarding, type ModoOnboarding } from './onboarding/Onboarding'
 import { carregar, salvar } from './services/storage'
 import { reverso } from './services/geocoding'
 import { classeDaTextura } from './logic/solo'
+import { STAGES } from './data/mock'
+import { useCultura } from './hooks/useCultura'
+import { CatalogoCulturas } from './components/CatalogoCulturas'
 
 const DEFAULT: AppState = {
   idx: 10,
@@ -22,6 +27,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(DEFAULT)
   const [campos, setCampos] = useState<EstadoTalhoes>(carregar)
   const [edicao, setEdicao] = useState<Exclude<ModoOnboarding, 'novo'> | null>(null)
+  const [verCulturas, setVerCulturas] = useState(false)
   const setIdx  = (idx: number) => setState(s => ({ ...s, idx }))
   const setMode = (mode: 'cal'|'cmp') => setState(s => ({ ...s, mode }))
   const togglePr = (k: keyof AppState['pr']) =>
@@ -29,6 +35,9 @@ export default function App() {
 
   const talhao = campos.talhoes.find(t => t.id === campos.ativo) ?? null
 
+  const clima = useClimaDecendios(talhao?.centro ?? null)
+  const culturaAtual = STAGES.find(s => state.idx >= s.from && state.idx <= s.to)?.crop ?? null
+  const cultura = useCultura(talhao ? culturaAtual : null)
   useEffect(() => { salvar(campos) }, [campos])
 
   // Nome da cidade do talhão: uma consulta quando o contorno é novo ou mudou.
@@ -88,13 +97,16 @@ export default function App() {
       </header>
       <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} onEditar={setEdicao} />
       <main className="main">
-        <Simulation idx={state.idx} />
+        {clima.status === 'erro' && <AvisoClima onRecarregar={clima.recarregar} />}
+        {cultura.status === 'erro' && <div className="aviso" role="alert">Os requisitos da cultura não carregaram. <button className="link" type="button" onClick={cultura.recarregar}>Tentar de novo</button></div>}
+        <Simulation idx={state.idx} clima={clima} cultura={cultura} />
         <Rotations
           idx={state.idx} mode={state.mode} pr={state.pr}
-          onIdx={setIdx} onMode={setMode}
+          onIdx={setIdx} onMode={setMode} decendios={clima.dados?.decendios ?? null}
         />
       </main>
-      <Inspector idx={state.idx} pr={state.pr} />
+      <Inspector idx={state.idx} pr={state.pr} clima={clima.dados} onVerDados={() => setVerCulturas(true)} />
+      {verCulturas && <CatalogoCulturas inicial={culturaAtual ?? 'soja'} onFechar={() => setVerCulturas(false)} />}
     </div>
   )
 }

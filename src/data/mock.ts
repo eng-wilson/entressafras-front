@@ -1,3 +1,4 @@
+// TMIN, TMAX e THIS_RAIN alimentam apenas testes e a fixture de clima.
 // Temperaturas mínimas por décimo (setembro décimo 0 → agosto décimo 35)
 export const TMIN = [19,19,19,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,20,20,20,17,17,17,15,15,15,14,14,14,15,15,15]
 export const TMAX = [35,35,34,33,32,31,30,30,30,29,29,29,29,29,30,29,29,29,30,30,30,30,31,31,31,31,31,31,31,32,32,33,33,34,34,35]

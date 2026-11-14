@@ -1,21 +1,16 @@
 import { useRef, useCallback } from 'react'
-import { THIS_RAIN, MONTHS_SHORT, LEN, MONTHS } from '../data/mock'
+import { MONTHS_SHORT } from '../data/mock'
+import type { Decendio } from '../types'
+import { classeChuva, classeChuvaDecendio, ROTULO_CHUVA, iconeChuva } from '../logic/chuva'
+import { chuvaMeses, climaDoPeriodo } from '../logic/clima'
+import { periodoLabel, mesDe, decendioDoMes } from '../logic/periodo'
+import { inteiro } from '../logic/formato'
 
-const rainClass = (mm: number) =>
-  mm < 60 ? 'dry' : mm < 150 ? 'low' : mm <= 300 ? 'good' : 'wet'
-const rainLabel: Record<string, string> = { dry: 'Seco', low: 'Pouca chuva', good: 'Chuva boa', wet: 'Muita chuva' }
-const rainIcon = (mm: number, mi: number) => {
-  const rk = rainClass(mm)
-  if (rk === 'dry') return '/canvas-icons.svg#w-sun'
-  if (rk === 'low') return '/canvas-icons.svg#w-drizzle'
-  return (mi >= 2 && mi <= 4) ? '/canvas-icons.svg#w-mixed' : '/canvas-icons.svg#w-rain'
-}
+type Props = { idx: number; decendios: Decendio[] | null; onIdx: (i: number) => void }
 
-type Props = { idx: number; onIdx: (i: number) => void }
-
-export function MonthStrip({ idx, onIdx }: Props) {
-  const activeM = Math.floor(idx / 3)
-  const decInM = idx % 3
+export function MonthStrip({ idx, onIdx, decendios }: Props) {
+  const activeM = mesDe(idx)
+  const decInM = decendioDoMes(idx)
   const scrubRef = useRef<HTMLDivElement>(null)
   const dragging = useRef(false)
 
@@ -28,11 +23,11 @@ export function MonthStrip({ idx, onIdx }: Props) {
     if (v !== idx) onIdx(v)
   }, [idx, onIdx])
 
-  const m = Math.floor(idx / 3), d = idx % 3
-  const days = d === 0 ? '1 a 10' : d === 1 ? '11 a 20' : `21 a ${LEN[m]}`
-  const mmM = THIS_RAIN[m]
-  const rkM = rainClass(mmM)
-  const sliderText = `${days} de ${MONTHS[m]}, ${rainLabel[rkM]}, ${mmM} milímetros no mês`
+  const d = decendioDoMes(idx)
+  const meses = chuvaMeses(decendios)
+  const periodo = climaDoPeriodo(decendios, idx)
+  const mm = periodo.chuvaDecendio
+  const sliderText = periodoLabel(idx) + (mm == null ? ', chuva sem dado' : `, ${ROTULO_CHUVA[classeChuvaDecendio(mm)]}, ${inteiro(mm)} milímetros no decêndio`) + (periodo.tmin == null || periodo.tmax == null ? '' : `, de ${inteiro(periodo.tmin)} a ${inteiro(periodo.tmax)} graus`)
 
   const knobPct = `${((idx + 0.5) / 36 * 100).toFixed(3)}%`
   const fillPct  = `${(idx / 35 * 100).toFixed(3)}%`
@@ -43,9 +38,9 @@ export function MonthStrip({ idx, onIdx }: Props) {
     <div style={{ position: 'relative' }}>
       <div className="months">
         {MONTHS_SHORT.map((month, mi) => {
-          const mm = THIS_RAIN[mi]
-          const rk = rainClass(mm)
-          const icon = rainIcon(mm, mi)
+          const mm = meses[mi]
+          const label = mm == null ? 'sem dado' : ROTULO_CHUVA[classeChuva(mm)]
+          const icon = mm == null ? null : iconeChuva(mm, mi)
           const isPast = mi <= 1
           const isActive = mi === activeM
 
@@ -55,15 +50,15 @@ export function MonthStrip({ idx, onIdx }: Props) {
               type="button"
               className={`mo${isActive ? ' hi' : ''}${isPast ? ' past' : ''}`}
               onClick={() => onIdx(mi * 3 + decInM)}
-              title={`${month}: ${rainLabel[rk]} · ${mm} mm`}
+              title={`${month}: ${label}${mm == null ? "" : `, ${inteiro(mm)} mm no mês`}`}
               aria-pressed={isActive}
-              aria-label={`${month}: ${rainLabel[rk]}, ${mm} milímetros`}
+              aria-label={`${month}: ${label}${mm == null ? "" : `, ${inteiro(mm)} milímetros no mês`}`}
             >
               <span className="t">{month}</span>
               <span className="wx-wrap">
-                <svg className="wx" aria-hidden="true">
+                {icon && <svg className="wx" aria-hidden="true">
                   <use href={icon} />
-                </svg>
+                </svg>}
               </span>
               <span className="dec" aria-hidden="true">
                 <i>1</i><i>2</i><i>3</i>

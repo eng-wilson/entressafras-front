@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { rankRotations } from '../logic/rank'
-import type { Priority } from '../types'
+import type { Priority, ClimaDecendios } from '../types'
 
 const WHY_ITEMS = [
   { bg: '#FDE2E4', color: '#A3000D', icon: 'i-shield', title: 'Menor risco', desc: 'Falta chuva no enchimento da soja, em janeiro.' },
@@ -9,9 +9,9 @@ const WHY_ITEMS = [
   { bg: '#E3F5E8', color: '#1E7A3C', icon: 'i-check', title: 'O que você ganha', desc: 'Você já conhece as duas culturas e vende os grãos.' },
 ]
 
-type Props = { idx: number; pr: Priority }
+type Props = { clima: ClimaDecendios | null; idx: number; pr: Priority; onVerDados: () => void }
 
-export function Inspector({ pr }: Props) {
+export function Inspector({ pr, clima, onVerDados }: Props) {
   const rpos = useMemo(() => rankRotations(pr), [pr])
   const selRank = rpos[3] + 1  // r4 is rotation index 3
 
@@ -83,13 +83,13 @@ export function Inspector({ pr }: Props) {
         </div>
       </div>
 
-      <button className="link" type="button">
+      <button className="link" type="button" onClick={onVerDados}>
         Ver todos os dados
         <svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg>
       </button>
 
-      <p className="foot">
-        Dados ilustrativos (mock). Na versão real: ZARC/MAPA e Embrapa para as culturas; previsão CPTEC/INMET e NASA GEOS-S2S; histórico GPM e NASA POWER. A decisão é sua e do seu agrônomo.
+      <p className="foot" title={clima?.aviso_resolucao}>
+        {clima ? `Chuva e temperatura: ${clima.fonte}, média de ${clima.safras.length} safras (${clima.safras[0]} a ${clima.safras.at(-1)}). Requisitos das culturas: catálogo EcoCrop, quando disponível. Solo, ciclos e rotações ainda ilustrativos (mock). A decisão é sua e do seu agrônomo.` : 'Clima indisponível. Requisitos das culturas: catálogo EcoCrop, quando disponível. Solo, ciclos e rotações ilustrativos (mock). A decisão é sua e do seu agrônomo.'}
       </p>
     </aside>
   )

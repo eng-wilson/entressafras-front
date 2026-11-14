@@ -24,7 +24,9 @@ export type SoilResult = {
 
 export type TempResult = {
   cls: StatusLevel; label: string; icon: string
-  tmin: number; tmax: number; aria: string
+  /** null quando não há dado de temperatura (semDado). */
+  tmin: number | null; tmax: number | null; aria: string
+  semDado: boolean
   imp: string; fix: string; hasCrop: boolean
   rx: number; rw: number
   x1: number; x2: number; x3: number; x4: number
@@ -71,3 +73,79 @@ export type Talhao = {
 
 export type DadosTalhao = Omit<Talhao, 'id' | 'classe' | 'local'>
 export type EstadoTalhoes = { talhoes: Talhao[]; ativo: string | null }
+
+// ---------- Clima (API /api/clima/decendios) ----------
+/** Um decêndio climatológico (média de várias safras). Campos null = sem dado. */
+export type Decendio = {
+  /** 0 = 1–10 set … 35 = 21–31 ago (mesma numeração de AppState.idx). */
+  idx: number
+  rotulo: string
+  dias: number
+  anos_validos: number
+  dias_preenchidos: number
+  /** Chuva total média no decêndio, mm. */
+  chuva_media: number | null
+  /** Chuva superada em 8 de cada 10 anos, mm. */
+  chuva_p20: number | null
+  /** ET0 total média, mm. */
+  et0_media: number | null
+  tmin_media: number | null
+  tmin_extremo_medio: number | null
+  tmin_absoluto: number | null
+  tmax_media: number | null
+  tmax_extremo_medio: number | null
+  tmax_absoluto: number | null
+  /** Umidade do solo superficial, fração 0–1. */
+  gwettop_media: number | null
+  /** Umidade da zona das raízes, fração 0–1. */
+  gwetroot_media: number | null
+}
+
+export type ClimaDecendios = {
+  ponto: Ponto
+  celula: { lat: number; lon: number; elev: number }
+  safras: string[]
+  fonte: string
+  aviso_resolucao: string
+  /** Sempre 36, ordenados por idx (validado em services/clima.ts). */
+  decendios: Decendio[]
+}
+
+/** Recorte do clima para o decêndio simulado; null = sem dado (nunca 0). */
+export type ClimaPeriodo = {
+  chuvaMes: number | null
+  chuvaDecendio: number | null
+  chuvaP20: number | null
+  et0: number | null
+  tmin: number | null
+  tmax: number | null
+  tminAbs: number | null
+  tmaxAbs: number | null
+}
+
+export type EstadoClima =
+  | { status: 'carregando'; dados: null }
+  | { status: 'ok'; dados: ClimaDecendios }
+  | { status: 'erro'; dados: null; erro: string }
+
+export type FaixaCultura = {
+  optimal_min: number | null; optimal_max: number | null
+  absolute_min: number | null; absolute_max: number | null
+}
+export type TemperaturaCultura = FaixaCultura & { killing_rest: number | null; killing_early_growth: number | null }
+export type OpcoesSoloCultura = { optimal: string[]; absolute: string[] }
+export type CropSummary = {
+  eco_port_code: number; scientific_name: string; common_names: string[]
+  category: string[]; life_span: string[]
+}
+export type CropPage = { total: number; limit: number; offset: number; items: CropSummary[] }
+export type CropDetail = Pick<CropSummary, 'eco_port_code' | 'scientific_name'> & {
+  temperature: TemperaturaCultura; rainfall: FaixaCultura; soil_ph: FaixaCultura
+  crop_cycle: { min_days: number | null; max_days: number | null }
+  soil: Record<'depth' | 'texture' | 'fertility' | 'al_toxicity' | 'salinity' | 'drainage', OpcoesSoloCultura>
+}
+export type EstadoCultura =
+  | { status: 'carregando'; dados: null }
+  | { status: 'ok'; dados: CropDetail }
+  | { status: 'sem_referencia'; dados: null }
+  | { status: 'erro'; dados: null }

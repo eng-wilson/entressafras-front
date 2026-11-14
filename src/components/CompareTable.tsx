@@ -148,7 +148,7 @@ export function CompareTable({ pr }: Props) {
       <p className="cfoot">
         Umidade necessária: água que a cultura consome no ciclo; o ícone mostra se a chuva foi
         suficiente nos últimos 10 anos (passe o mouse). Produção: sacas de 60 kg por hectare,
-        valores ilustrativos.
+        valores ilustrativos. A chuva anual do catálogo de culturas é uma referência separada do consumo por ciclo.
       </p>
     </>
   )

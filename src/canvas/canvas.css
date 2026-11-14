@@ -491,3 +491,24 @@
   .item-btn{width:100%;text-align:left;border-radius:10px}
   .item-btn:hover{background:rgba(0,0,0,.03)}
   .item-btn:focus-visible{outline:3px solid rgba(30,122,60,.4);outline-offset:-3px}
+
+.aviso { background: #FFF1DB; color: #9A5B00; border-radius: 10px; margin-bottom: 12px; padding: 12px 16px; }
+.aviso .link { margin-left: 8px; }
+.ms-h.nd { background: #eee; color: #666; }
+.sk { display: inline-block; background: #e3e5e2; border-radius: 6px; animation: sk-pulse 1.2s ease-in-out infinite alternate; }
+.sk-num { width: 52px; height: 32px; }
+.sk-chip { width: 78px; height: 20px; }
+@keyframes sk-pulse { to { opacity: .4; } }
+@media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
+
+.culturas-dialog { width: min(760px, calc(100vw - 48px)); max-height: 85vh; overflow: auto; border: 0; border-radius: 16px; padding: 24px; color: #1D1D1F; background: #fff; box-shadow: 0 16px 64px #0003; }
+.culturas-dialog::backdrop { background: #0005; }
+.culturas-dialog header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.culturas-dialog h2 { margin: 0; font-size: 20px; }
+.culturas-seletor { display: flex; align-items: center; gap: 12px; }
+.culturas-seletor select { flex: 1; min-height: 40px; padding: 8px; font: inherit; border: 1px solid #d2d2d7; border-radius: 8px; background: #fff; }
+.culturas-requisitos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.culturas-requisitos > div { padding: 12px; border-radius: 10px; background: #f5f5f7; }
+.culturas-requisitos dt { font-weight: 600; margin-bottom: 6px; }
+.culturas-requisitos dd { margin: 0; line-height: 1.5; font-size: 13px; }
+.culturas-nota { color: #6E6E73; font-size: 12px; line-height: 1.5; }

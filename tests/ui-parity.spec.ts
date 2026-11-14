@@ -1,3 +1,4 @@
+import { comClimaFixo } from './fixtures/clima';
 import { test, expect, type Page } from '@playwright/test';
 import { comTalhaoSalvo } from './fixtures/talhao';
 
@@ -74,7 +75,7 @@ test.describe('ref: gera goldens da referência', () => {
     test(`ref: ${state.id}`, async ({ page }) => {
       await page.goto('/reference/ClimaMes2.dc.html');
       await state.setup(page);
-      await expect(page).toHaveScreenshot(`ref-${state.id}.png`);
+      await expect(page).toHaveScreenshot(`ref-${state.id}.png`, { mask: [page.locator('.insp .foot')] });
     });
   }
 });
@@ -86,14 +87,14 @@ test.describe('ref: gera goldens da referência', () => {
 
 test.describe('app: paridade com referência', () => {
   // Sem talhão salvo o app abre no onboarding; a semente reproduz o talhão da referência.
-  test.beforeEach(({ page }) => comTalhaoSalvo(page));
+  test.beforeEach(async ({ page }) => { await comTalhaoSalvo(page); await comClimaFixo(page); });
 
   for (const state of STATES) {
     test(`app: ${state.id}`, async ({ page }) => {
       await page.goto('/');
       await state.setup(page);
       // Usa o mesmo nome de snapshot gerado pelo teste "ref:" correspondente
-      await expect(page).toHaveScreenshot(`ref-${state.id}.png`);
+      await expect(page).toHaveScreenshot(`ref-${state.id}.png`, { mask: [page.locator('.insp .foot')] });
     });
   }
 });
