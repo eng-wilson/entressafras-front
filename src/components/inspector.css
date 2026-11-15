@@ -61,6 +61,8 @@
 .insp-culture-copy { flex: 1; min-width: 0; }
 .insp-culture-copy strong { display: block; font-weight: 600; }
 .insp-culture-copy small { display: block; color: var(--insp-secondary); font-size: var(--insp-caption); overflow-wrap: anywhere; }
+/* "1ª safra" é só um rótulo pequeno e claro acima; o nome da cultura é o que sobressai. */
+.insp-culture-copy small.insp-culture-ord { font-size: .75rem; font-weight: 500; color: var(--insp-secondary); opacity: .85; margin-bottom: 1px; }
 .insp-culture-row.selected { background: #e4ecf8; }
 .insp-culture-row:hover { background: #edf1f7; }
 .insp-culture-row.selected:hover { background: #dbe7f8; }

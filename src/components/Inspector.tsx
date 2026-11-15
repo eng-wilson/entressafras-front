@@ -96,17 +96,17 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           <div><span>Posição no ranking</span><small>{rankingTeste ? 'Ordem provisória da API' : 'Entre as opções recebidas'}</small></div>
           <strong>{rotIdx + 1}ª de {conj.rotacoes.length}</strong>
         </div>
-        <section className="insp-section" aria-label="Culturas da rotação">
-          <h3>Culturas</h3>
+        <section className="insp-section" aria-label="Safras da rotação">
+          <h3>Safras</h3>
           <div className="insp-group insp-culture-list">
             {def.safras.map((d, n) => {
               const sf = rot?.safras[n]
               const estado = sf?.anos != null ? classeAnos(sf.anos) : 'none'
               return <button key={`${d.ref}-${n}`} type="button" className={`insp-culture-row${culturaSelecionada === n ? ' selected' : ''}`} aria-pressed={culturaSelecionada === n}
-                aria-label={`Ver ${d.nome} no calendário. Plantio ${decendio(d.de)}; ${d.cobertura ? 'fim do ciclo' : 'colheita'} ${decendio(d.ate)}.`}
+                aria-label={`Ver a ${n + 1}ª safra (${d.nome}) no calendário. Plantio ${decendio(d.de)}; ${d.cobertura ? 'fim do ciclo' : 'colheita'} ${decendio(d.ate)}.`}
                 onClick={() => onNavegarPeriodo(d.de)}>
                 <span className={`insp-culture-dot ${estado}`} aria-hidden="true" />
-                <span className="insp-culture-copy"><strong>{d.nome}</strong><small>Plantio {decendio(d.de).replace(' a ', '–')}</small><small>{d.cobertura ? 'Fim do ciclo' : 'Colheita'} {decendio(d.ate).replace(' a ', '–')}</small><small>{sf?.risco ? `Risco hídrico: ${sf.risco.pct}%${sf.risco.metodo === 'MOCK' ? ' · provisório' : ''}` : 'Risco não informado'}</small></span>
+                <span className="insp-culture-copy"><small className="insp-culture-ord">{n + 1}ª safra{d.cobertura ? ' · cobertura' : ''}</small><strong>{d.nome}</strong><small>Plantio {decendio(d.de).replace(' a ', '–')}</small><small>{d.cobertura ? 'Fim do ciclo' : 'Colheita'} {decendio(d.ate).replace(' a ', '–')}</small><small>{sf?.risco ? `Risco hídrico: ${sf.risco.pct}%${sf.risco.metodo === 'MOCK' ? ' · provisório' : ''}` : 'Risco não informado'}</small></span>
                 <Selo safra={sf} compact />
               </button>
             })}
