@@ -6,6 +6,7 @@
 //   talhao.mostrar({ rotacao, ano, posicao, classe, classeId, solo, soloChave, fonte, fonteChave })
 //       → { safra, sim } da safra pedida (simula e guarda em cache)
 //   talhao.dia(dia)        troca só o dia mostrado (barato: os retratos diários já existem)
+//   talhao.colhido(sim)    pousio depois da colheita: o solo do fim do ciclo, sem nenhuma planta de pé
 import { simulateRotacao } from '../simulation/rotacao.js';
 import { CULTURAS } from '../domain/crops/catalogo.js';
 import { createCamera } from '../render/iso/camera.js';
@@ -124,7 +125,9 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
         const { cena, sim, crop, classe, dia } = atual;
         const reg = sim.plantas[dia];
         atual.clima = climaVisual(sim, dia);
-        cena.lavoura.atualizar(dia / crop.cicloDias, reg, { ...MODO.planta, clima: atual.clima });
+        // Colhido (pousio): t antes da 1ª fase = nenhuma planta. A cultura nunca fica de pé depois da colheita.
+        const t = atual.colhido ? -1 : dia / crop.cicloDias;
+        cena.lavoura.atualizar(t, reg, { ...MODO.planta, clima: atual.clima });
         cena.diorama.atualizar({ sim, dia, classe, modo: MODO.solo, lavoura: cena.lavoura, reg });
         const estado = atual.clima.seca > 0.7 ? 'Seca intensa' : atual.clima.seca > 0.25 ? 'Estresse por seca ou calor' : atual.clima.chuva >= 30 ? 'Chuva intensa' : atual.clima.chuva >= 0.2 ? 'Chuva' : 'Sem chuva';
         canvas.setAttribute('aria-label', `Talhão simulado: ${estado}, ${atual.clima.chuva.toFixed(1)} mm de chuva no dia. Arraste para mover; mais e menos para zoom; zero para restaurar.`);
@@ -181,6 +184,11 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
             if (!atual) return;
             const dia = Math.max(0, Math.min(atual.crop.cicloDias, Math.round(d)));
             if (dia !== atual.dia) { atual.dia = dia; sujo = true; }
+        },
+        colhido(c) {
+            if (!atual || !!atual.colhido === !!c) return;
+            atual.colhido = !!c;
+            sujo = true;
         },
         redimensionar,
         // Para de desenhar enquanto a cena não aparece (o último quadro fica no canvas); retomar redesenha.

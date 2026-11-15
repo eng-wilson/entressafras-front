@@ -59,6 +59,8 @@ export type ResultadoRotacao = { rotacao: RotacaoSim; safras: (SafraSimulada & {
 export type Talhao = {
   mostrar(o: OpcoesMostrar): SafraSimulada
   dia(d: number): void
+  /** Pousio depois da colheita: o solo do fim do ciclo, sem nenhuma planta de pé. */
+  colhido(c: boolean): void
   zoom(fator: number): void
   restaurar(): void
   /** true para de desenhar (cena escondida); false retoma. */

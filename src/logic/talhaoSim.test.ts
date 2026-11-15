@@ -40,8 +40,17 @@ describe('quadroDoDecendio', () => {
     expect(quadroDoDecendio(s, 2)).toEqual({ posicao: 0, fracao: 0 })
     expect(quadroDoDecendio(SAFRAS[1].map((x, i) => (i ? { ...x, de: 18 } : x)), 17)).toEqual({ posicao: 1, fracao: 0 })
   })
-  it('depois da última colheita fica no fim do ciclo da última safra', () => {
-    expect(quadroDoDecendio(s, 31)).toEqual({ posicao: 1, fracao: 1 })
+  it('depois da última colheita fica no fim do ciclo da última safra, colhido (sem planta de pé)', () => {
+    expect(quadroDoDecendio(s, 31)).toEqual({ posicao: 1, fracao: 1, colhido: true })
+  })
+  it('pousio nunca mostra cultura: fora das janelas, ou é o dia 0 da próxima (antes da emergência) ou colhido', () => {
+    for (const safras of SAFRAS) {
+      for (let idx = 0; idx < 36; idx++) {
+        if (safras.some(x => idx >= x.de && idx <= x.ate)) continue
+        const q = quadroDoDecendio(safras, idx)
+        expect(q.colhido === true || q.fracao === 0).toBe(true)
+      }
+    }
   })
 })
 

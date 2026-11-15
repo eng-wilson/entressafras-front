@@ -43,17 +43,18 @@ export function rotacaoSim(rot: number, safras: SafraDef[]): RotacaoSim {
  * Safra da rotação e fração do ciclo (0 = plantio, 1 = colheita) que o talhão mostra no decêndio.
  * Dentro de uma janela, o ciclo da simulação é esticado sobre os decêndios da janela, para o desenho
  * acompanhar o estágio do calendário (logic/estagios.ts). Antes de uma safra (pousio, palhada entre safras),
- * mostra o plantio dela: dia 0, já com a palhada e o solo herdados da anterior. Depois da última colheita,
- * fica no fim do ciclo da última safra: o plantio seguinte só vem na primavera, com outro clima.
+ * mostra o plantio dela: dia 0, já com a palhada e o solo herdados da anterior (antes da emergência: sem planta).
+ * Depois da última colheita, fica no fim do ciclo da última safra (o plantio seguinte só vem na primavera, com
+ * outro clima), mas COLHIDO: a cena desenha o solo sem nenhuma planta. Pousio nunca mostra cultura de pé.
  */
-export function quadroDoDecendio(safras: SafraDef[], idx: number): { posicao: number; fracao: number } {
+export function quadroDoDecendio(safras: SafraDef[], idx: number): { posicao: number; fracao: number; colhido?: boolean } {
   const i = safras.findIndex(s => idx >= s.de && idx <= s.ate)
   if (i >= 0) {
     const s = safras[i]
     return { posicao: i, fracao: s.ate > s.de ? (idx - s.de) / (s.ate - s.de) : 0 }
   }
   const prox = safras.findIndex(s => s.de > idx)
-  return prox >= 0 ? { posicao: prox, fracao: 0 } : { posicao: safras.length - 1, fracao: 1 }
+  return prox >= 0 ? { posicao: prox, fracao: 0 } : { posicao: safras.length - 1, fracao: 1, colhido: true }
 }
 
 const DIAS_MES = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
