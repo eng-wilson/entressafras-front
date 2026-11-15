@@ -39,7 +39,7 @@ const telaInicial = (modo: ModoOnboarding): Tela =>
 export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [], onEscolher }: Props) {
   const [tela, setTela] = useState<Tela>(telaInicial(modo))
   const [pontos, setPontos] = useState<Contorno>(modo === 'editar' && talhao ? talhao.contorno : [])
-  const [camada, setCamada] = useState<Camada>('mapa')
+  const [camada, setCamada] = useState<Camada>('sat') // satélite por padrão: o agricultor reconhece o talhão pela imagem
   const [mapa, setMapa] = useState<LMap | null>(null)
   const [aviso, setAviso] = useState('')
   const [busca, setBusca] = useState('')
