@@ -37,7 +37,7 @@ Copie `.env.example` para `.env.local` e ajuste `VITE_API_URL`. Sem configuraç�
 
 ## Dados de clima
 
-O [plano de integração atualizado](docs/PLANO_INTEGRACAO.md) adia a fase 2 (dados diários) e antecipa a fase 3 (catálogo de culturas). Não há chamadas ao endpoint diário. A umidade permanece ilustrativa.
+Estado da integração com a API (endpoints, origem de cada dado da tela e pendências): [docs/INTEGRACAO_API.md](docs/INTEGRACAO_API.md). Não há chamadas ao endpoint diário.
 
 O indicador de chuva usa `chuva_media` do decêndio selecionado; temperaturas também usam médias históricas por decêndio. A escala da chuva vai de 0 a 150 mm, com marcas em 20, 50 e 100 mm. As classificações ilustrativas foram ajustadas para um terço dos limites mensais: abaixo de 20 mm seco; abaixo de 50 pouca chuva; até 100 chuva boa; acima de 100 muita chuva. Essas faixas não são recomendações agronômicas. Os ícones e tooltips dos meses continuam resumindo o total mensal (soma dos três decêndios).
 

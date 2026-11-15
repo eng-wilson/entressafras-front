@@ -11,7 +11,7 @@ O widget "Água para a cultura" e o panorama "Atenção no ciclo" leem a mesma f
 - Sem risco na resposta, ou fora das safras: sem dado. Nada é estimado no lugar.
 - Valores que o servidor marca como MOCK aparecem como "provisório".
 
-Histórico: a versão anterior (sessão de 15/11, ver [REPASSE_ENDPOINTS_INDICADORES.md](REPASSE_ENDPOINTS_INDICADORES.md)) lia ETa/ETc da corrida do worker da cena, com clima diário sintético. Pela regra do projeto (o que a API resolve não é calculado no front), essa análise saiu dos indicadores. O motor local continua só no desenho da cena. Antes disso, o widget lia tabelas fixas (`WAT2`/`SOIL`), o erro que motivou a correção.
+Histórico: a versão anterior (sessão de 15/11; o repasse que a motivou foi incorporado a [INTEGRACAO_API.md](INTEGRACAO_API.md)) lia ETa/ETc da corrida do worker da cena, com clima diário sintético. Pela regra do projeto (o que a API resolve não é calculado no front), essa análise saiu dos indicadores. O motor local continua só no desenho da cena. Antes disso, o widget lia tabelas fixas (`WAT2`/`SOIL`), o erro que motivou a correção.
 
 ## Como os momentos são encontrados
 

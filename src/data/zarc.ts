@@ -1,6 +1,6 @@
 // Vocabulário do ZARC (MAPA/Embrapa) usado na leitura do risco: nomes das fases, a régua de níveis e a proporção
 // padrão das fases (só para cultura sem estágios na API). O risco em si vem da API; os antigos parâmetros das
-// portarias (ISNA mínimo, CAD, Kc local) saíram com o cálculo do front (ver docs/PLANO_INTEGRACAO.md, fase 5).
+// portarias (ISNA mínimo, CAD, Kc local) saíram com o cálculo do front (ver docs/INTEGRACAO_API.md).
 
 export type Fonte = { titulo: string; url: string }
 /** Id das culturas que a tela conhece (catálogo local e simulador). */

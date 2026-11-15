@@ -1,7 +1,7 @@
 // MOCK — perfil local de cada cultura que a API de rotações pode devolver, pelo código EcoPort.
 // A API traz a cultura, as datas, o risco hídrico, os scores e a proteção do solo; o resto (nome exibido, produção e
 // preço, efeito nas pragas e score de água) ainda não vem do backend. O consumo de água do ciclo é Σ Kc × ET0 (dados da API). Valores ilustrativos, os
-// mesmos do conjunto local quando a cultura coincide. Pendências: docs/PLANO_INTEGRACAO.md, "Fase 5".
+// mesmos do conjunto local quando a cultura coincide. Pendências: docs/INTEGRACAO_API.md.
 import type { CulturaRef, ZarcId } from './zarc'
 
 export type PerfilCultura = {

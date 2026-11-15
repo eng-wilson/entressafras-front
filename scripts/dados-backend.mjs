@@ -1,6 +1,6 @@
 // Cobertura dos dados necessários pelo backend, conferida na API ao vivo.
 //
-//   npm run dados:status            consulta a API e reescreve a tabela em docs/PLANO_INTEGRACAO.md
+//   npm run dados:status            consulta a API e reescreve a tabela em docs/INTEGRACAO_API.md
 //   npm run dados:status -- --check falha (código 1) se a tabela do documento estiver desatualizada
 //
 // Regra: sempre que a API servir um dado (e não marcado como MOCK), ele aparece automaticamente como real.
@@ -161,7 +161,7 @@ async function principal() {
     console.error(`API indisponível em ${API}: a tabela não foi alterada.`)
     process.exit(2)
   }
-  const DOC = fileURLToPath(new URL('../docs/PLANO_INTEGRACAO.md', import.meta.url))
+  const DOC = fileURLToPath(new URL('../docs/INTEGRACAO_API.md', import.meta.url))
   const falhou = { decendios: !decendios, cultura: !cultura, rotacoes: !rotacoes }
   const itens = avaliar({ openapi, decendios, cultura, rotacoes, falhou })
   const bloco = tabela(itens, new Date().toLocaleDateString('pt-BR'))

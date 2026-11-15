@@ -1,12 +1,12 @@
 # Indicadores das rotações
 
-> **Revisão de 15/11/2026:** com o contrato novo da API, Resiliência, Produtividade e Saúde do solo vêm das escalas 0–100 da API (`scores`), e a ordem vem do `rank` calculado pelas prioridades enviadas. Economia de água continua mock. As seções de Saúde do solo e Produtividade abaixo descrevem o mock anterior e ficam como histórico. Mapa atualizado: [MOCK_E_DADOS_REAIS.md](MOCK_E_DADOS_REAIS.md).
+> **Revisão de 15/11/2026:** com o contrato novo da API, Resiliência, Produtividade e Saúde do solo vêm das escalas 0–100 da API (`scores`), e a ordem vem do `rank` calculado pelas prioridades enviadas. Economia de água continua mock. As seções de Saúde do solo e Produtividade abaixo descrevem o mock anterior e ficam como histórico. Mapa atualizado: [INTEGRACAO_API.md](INTEGRACAO_API.md).
 
-> **Regra do projeto (14/11/2026):** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. A resiliência climática e a ordem das rotações vêm da API (`POST /api/rotations/recommendations`). O balanço hídrico ZARC que o front fazia foi removido. Água, solo e produtividade continuam ilustrativos (mock), porque a API ainda não os entrega. Detalhes: [PLANO_INTEGRACAO.md](PLANO_INTEGRACAO.md), fase 5.
+> **Regra do projeto (14/11/2026):** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. A resiliência climática e a ordem das rotações vêm da API (`POST /api/rotations/recommendations`). O balanço hídrico ZARC que o front fazia foi removido. Água, solo e produtividade continuam ilustrativos (mock), porque a API ainda não os entrega. Detalhes: [INTEGRACAO_API.md](INTEGRACAO_API.md).
 
 Revisão de 14/11/2026. Este documento descreve como a tela calcula cada um dos quatro indicadores (Resiliência climática, Economia de água, Saúde do solo e Produtividade) e a ordenação das rotações. Para cada um, indica a fórmula, a origem de cada dado (API real ou mock), as faixas de nota, onde a regra está no código e o que falta para sair do mock.
 
-As pendências com o backend estão detalhadas em [PLANO_INTEGRACAO.md](PLANO_INTEGRACAO.md). Este documento só aponta para elas.
+Estado da integração e pendências com o backend: [INTEGRACAO_API.md](INTEGRACAO_API.md).
 
 ## Visão geral
 
