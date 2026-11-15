@@ -14,10 +14,18 @@ describe('tempGauge — soja', () => {
     expect(r.cls).toBe('good')
     expect(r.label).toBe('Bom')
   })
-  it('máxima 35 supera ótimo 33 e não limite 38 → Atenção', () => {
-    const r = tempGauge('soja', 'veg', false, { tmin: 21, tmax: 35 }, soja)
+  it('tarde de 35° com média 28° (dentro do ótimo 20–33) e abaixo do limite 38 → Bom', () => {
+    expect(tempGauge('soja', 'veg', false, { tmin: 21, tmax: 35 }, soja).label).toBe('Bom')
+  })
+  it('média acima do ótimo 33 e máxima abaixo do limite 38 → Calor · Atenção', () => {
+    const r = tempGauge('soja', 'veg', false, { tmin: 30, tmax: 37 }, soja)
     expect(r.cls).toBe('warn')
     expect(r.label).toBe('Calor · Atenção')
+  })
+  it('a faixa ótima é da média, não da mínima: milheto a 23–33° não é frio', () => {
+    const milheto = { ...soja, scientific_name: 'Pennisetum glaucum', temperature: { optimal_min: 25, optimal_max: 35, absolute_min: 12, absolute_max: 40, killing_rest: 2, killing_early_growth: 0 } }
+    expect(tempGauge('milho', 'veg', false, { tmin: 23, tmax: 33 }, milheto).label).toBe('Bom')
+    expect(tempGauge('milho', 'veg', false, { tmin: 17, tmax: 29 }, milheto).label).toBe('Frio · Atenção')
   })
   it('floração usa requisitos da espécie e não limiar antigo 30', () => {
     const r = tempGauge('soja', 'flor', false, { tmin: 21, tmax: 31 }, soja)
@@ -45,7 +53,8 @@ describe('tempGauge — sem cultura', () => {
 
 describe('tempGauge — milho', () => {
   it('milho tem limite de calor 33/47 no catálogo', () => {
-    expect(tempGauge('milho', 'veg', false, { tmin: 20, tmax: 35 }, milho).cls).toBe('warn')
+    expect(tempGauge('milho', 'veg', false, { tmin: 20, tmax: 35 }, milho).cls).toBe('good')
+    expect(tempGauge('milho', 'veg', false, { tmin: 30, tmax: 38 }, milho).cls).toBe('warn')
     expect(tempGauge('milho', 'veg', false, { tmin: 20, tmax: 48 }, milho).cls).toBe('risk')
   })
 })
@@ -64,7 +73,8 @@ describe('tempGauge — valores da API', () => {
     expect(r.hiLabel).toBe('30°')
     expect(r.cls).toBe('good')
     expect(r.aria).toBe('Temperatura de 20 a 30 graus, Bom')
-    expect(tempGauge('soja', 'veg', false, { tmin: 20, tmax: 33.4 }, soja).cls).toBe('warn')
+    expect(tempGauge('soja', 'veg', false, { tmin: 32.6, tmax: 33.4 }, soja).cls).toBe('good') // média 33,0 = ótimo máximo
+    expect(tempGauge('soja', 'veg', false, { tmin: 32.8, tmax: 33.4 }, soja).cls).toBe('warn') // média 33,1
   })
   it('referência ausente ou parcial preserva números sem classificar como Bom', () => {
     const sem = tempGauge('soja', 'veg', false, faixa(9))
@@ -75,7 +85,7 @@ describe('tempGauge — valores da API', () => {
   })
   it('limites exatos e valores além do absoluto', () => {
     expect(tempGauge('soja', 'veg', false, { tmin: 20, tmax: 33 }, soja).cls).toBe('good')
-    expect(tempGauge('soja', 'veg', false, { tmin: 10, tmax: 38 }, soja).cls).toBe('warn')
+    expect(tempGauge('soja', 'veg', false, { tmin: 10, tmax: 38 }, soja).cls).toBe('good')
     expect(tempGauge('soja', 'veg', false, { tmin: 9.9, tmax: 33 }, soja).label).toBe('Frio · Risco')
     expect(tempGauge('soja', 'veg', false, { tmin: 20, tmax: 38.1 }, soja).cls).toBe('risk')
   })
