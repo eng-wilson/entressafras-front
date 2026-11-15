@@ -36,9 +36,12 @@ export function Rotations({ idx, mode, onIdx, onMode, decendios, sel, onToggleSe
   return (
     <div id="rotation-board" className="board" tabIndex={-1} aria-label="Calendário e comparação das rotações">
       <RotationsHeader mode={mode} onMode={onMode} onAdd={onAdd} addBloqueio={addBloqueio} />
-      <div className="cal">
-        <MonthStrip idx={idx} onIdx={onIdx} decendios={decendios} diag={mode === 'cal' && !rascunho ? diags?.[rot] ?? null : null} faixa={mode === 'cal' && rascunho ? faixa : null} />
-      </div>
+      {/* A comparação vale para o ciclo inteiro: o calendário e o período simulado não mudam nada nela. */}
+      {mode === 'cal' && (
+        <div className="cal">
+          <MonthStrip idx={idx} onIdx={onIdx} decendios={decendios} diag={!rascunho ? diags?.[rot] ?? null : null} faixa={rascunho ? faixa : null} />
+        </div>
+      )}
       {mode === 'cal' ? (
         <CalendarRows res={res} sel={rot} onSel={onRot} diags={diags} idx={idx} rascunho={rascunho} onRemoverSalva={onRemoverSalva} />
       ) : (

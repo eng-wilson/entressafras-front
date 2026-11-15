@@ -24,16 +24,18 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
   await expect(page.getByRole('complementary', { name: 'Ajustes' }).getByRole('region', { name: 'Momentos de atenção da rotação' })).toHaveCount(0)
   await page.screenshot({ path: testInfo.outputPath('inspector-desktop.png') })
 
+  // O cursor está longe da fase antes de ir à comparação.
+  await page.getByRole('slider', { name: 'Arraste para simular um período' }).fill('0')
   await insp.getByRole('button', { name: 'Comparar alternativas' }).click()
   const tabela = page.getByRole('table', { name: 'Comparação das rotações' })
   await expect(tabela).toBeVisible()
   await expect(tabela.getByRole('checkbox', { name: 'Mostrar Soja → Milho safrinha no mapa' })).toBeChecked()
   await expect(tabela.getByRole('checkbox', { name: 'Mostrar Soja → Milheto no mapa' })).toBeChecked()
   await expect(page.locator('#rotation-board')).toBeFocused()
+  // Na comparação, o calendário some: o período simulado não muda nada nela.
+  await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveCount(0)
 
-  // O cursor está longe da fase. A ação deve voltar ao calendário e à fase
-  // do milho, mesmo quando acionada a partir da comparação.
-  await page.getByRole('slider', { name: 'Arraste para simular um período' }).fill('0')
+  // A ação deve voltar ao calendário e à fase do milho, mesmo quando acionada a partir da comparação.
   await insp.getByRole('button', { name: 'Ver fase no calendário' }).click()
   await expect(tabela).toHaveCount(0)
   await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toBeFocused()
