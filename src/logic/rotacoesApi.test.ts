@@ -64,10 +64,11 @@ describe('conjuntoDaApi', () => {
 
   it('cultura desconhecida e sem perfil hídrico continua na tela, sem Kc e sem nada local no lugar', () => {
     const r: RotationRecommendations = structuredClone(ROTACOES_FIXTURE)
-    r.rotations[1].crops[1].crop = { ...r.rotations[1].crops[1].crop, eco_port_code: 99999, common_names: ['teff'], water_requirements: null }
+    r.rotations[1].crops[1].crop = { ...r.rotations[1].crops[1].crop, eco_port_code: 99999, scientific_name: 'Eragrostis tef', common_names: ['teff'], water_requirements: null }
     const c = conjuntoDaApi(r)
     expect(c.rotacoes).toHaveLength(4)
-    expect(c.rotacoes[1].safras[1]).toMatchObject({ nome: 'Teff', ref: 'eco:99999', zarc: null })
+    // Fora do catálogo local: nome científico (os nomes comuns do EcoCrop vêm em inglês)
+    expect(c.rotacoes[1].safras[1]).toMatchObject({ nome: 'Eragrostis tef', ref: 'eco:99999', zarc: null })
     expect(c.rotacoes[1].safras[1].kc).toBeUndefined()
     expect(c.rotacoes[1].ct.y2).toBe('-')
   })

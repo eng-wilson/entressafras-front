@@ -5,7 +5,7 @@
 import type { BarDef, ConjuntoRotacoes, CTRow, RotacaoDef, SafraDef } from '../data/mock'
 import { LEN } from '../data/mock'
 import { PERFIS, type PerfilCultura } from '../data/perfis'
-import { REFERENCIAS_CULTURAS } from '../data/culturas'
+import { CULTURAS, REFERENCIAS_CULTURAS } from '../data/culturas'
 import { faixa } from './aptidao'
 import type { Historico, Priorities, Priority, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
 
@@ -34,7 +34,6 @@ export function mesDaData(iso: string, ano: number, fim = false): number {
   return Math.min(12, Math.max(0, m + (fim ? d : d - 1) / len))
 }
 
-const maiuscula = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /** Kc do catálogo da API; sem perfil hídrico na API, sem Kc (o consumo fica sem dado, nada local no lugar). */
@@ -43,13 +42,24 @@ function kcDe(c: RotationCrop): [number, number, number] | null {
   return w ? [w.initial, w.mid_season, w.late_season] : null
 }
 
+/** Cultura do catálogo local (nome em português e requisitos) pelo código EcoCrop e pela espécie; null se não houver. */
+function doCatalogo(codigo: number, especie: string): string | null {
+  const ids = Object.entries(REFERENCIAS_CULTURAS)
+    .filter(([, r]) => r.codigo === codigo && r.especie === especie && !r.cultivar)
+    .map(([id]) => id)
+  return ids[0] ?? null
+}
+
 function safra(c: RotationCrop, n: 0 | 1, ano: number): SafraDef {
   const perfil = PERFIS[c.crop.eco_port_code]
   const kc = kcDe(c)
-  const nomeApi = maiuscula(c.crop.common_names[0] ?? c.crop.scientific_name)
+  // Sem perfil local: o nome em português do catálogo local; sem ele, o nome científico (os nomes comuns do EcoCrop
+  // vêm em inglês).
+  const catalogo = perfil ? null : doCatalogo(c.crop.eco_port_code, c.crop.scientific_name)
+  const nomeSem = catalogo ? CULTURAS[catalogo].nome : c.crop.scientific_name
   return {
-    nome: perfil ? (n === 1 && perfil.nome2 ? perfil.nome2 : perfil.nome) : nomeApi,
-    ref: perfil?.id ?? `eco:${c.crop.eco_port_code}`,
+    nome: perfil ? (n === 1 && perfil.nome2 ? perfil.nome2 : perfil.nome) : nomeSem,
+    ref: perfil?.id ?? catalogo ?? `eco:${c.crop.eco_port_code}`,
     zarc: perfil ? (n === 1 && perfil.zarc2 !== undefined ? perfil.zarc2 : perfil.zarc) : null,
     de: decendioDaData(c.planting_date, ano),
     ate: decendioDaData(c.harvest_date, ano),

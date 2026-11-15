@@ -153,8 +153,8 @@ async function principal() {
     json(`/api/crops/${SOJA}`),
     json('/api/rotations/recommendations', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      // Como a tela pede: sem textura (a API estima o solo), com histórico e todas as prioridades.
-      body: JSON.stringify({ location: PONTO, crop_history: [SOJA, 2175], priorities: { productivity: 1, water_security: 1, soil_protection: 1 } }),
+      // Como a tela pede para o T-07 (textura informada, histórico soja → milho, todas as prioridades).
+      body: JSON.stringify({ location: PONTO, soil_type: 'clayey', crop_history: [SOJA, 2175], priorities: { productivity: 1, water_security: 1, soil_protection: 1 } }),
     }),
   ])
   if (!openapi) {

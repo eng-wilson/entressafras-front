@@ -100,5 +100,32 @@ Limiares de apresentação definidos no front (não são da API nem oficiais): r
 ## Cobertura dos dados pelo backend
 
 <!-- dados-backend:inicio -->
-_Gerada por `npm run dados:status`. Ainda não regerada com o contrato de 15/11/2026: o endpoint de recomendações estava fora do ar._
+_Gerada por `npm run dados:status` em 15/11/2026, consultando a API ao vivo. Não editar à mão: ajuste `scripts/dados-backend.mjs`._
+
+Resumo: 16 reais em uso, 0 servidos sem uso no front, 0 MOCK no backend, 6 pendentes.
+
+| Dado | Situação | Onde o front usa | O que falta do backend |
+|---|---|---|---|
+| Chuva, ET0 e temperatura por decêndio | ✅ Real, em uso | Indicadores do decêndio, consumo de água (tabela e memória), chuva no ano (lateral) | — |
+| Requisitos das culturas (EcoCrop) | ✅ Real, em uso | Temperatura, catálogo "Dados das culturas" | — |
+| Kc por cultura | ✅ Real, em uso | Consumo de água (Kc × ET0) | — |
+| Duração dos estágios por cultura | ✅ Real, em uso | Fases no calendário, curva de Kc, período crítico e estágios do talhão | — |
+| Profundidade das raízes | ✅ Real, em uso | Dados das culturas (exibição) | — |
+| Rotações recomendadas (culturas) | ✅ Real, em uso | As rotações da tela | — |
+| Janelas de plantio e colheita | ✅ Real, em uso | Calendário, estágios, fases | — |
+| Origem das datas (calendário GGCMI/CONAB) | ✅ Real, em uso | Memória de cálculo | — |
+| Ordem das rotações pelas prioridades | ✅ Real, em uso | Ordem da lista; "O que importa" vai à API (água não entra) | — |
+| Risco hídrico por cultura | ✅ Real, em uso | Selo de clima, período crítico, resiliência por safra | — |
+| Atendimento à demanda por fase (ISNA) | ✅ Real, em uso | Widget "Água para a cultura" e "Atenção no ciclo" | — |
+| Ky por estágio (sensibilidade ao déficit) | ✅ Real, em uso | Sensibilidade da fase em "Atenção no ciclo" | — |
+| Escalas 0–100 (segurança hídrica, produtividade, solo) | ✅ Real, em uso | Mapa de aptidão (3 dos 4 eixos) | — |
+| Proteção do solo planejada | ✅ Real, em uso | Saúde do solo: nota e texto (cobertura viva, troca de família) | — |
+| Solo usado na simulação (textura, água por metro) | ✅ Real, em uso | Lateral (solo estimado quando não informado), memória de cálculo | — |
+| Propriedades do solo superficial (SoilGrids) | ✅ Real, em uso | Memória de cálculo (só exibição) | — |
+| Atendimento à demanda dia a dia ou por decêndio | ⬜ Pendente no backend | Não há: dentro da fase o valor é constante | Série ETa, ETc e água na zona das raízes por dia ou decêndio, vinculada à rotação |
+| Economia de água da rotação | ⬜ Pendente no backend | Eixo "Economia de água" (`src/data/perfis.ts`, mock) | Indicador de consumo ou eficiência de água por rotação |
+| Produção (sc/ha) e preço por cultura | ⬜ Pendente no backend | Tabela de comparação e receita (`src/data/perfis.ts`, mock) | Produtividade e preço por cultura e região, com data |
+| Efeito da sequência nas pragas | ⬜ Pendente no backend | Selo "Mais pragas" e texto (`src/data/perfis.ts`, mock) | Efeito da sequência de culturas nas pragas |
+| Umidade do solo atual | ⬜ Pendente no backend | Não exibida (o widget mostra o atendimento à demanda) | Leitura atual com data, origem e unidade |
+| Previsão do tempo | ⬜ Pendente no backend | Fora do escopo atual | Fonte de previsão com horizonte e data de emissão |
 <!-- dados-backend:fim -->

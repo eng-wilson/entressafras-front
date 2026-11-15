@@ -21,6 +21,9 @@ export const REFERENCIAS_CULTURAS: Record<string, { codigo: number; especie: str
   ruziziensis: { codigo: 543, especie: 'Brachiaria ruziziensis' },
   crotalaria_spectabilis: { codigo: 4982, especie: 'Crotalaria spectabilis' },
   crotalaria_juncea: { codigo: 801, especie: 'Crotalaria juncea' },
+  // Recomendadas pela API em 15/11/2026; códigos conferidos por nome científico em /api/crops.
+  feijao_caupi: { codigo: 2153, especie: 'Vigna unguiculata' },
+  girassol: { codigo: 1191, especie: 'Helianthus annuus' },
 }
 
 const lista: Cultura[] = [
@@ -31,6 +34,8 @@ const lista: Cultura[] = [
   { id: 'sorgo', nome: 'Sorgo', grupo: 'grao', unidade: 'sc/ha' },
   { id: 'trigo', nome: 'Trigo', grupo: 'grao', unidade: 'sc/ha' },
   { id: 'algodao', nome: 'Algodão', grupo: 'grao', unidade: '@/ha' },
+  { id: 'feijao_caupi', nome: 'Feijão-caupi', grupo: 'grao', unidade: 'sc/ha' },
+  { id: 'girassol', nome: 'Girassol', grupo: 'grao', unidade: 'sc/ha' },
   { id: 'milheto', nome: 'Milheto', grupo: 'cobertura', unidade: 't/ha MS' },
   { id: 'brizantha_marandu', nome: 'Braquiária Marandu', grupo: 'cobertura', unidade: 't/ha MS' },
   { id: 'brizantha_piata', nome: 'Braquiária Piatã', grupo: 'cobertura', unidade: 't/ha MS' },
