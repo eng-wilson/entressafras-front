@@ -2,6 +2,7 @@
 // Fecha com Esc ou clique fora; o foco vai para dentro ao abrir e volta para quem abriu ao fechar.
 import './folha.css'
 import { useEffect, useId, useRef, type ReactNode } from 'react'
+import { t } from '../i18n'
 
 type Props = {
   titulo: string
@@ -32,9 +33,9 @@ export function Folha({ titulo, onCancelar, onSalvar, podeSalvar = true, largura
     <div className="fo-fundo" onMouseDown={e => { if (e.target === e.currentTarget) cancelar.current() }}>
       <section ref={folha} className="fo-folha" role="dialog" aria-modal="true" aria-labelledby={id} tabIndex={-1} style={{ maxWidth: largura }}>
         <header className="fo-barra">
-          <button className="fo-btn" type="button" onClick={onCancelar}>Cancelar</button>
+          <button className="fo-btn" type="button" onClick={onCancelar}>{t('Cancelar')}</button>
           <h2 id={id}>{titulo}</h2>
-          <button className="fo-btn fo-forte" type="button" onClick={onSalvar} disabled={!podeSalvar}>Salvar</button>
+          <button className="fo-btn fo-forte" type="button" onClick={onSalvar} disabled={!podeSalvar}>{t('Salvar')}</button>
         </header>
         <div className="fo-corpo">{children}</div>
       </section>

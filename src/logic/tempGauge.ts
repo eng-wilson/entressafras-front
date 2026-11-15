@@ -1,5 +1,6 @@
 import type { CropDetail, TempResult, StatusLevel } from '../types'
 import { SEM_DADO } from './formato'
+import { t } from '../i18n'
 
 const TRACK_W = 268
 const X = (v: number) => Math.max(0, Math.min(45, v)) / 45 * TRACK_W
@@ -42,9 +43,9 @@ export function tempGauge(
   if (lo == null || hi == null) {
     return {
       ...(crop ? gradCrop : gradSoil),
-      cls: 'good', label: SEM_DADO, icon: '#i-info', semDado: true,
-      tmin: null, tmax: null, aria: 'Temperatura: sem dado',
-      imp: 'Sem dado de temperatura para este talhão.', fix: 'Tente de novo mais tarde.',
+      cls: 'good', label: t(SEM_DADO), icon: '#i-info', semDado: true,
+      tmin: null, tmax: null, aria: t('Temperatura: sem dado'),
+      imp: t('Sem dado de temperatura para este talhão.'), fix: t('Tente de novo mais tarde.'),
       hasCrop: !!crop, rx: 0, rw: 0, x1: -20, x2: -20, x3: -20, x4: -20,
       loLabel: '–', hiLabel: '–', loX: 0, hiX: 0, merged: true,
     }
@@ -53,55 +54,57 @@ export function tempGauge(
   const loX = X(lo), hiX = X(hi)
   const loLabel = grau(lo), hiLabel = grau(hi)
   const merged = (hiX - loX) / TRACK_W < 0.19
-  const aria = (label: string) => `Temperatura de ${Math.round(lo)} a ${Math.round(hi)} graus, ${label}`
+  const aria = (label: string) => t('Temperatura de {min} a {max} graus, {rotulo}', { min: Math.round(lo), max: Math.round(hi), rotulo: label })
 
   if (!crop) {
     const tk = covered ? 'good' : (hi >= 32 ? 'warn' : 'neu')
     const labels: Record<string,[string,string,string]> = {
-      good: ['Protegido','#i-okc','A palhada mantém o solo mais fresco.'],
-      warn: ['Exposto','#i-alert','O sol esquenta o solo descoberto e ele seca mais rápido.'],
-      neu:  ['Sem cultura','#i-info','Sem calor forte agora.'],
+      good: [t('Protegido'),'#i-okc',t('A palhada mantém o solo mais fresco.')],
+      warn: [t('Exposto'),'#i-alert',t('O sol esquenta o solo descoberto e ele seca mais rápido.')],
+      neu:  [t('Sem cultura'),'#i-info',t('Sem calor forte agora.')],
     }
     const [label, icon, imp] = labels[tk]
     const cls: StatusLevel = tk === 'neu' ? 'good' : (tk as StatusLevel)
-    return { ...gradSoil, cls, label, icon, semDado:false, tmin:lo, tmax:hi, aria:aria(label), imp, fix:'Mantenha o solo coberto.', hasCrop:false, rx:loX, rw:Math.max(10, hiX-loX), x1:-20,x2:-20,x3:-20,x4:-20, loLabel, hiLabel, loX, hiX, merged }
+    return { ...gradSoil, cls, label, icon, semDado:false, tmin:lo, tmax:hi, aria:aria(label), imp, fix:t('Mantenha o solo coberto.'), hasCrop:false, rx:loX, rw:Math.max(10, hiX-loX), x1:-20,x2:-20,x3:-20,x4:-20, loLabel, hiLabel, loX, hiX, merged }
   }
 
-  const t = referencia?.temperature
+  const tp = referencia?.temperature
   const geometria = { semDado: false, tmin: lo, tmax: hi, hasCrop: true,
     rx: loX, rw: Math.max(10, hiX - loX), loLabel, hiLabel, loX, hiX, merged }
-  if (!t || t.optimal_min == null || t.optimal_max == null || t.absolute_min == null || t.absolute_max == null) {
+  if (!tp || tp.optimal_min == null || tp.optimal_max == null || tp.absolute_min == null || tp.absolute_max == null) {
+    // O rótulo fica em português: TempRangeBar compara com 'Sem referência' (a exibição traduz com t()).
     return { ...gradSoil, ...geometria, cls: 'good', label: 'Sem referência', icon: '#i-info',
-      aria: aria('Sem referência da cultura'), imp: 'Requisitos térmicos indisponíveis.',
-      fix: 'Consulte os dados da cultura.', x1: -20, x2: -20, x3: -20, x4: -20 }
+      aria: aria(t('Sem referência da cultura')), imp: t('Requisitos térmicos indisponíveis.'),
+      fix: t('Consulte os dados da cultura.'), x1: -20, x2: -20, x3: -20, x4: -20 }
   }
   // Faixas gerais da espécie (EcoCrop); nenhuma regra fenológica é inventada quando o catálogo não a fornece.
   // A faixa ótima do EcoCrop vale para a temperatura MÉDIA: comparar a mínima da madrugada com o ótimo dava
   // "Frio" a 23–33 °C (milheto, ótimo 25–35). Os limites absolutos seguem nos extremos: noite abaixo do mínimo
   // ou tarde acima do máximo tolerado é risco real, mesmo com a média boa.
   const media = (lo + hi) / 2
-  const cold: StatusLevel = lo < t.absolute_min ? 'risk' : media < t.optimal_min ? 'warn' : 'good'
-  const hot: StatusLevel = hi > t.absolute_max ? 'risk' : media > t.optimal_max ? 'warn' : 'good'
+  const cold: StatusLevel = lo < tp.absolute_min ? 'risk' : media < tp.optimal_min ? 'warn' : 'good'
+  const hot: StatusLevel = hi > tp.absolute_max ? 'risk' : media > tp.optimal_max ? 'warn' : 'good'
   // Limite letal inicial só vale em semeadura/emergência e usa extremo histórico, não a média.
-  const geada = (stageK === 'seed' || stageK === 'emerg') && t.killing_early_growth != null
-    && faixa.tminExtremo != null && faixa.tminExtremo <= t.killing_early_growth
+  const geada = (stageK === 'seed' || stageK === 'emerg') && tp.killing_early_growth != null
+    && faixa.tminExtremo != null && faixa.tminExtremo <= tp.killing_early_growth
   const rank = { good:0, warn:1, risk:2 }
   const side = rank[cold] >= rank[hot] && cold !== 'good' ? 'cold' : (hot !== 'good' ? 'hot' : 'none')
   const lvl: StatusLevel = geada ? 'risk' : side === 'cold' ? cold : side === 'hot' ? hot : 'good'
-  const LVL: Record<string,string> = { warn:'Atenção', risk:'Risco' }
-  const label = geada ? 'Geada · Risco histórico' : lvl === 'good' ? 'Bom'
-    : side === 'cold' ? `Frio · ${LVL[lvl]}`
-    : `Calor · ${LVL[lvl]}`
+  const LVL: Record<string,string> = { warn:t('Atenção'), risk:t('Risco') }
+  const label = geada ? t('Geada · Risco histórico') : lvl === 'good' ? t('Bom')
+    : side === 'cold' ? t('Frio · {nivel}', { nivel: LVL[lvl] })
+    : t('Calor · {nivel}', { nivel: LVL[lvl] })
   const icon = lvl === 'good' ? '#i-okc' : lvl === 'warn' ? '#i-alert' : '#i-xc'
-  const grad = { ...gradCrop, z1: off(t.absolute_min), z2: off(t.optimal_min),
-    z3: off(t.optimal_min), z4: off((t.optimal_min + t.optimal_max) / 2),
-    z5: off(t.optimal_max), z6: off(t.optimal_max), z7: off(t.absolute_max), z8: '1' }
+  const grad = { ...gradCrop, z1: off(tp.absolute_min), z2: off(tp.optimal_min),
+    z3: off(tp.optimal_min), z4: off((tp.optimal_min + tp.optimal_max) / 2),
+    z5: off(tp.optimal_max), z6: off(tp.optimal_max), z7: off(tp.absolute_max), z8: '1' }
   return {
     ...grad, ...geometria, cls: lvl, label, icon,
     aria: aria(label),
-    imp: geada ? 'Extremo histórico atingiu o limite letal inicial informado pelo EcoCrop.'
-      : `Média do decêndio de ${grau(media)}, comparada à faixa ótima de ${referencia!.scientific_name} (EcoCrop, ${grau(t.optimal_min)} a ${grau(t.optimal_max)}).`,
-    fix: 'Requisitos gerais da espécie; avalie cultivar e condições locais com seu agrônomo.',
-    x1: X(t.absolute_min), x2: X(t.optimal_min), x3: X(t.optimal_max), x4: X(t.absolute_max),
+    imp: geada ? t('Extremo histórico atingiu o limite letal inicial informado pelo EcoCrop.')
+      : t('Média do decêndio de {media}, comparada à faixa ótima de {especie} (EcoCrop, {min} a {max}).',
+        { media: grau(media), especie: referencia!.scientific_name, min: grau(tp.optimal_min), max: grau(tp.optimal_max) }),
+    fix: t('Requisitos gerais da espécie; avalie cultivar e condições locais com seu agrônomo.'),
+    x1: X(tp.absolute_min), x2: X(tp.optimal_min), x3: X(tp.optimal_max), x4: X(tp.absolute_max),
   }
 }

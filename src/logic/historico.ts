@@ -2,6 +2,7 @@
 // Portado de entressafras/src/domain/historico.js (sem a parte de simulação).
 import { CULTURAS } from '../data/culturas'
 import type { Historico, RegistroSafra } from '../types'
+import { t } from '../i18n'
 
 export const NAO_PLANTEI = 'nao_plantei'
 export const GRUPOS_CULTURA: [string, string[]][] = [
@@ -22,16 +23,16 @@ export const anoDaSafra = (rotulo: string) => parseInt(rotulo.slice(0, 4), 10)
 export const completo = (r: RegistroSafra | null | undefined) => !!(r && r.c1 && r.c2)
 /** Situação de um ano no histórico: as duas safras, só uma ou nenhuma. */
 export const statusSafra = (r: RegistroSafra | null | undefined) =>
-  completo(r) ? 'Completa' : r && (r.c1 || r.c2) ? '1 de 2' : 'Vazia'
+  completo(r) ? t('Completa') : r && (r.c1 || r.c2) ? t('1 de 2') : t('Vazia')
 
 export const ehOutra = (v: string | null | undefined): v is string => typeof v === 'string' && v.startsWith('outra:')
 export const outra = (nome: string) => `outra:${nome.trim()}`
 
 export function nomeCultura(v: string | null | undefined): string {
   if (!v) return ''
-  if (v === NAO_PLANTEI) return 'Não plantei'
+  if (v === NAO_PLANTEI) return t('Não plantei')
   if (ehOutra(v)) return v.slice(6)
-  return CULTURAS[v]?.nome ?? v
+  return CULTURAS[v] ? t(CULTURAS[v].nome) : v
 }
 
 /** Unidade de produtividade (só grãos pedem produtividade). */

@@ -6,6 +6,7 @@ import { registroMaisRecente, resumoSafra } from '../logic/historico'
 import { chuvaDoAno } from '../logic/clima'
 import { inteiro, SEM_DADO } from '../logic/formato'
 import { NOME_EIXO } from '../logic/aptidao'
+import { t } from '../i18n'
 
 /** Ações da lista do talhão: cada linha editável abre o que muda aquele dado. */
 export type AcaoTalhao = 'redesenhar' | 'solo' | 'historico'
@@ -26,32 +27,32 @@ type Info = { label: string; value: string; dica?: string; acao?: { a: AcaoTalha
 function chuvaAno(clima: EstadoClima): { value: string; dica?: string } {
   if (clima.status === 'carregando') return { value: '…' }
   const mm = chuvaDoAno(clima.dados?.decendios ?? null)
-  if (mm === null || !clima.dados) return { value: SEM_DADO }
-  return { value: `${inteiro(mm)} mm`, dica: `Média de ${clima.dados.safras.length} safras, NASA POWER` }
+  if (mm === null || !clima.dados) return { value: t(SEM_DADO) }
+  return { value: `${inteiro(mm)} mm`, dica: t('Média de {n} safras, NASA POWER', { n: clima.dados.safras.length }) }
 }
 
-const TEXTURA_API = { sandy: 'Arenoso', medium: 'Médio', clayey: 'Argiloso' } as const
+const texturaApi = (k: SoilInfo['texture_class']) => ({ sandy: t('Arenoso'), medium: t('Médio'), clayey: t('Argiloso') })[k]
 
 /** Sem textura informada, a API estima o solo pelo local: a lateral mostra a estimativa dela, marcada como tal. */
-function solo(t: Talhao, api: SoilInfo | undefined): { value: string; dica?: string } {
-  if (!t.textura && api?.source === 'SOILGRIDS_SAXTON_RAWLS_2006') {
+function solo(talhao: Talhao, api: SoilInfo | undefined): { value: string; dica?: string } {
+  if (!talhao.textura && api?.source === 'SOILGRIDS_SAXTON_RAWLS_2006') {
     return {
-      value: `${TEXTURA_API[api.texture_class]} (estimado)`,
-      dica: `Estimado pela API a partir do local (SoilGrids): ${Math.round(api.available_water_mm_per_m)} mm de água por metro de raiz. Editar o solo do talhão`,
+      value: t('{textura} (estimado)', { textura: texturaApi(api.texture_class) }),
+      dica: t('Estimado pela API a partir do local (SoilGrids): {mm} mm de água por metro de raiz. Editar o solo do talhão', { mm: Math.round(api.available_water_mm_per_m) }),
     }
   }
-  return { value: rotuloSolo(t) }
+  return { value: rotuloSolo(talhao) }
 }
 
-function infoDo(t: Talhao, clima: EstadoClima, api: SoilInfo | undefined): Info[] {
-  const ultima = resumoSafra(registroMaisRecente(t.historico)?.registro)
+function infoDo(talhao: Talhao, clima: EstadoClima, api: SoilInfo | undefined): Info[] {
+  const ultima = resumoSafra(registroMaisRecente(talhao.historico)?.registro)
   return [
-    { label: t.nome, value: fmtHaCurto(t.areaHa), acao: { a: 'redesenhar', dica: 'Redesenhar o contorno do talhão' } },
-    { label: 'Solo', ...(() => { const s = solo(t, api); return { value: s.value, acao: { a: 'solo' as const, dica: s.dica ?? 'Editar o solo do talhão' } } })() },
-    { label: 'Histórico', value: ultima || 'Registrar', acao: { a: 'historico', dica: 'Registrar as safras anteriores' } },
+    { label: talhao.nome, value: fmtHaCurto(talhao.areaHa), acao: { a: 'redesenhar', dica: t('Redesenhar o contorno do talhão') } },
+    { label: t('Solo'), ...(() => { const s = solo(talhao, api); return { value: s.value, acao: { a: 'solo' as const, dica: s.dica ?? t('Editar o solo do talhão') } } })() },
+    { label: t('Histórico'), value: ultima || t('Registrar'), acao: { a: 'historico', dica: t('Registrar as safras anteriores') } },
     // A umidade saiu daqui: a cena mostra a do decêndio simulado. A chuva do ano situa o talhão no regime de chuvas.
-    { label: 'Chuva no ano', ...chuvaAno(clima) },
-    { label: 'Local', value: t.local || fmtCoord(t.centro) },
+    { label: t('Chuva no ano'), ...chuvaAno(clima) },
+    { label: t('Local'), value: talhao.local || fmtCoord(talhao.centro) },
   ]
 }
 
@@ -66,12 +67,12 @@ const PRIORITIES = [
 export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props) {
   const conj = useConjunto()
   return (
-    <aside className="side" aria-label="Ajustes">
+    <aside className="side" aria-label={t('Ajustes')}>
       <div className="sec">
         <div className="sec-h">
-          <h3>Talhão</h3>
+          <h3>{t('Talhão')}</h3>
           <button className="sec-a" type="button" onClick={onTrocar}
-            title="Trocar de talhão ou adicionar um novo" aria-label="Trocar de talhão ou adicionar um novo">
+            title={t('Trocar de talhão ou adicionar um novo')} aria-label={t('Trocar de talhão ou adicionar um novo')}>
             <svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-swap" /></svg>
           </button>
         </div>
@@ -98,8 +99,8 @@ export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props
       </div>
 
       <div className="sec">
-        <h3>O que importa</h3>
-        <p className="prh">A ordem das rotações segue o que você marcar (calculada pela API). Economia de água ainda não entra na ordem.</p>
+        <h3>{t('O que importa')}</h3>
+        <p className="prh">{t('A ordem das rotações segue o que você marcar (calculada pela API). Economia de água ainda não entra na ordem.')}</p>
         <div className="list">
           {PRIORITIES.map(({ k, label, icon }) => (
             <div key={k} className="item">
@@ -107,14 +108,14 @@ export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props
                 <svg className="ic" aria-hidden="true">
                   <use href={`/canvas-icons.svg#${icon}`} />
                 </svg>
-                {label}
+                {t(label)}
               </span>
               <button
                 className="sw"
                 type="button"
                 role="switch"
                 aria-checked={pr[k]}
-                aria-label={label}
+                aria-label={t(label)}
                 onClick={() => onToggle(k)}
               />
             </div>

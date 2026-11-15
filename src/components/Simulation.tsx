@@ -19,6 +19,7 @@ import { useConjunto } from '../state/conjunto'
 import { normaisDoClima, quadroDoDecendio, rotacaoSim } from '../logic/talhaoSim'
 import { respostasDoLaudo } from '../logic/solo'
 import type { QuadroAgua } from '../logic/atencaoCiclo'
+import { t } from '../i18n'
 
 type Props = {
   quadrosAgua?: QuadroAgua[]
@@ -64,19 +65,21 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
   const sim = cargando ? null : { rotacao, ...quadro, classeId: talhao.classe, respostas, normais }
 
   return (
-    <section className="trio" aria-label={cmp ? 'Comparação das rotações marcadas' : 'Resumo do período simulado'}>
+    <section className="trio" aria-label={cmp ? t('Comparação das rotações marcadas') : t('Resumo do período simulado')}>
       {cmp ? (
         // A comparação vale para o ciclo inteiro: a data do decêndio não se aplica aqui
         <div className="trio-h">
-          <span className="trio-k">Comparando</span>
+          <span className="trio-k">{t('Comparando')}</span>
           <span className="trio-t">
-            {cmp.sel.length} {cmp.sel.length === 1 ? 'rotação' : 'rotações'} · safra {conj.ano}/{String(conj.ano + 1).slice(2)}
+            {cmp.sel.length === 1
+              ? t('{n} rotação · safra {ano}', { n: cmp.sel.length, ano: `${conj.ano}/${String(conj.ano + 1).slice(2)}` })
+              : t('{n} rotações · safra {ano}', { n: cmp.sel.length, ano: `${conj.ano}/${String(conj.ano + 1).slice(2)}` })}
           </span>
-          <span className="trio-p">avaliadas no ciclo completo, de setembro a agosto</span>
+          <span className="trio-p">{t('avaliadas no ciclo completo, de setembro a agosto')}</span>
         </div>
       ) : (
         <div className="trio-h">
-          <span className="trio-k">Simulando</span>
+          <span className="trio-k">{t('Simulando')}</span>
           <span className="trio-t">{periodLabel}</span>
         </div>
       )}
@@ -85,7 +88,7 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
         {cmp && <QuadMap sel={cmp.sel} pr={cmp.pr} res={cmp.res} />}
         {/* A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela.
             No modo Comparação ela só fica escondida: desmontar destruiria o canvas, o cache de sprites e o zoom. */}
-        <section className="field cena" aria-label="Seu talhão" hidden={!!cmp}>
+        <section className="field cena" aria-label={t('Seu talhão')} hidden={!!cmp}>
           <IsoField
             sim={sim}
             pausado={!!cmp}

@@ -44,7 +44,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'pnpm dev',
-    url: 'http://localhost:5173',
+    url: process.env.PW_BASE_URL ?? 'http://localhost:5173',
     reuseExistingServer: true,
   },
 });

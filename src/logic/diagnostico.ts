@@ -4,8 +4,8 @@
 // e as fases no calendário (estágios FAO-56 da API) que resiliencia.ts organizou.
 // Documentação: docs/PERIODOS_CRITICOS.md.
 import { NOME_FASE } from '../data/zarc'
-import { janelaLabel, mesDe } from './periodo'
-import { MONTHS_SHORT } from '../data/mock'
+import { janelaLabel, mesCurtoDe, mesDe } from './periodo'
+import { t } from '../i18n'
 import type { Fase, ResRotacao } from './resiliencia'
 import { classeAnos } from './status'
 
@@ -86,22 +86,32 @@ export const periodoDecisivo = (d: Diagnostico | null): number | null => d?.deci
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /** Frequência do problema, pela API: "risco hídrico de 30% (API), maior déficit de água nesta fase". */
-const frequencia = (p: PeriodoCritico) => `risco hídrico de ${p.pct}% (API), maior déficit de água nesta fase`
+const frequencia = (p: PeriodoCritico) => t('risco hídrico de {pct}% (API), maior déficit de água nesta fase', { pct: p.pct })
 
 /** "Milho safrinha, floração e enchimento de grãos (21 abr a 31 mai): risco hídrico de 30% (API), ..." */
 export const textoCritico = (p: PeriodoCritico): string =>
-  `${p.nome}, ${minuscula(p.nomeFase)} (${p.rotulo}): ${frequencia(p)}.`
+  t('{cultura}, {fase} ({periodo}): {frequencia}.', { cultura: t(p.nome), fase: minuscula(t(p.nomeFase)), periodo: p.rotulo, frequencia: frequencia(p) })
 
 const ARTIGO = ['no', 'no', 'na', 'na'] as const
 /** "Período crítico na floração e enchimento de grãos (21 abr a 31 mai): risco hídrico de 30% (API), ..." */
-export const textoFase = (p: PeriodoCritico): string =>
-  `Período crítico ${ARTIGO[p.fase]} ${minuscula(p.nomeFase)} (${p.rotulo}): ${frequencia(p)}.`
+export const textoFase = (p: PeriodoCritico): string => {
+  const v = { fase: minuscula(t(p.nomeFase)), periodo: p.rotulo, frequencia: frequencia(p) }
+  return ARTIGO[p.fase] === 'no'
+    ? t('Período crítico no {fase} ({periodo}): {frequencia}.', v)
+    : t('Período crítico na {fase} ({periodo}): {frequencia}.', v)
+}
 
-const NA_FASE = ['no estabelecimento', 'no crescimento', 'na floração', 'na maturação'] as const
-const mes = (idx: number) => MONTHS_SHORT[mesDe(idx)].toLowerCase()
+const mes = (idx: number) => mesCurtoDe(mesDe(idx))
 /** Motivo curto, para caber no selo da linha: "seca na floração (abr–mai)". */
-export const motivoCurto = (p: PeriodoCritico): string =>
-  `seca ${NA_FASE[p.fase]} (${mesDe(p.de) === mesDe(p.ate) ? mes(p.de) : `${mes(p.de)}–${mes(p.ate)}`})`
+export const motivoCurto = (p: PeriodoCritico): string => {
+  const meses = mesDe(p.de) === mesDe(p.ate) ? mes(p.de) : `${mes(p.de)}–${mes(p.ate)}`
+  return [
+    t('seca no estabelecimento ({meses})', { meses }),
+    t('seca no crescimento ({meses})', { meses }),
+    t('seca na floração ({meses})', { meses }),
+    t('seca na maturação ({meses})', { meses }),
+  ][p.fase]
+}
 
 /**
  * O que a falta de água costuma causar em cada fase (efeito agronômico geral, não calculado aqui).
@@ -123,4 +133,4 @@ export const criticoEm = (d: Diagnostico | null, idx: number): PeriodoCritico | 
 
 /** Legenda do chip: o problema da fase e com que frequência faltou água nela. */
 export const legendaCritico = (p: PeriodoCritico): string =>
-  `${PROBLEMA_FASE[p.fase]} Risco hídrico de ${p.pct}% (API), com o maior déficit de água nesta fase.`
+  t('{problema} Risco hídrico de {pct}% (API), com o maior déficit de água nesta fase.', { problema: t(PROBLEMA_FASE[p.fase]), pct: p.pct })

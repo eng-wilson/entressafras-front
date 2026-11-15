@@ -8,6 +8,7 @@ import { anoDaSafra, completo, rotuloSafra, safraPlanejada, statusSafra, ultimaS
 import { EditorSafra } from '../onboarding/EditorSafra'
 import { Icone } from '../onboarding/Icone'
 import { Folha } from './Folha'
+import { t } from '../i18n'
 
 type Props = {
   talhao: Talhao
@@ -56,32 +57,32 @@ export function HistoricoModal({ talhao, onSalvar, onCancelar, hoje: hojeProp }:
   const no = (x: RegistroSafra | undefined, k: 'c1' | 'c2') => <i className={x?.[k] ? 'on' : ''} />
 
   return (
-    <Folha titulo={`Histórico do ${talhao.nome}`} largura={640} onCancelar={onCancelar} onSalvar={salvar}>
-      <div className="hs-years" ref={regua} role="group" aria-label="Safras, da mais antiga para a atual">
-        <button className="hs-yr mais first" type="button" onClick={registrarAntiga} aria-label={`Registrar safra ${antiga}`}>
+    <Folha titulo={t('Histórico do {talhao}', { talhao: talhao.nome })} largura={640} onCancelar={onCancelar} onSalvar={salvar}>
+      <div className="hs-years" ref={regua} role="group" aria-label={t('Safras, da mais antiga para a atual')}>
+        <button className="hs-yr mais first" type="button" onClick={registrarAntiga} aria-label={t('Registrar safra {safra}', { safra: antiga })}>
           <span className="node" aria-hidden="true"><Icone id="i-plus" /></span>
-          <span className="y">{antiga}</span><span className="s">Mais antiga</span>
+          <span className="y">{antiga}</span><span className="s">{t('Mais antiga')}</span>
         </button>
         {ys.map(y => (
           <button key={y} className={`hs-yr${y === sel ? ' sel' : ''}`} type="button" aria-pressed={y === sel}
-            aria-label={`Safra ${y}, ${statusSafra(hist[y]).toLowerCase()}`} onClick={() => setSel(y)}>
+            aria-label={t('Safra {safra}, {status}', { safra: y, status: statusSafra(hist[y]).toLowerCase() })} onClick={() => setSel(y)}>
             <span className="node" aria-hidden="true">{no(hist[y], 'c1')}{no(hist[y], 'c2')}</span>
             <span className="y">{y}</span><span className="s">{statusSafra(hist[y])}</span>
           </button>
         ))}
-        <div className="hs-yr fut last" aria-label={`Safra ${planejada}, planejando agora`}>
+        <div className="hs-yr fut last" aria-label={t('Safra {safra}, planejando agora', { safra: planejada })}>
           <span className="node" aria-hidden="true" />
-          <span className="y">{planejada}</span><span className="s">Planejando</span>
+          <span className="y">{planejada}</span><span className="s">{t('Planejando')}</span>
         </div>
       </div>
 
       <div className="hs-cab">
         <div>
-          <h3>Safra {sel}</h3>
-          <div className="hs-nota">{completo(r) ? 'Completa. Produtividade e pragas são opcionais.' : 'Escolha a cultura das duas safras'}</div>
+          <h3>{t('Safra {safra}', { safra: sel })}</h3>
+          <div className="hs-nota">{completo(r) ? t('Completa. Produtividade e pragas são opcionais.') : t('Escolha a cultura das duas safras')}</div>
         </div>
         {maisNova && completo(hist[maisNova]) && !completo(r) && (
-          <button className="hs-copy" type="button" onClick={copiar}><Icone id="i-repeat" />Igual a {maisNova}</button>
+          <button className="hs-copy" type="button" onClick={copiar}><Icone id="i-repeat" />{t('Igual a {safra}', { safra: maisNova })}</button>
         )}
       </div>
 
@@ -90,7 +91,7 @@ export function HistoricoModal({ talhao, onSalvar, onCancelar, hoje: hojeProp }:
 
       <div className="hs-fim">
         <button className="hs-cta" type="button" onClick={() => (i > 0 ? setSel(ys[i - 1]) : registrarAntiga())}>
-          <Icone id="i-left" />{i > 0 ? `Próxima: ${ys[i - 1]}` : `Registrar ${antiga}`}
+          <Icone id="i-left" />{i > 0 ? t('Próxima: {safra}', { safra: ys[i - 1] }) : t('Registrar {safra}', { safra: antiga })}
         </button>
       </div>
     </Folha>

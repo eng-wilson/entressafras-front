@@ -2,6 +2,7 @@
 // Portado de entressafras/src/domain/soil/laudo.js.
 // Limites para o Cerrado: Sousa & Lobato (eds.), "Cerrado: correção do solo e adubação", Embrapa, 2004.
 import type { AnaliseSolo, CampoLaudo, Textura } from '../types'
+import { t } from '../i18n'
 
 export const TEXTURAS: Record<Textura, { nome: string; dica: string; classe: string; foto: string; alt: string }> = {
   argiloso: { nome: 'Argiloso', dica: 'Molhada, faz uma fita na mão', classe: 'latossolo_vermelho', foto: '/onboarding/solo_argiloso.jpg', alt: 'Mão segurando uma bola de terra avermelhada, lisa e firme' },
@@ -22,13 +23,13 @@ export const CAMPOS_LAUDO: { k: CampoLaudo; nome: string; sub: string; unidade: 
 ]
 
 /** Aceita vírgula decimal. Vazio ou inválido → null. */
-export function lerNumero(t: string | null | undefined): number | null {
-  if (t === null || t === undefined || t.trim() === '') return null
-  const n = parseFloat(t.replace(',', '.'))
+export function lerNumero(txt: string | null | undefined): number | null {
+  if (txt === null || txt === undefined || txt.trim() === '') return null
+  const n = parseFloat(txt.replace(',', '.'))
   return Number.isFinite(n) ? n : null
 }
 
-export const classeDaTextura = (t: Textura | null) => (t ? TEXTURAS[t].classe : CLASSE_PADRAO)
+export const classeDaTextura = (tx: Textura | null) => (tx ? TEXTURAS[tx].classe : CLASSE_PADRAO)
 
 /** Embrapa: arenosa < 15 %, média 15–35 %, argilosa > 35 %. */
 export function texturaDaArgila(arg: number | null): Textura | null {
@@ -72,7 +73,8 @@ export function texturaEfetiva(
 }
 
 /** Rótulo para a Sidebar. */
-export function rotuloSolo(t: { textura: Textura | null; texturaInformada: boolean; texturaPeloLaudo: boolean }) {
-  if (!t.textura) return t.texturaInformada ? '—' : 'Padrão da região'
-  return TEXTURAS[t.textura].nome + (t.texturaPeloLaudo ? ' (laudo)' : '')
+export function rotuloSolo(s: { textura: Textura | null; texturaInformada: boolean; texturaPeloLaudo: boolean }) {
+  if (!s.textura) return s.texturaInformada ? '—' : t('Padrão da região')
+  const nome = t(TEXTURAS[s.textura].nome)
+  return s.texturaPeloLaudo ? t('{textura} (laudo)', { textura: nome }) : nome
 }

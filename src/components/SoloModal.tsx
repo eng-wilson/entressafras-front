@@ -8,6 +8,7 @@ import { PassoSolo } from '../onboarding/PassoSolo'
 import { dadosDo, formDe, type Form } from '../onboarding/dados'
 import { Icone } from '../onboarding/Icone'
 import { Folha } from './Folha'
+import { t } from '../i18n'
 
 type Props = {
   talhao: Talhao
@@ -23,12 +24,12 @@ export function SoloModal({ talhao, onSalvar, onCancelar, onMudarLocal }: Props)
   const pode = !!tex.textura && !!f.nome.trim()
 
   return (
-    <Folha titulo="Solo do talhão" largura={640} podeSalvar={pode} onCancelar={onCancelar}
+    <Folha titulo={t('Solo do talhão')} largura={640} podeSalvar={pode} onCancelar={onCancelar}
       onSalvar={() => pode && onSalvar(dadosDo(f, talhao.contorno, talhao))}>
       <div className="fo-sec">
-        <h3 className="fo-sh">Talhão</h3>
+        <h3 className="fo-sh">{t('Talhão')}</h3>
         <div className="fo-grp fo-lin">
-          <label htmlFor="solo-nome">Nome</label>
+          <label htmlFor="solo-nome">{t('Nome')}</label>
           <input id="solo-nome" type="text" maxLength={24} autoComplete="off" value={f.nome}
             onChange={e => setF({ ...f, nome: e.target.value })} />
         </div>
@@ -38,19 +39,19 @@ export function SoloModal({ talhao, onSalvar, onCancelar, onMudarLocal }: Props)
         <div className="fo-grp">
           <PassoSolo form={f} onMudar={s => setF({ ...f, ...s })} />
         </div>
-        {!tex.textura && <p className="fo-nota">Escolha a textura para salvar.</p>}
+        {!tex.textura && <p className="fo-nota">{t('Escolha a textura para salvar.')}</p>}
       </div>
 
       <div className="fo-sec">
-        <h3 className="fo-sh">Localização</h3>
+        <h3 className="fo-sh">{t('Localização')}</h3>
         <div className="fo-grp fo-lin">
           <span className="fo-local">
             <Icone id="i-pin" />
             <span>{talhao.local || fmtCoord(talhao.centro)}<small>{fmtHa(talhao.areaHa)}</small></span>
           </span>
-          <button className="fo-lnk" type="button" onClick={onMudarLocal}>Mudar no mapa</button>
+          <button className="fo-lnk" type="button" onClick={onMudarLocal}>{t('Mudar no mapa')}</button>
         </div>
-        <p className="fo-nota">Redesenhar o contorno muda a localização e a área. Solo e histórico continuam.</p>
+        <p className="fo-nota">{t('Redesenhar o contorno muda a localização e a área. Solo e histórico continuam.')}</p>
       </div>
     </Folha>
   )

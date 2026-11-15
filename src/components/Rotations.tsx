@@ -6,6 +6,7 @@ import type { Diagnostico } from '../logic/diagnostico'
 import { RotationsHeader } from './RotationsHeader'
 import { MonthStrip } from './MonthStrip'
 import { CalendarRows } from './CalendarRows'
+import { t } from '../i18n'
 
 type Props = {
   decendios: Decendio[] | null
@@ -34,7 +35,7 @@ type Props = {
 // pontos fortes e fracos ficam nos cards da comparação, acima.
 export function Rotations({ idx, mode, onIdx, onMode, decendios, sel, onToggleSel, res, rot, onRot, diags, onAdd, addBloqueio, rascunho, faixa, onRemoverSalva }: Props) {
   return (
-    <div id="rotation-board" className="board" tabIndex={-1} aria-label="Calendário e comparação das rotações">
+    <div id="rotation-board" className="board" tabIndex={-1} aria-label={t('Calendário e comparação das rotações')}>
       <RotationsHeader mode={mode} onMode={onMode} onAdd={onAdd} addBloqueio={addBloqueio} />
       {/* A comparação vale para o ciclo inteiro: o calendário e o período simulado não mudam nada nela. */}
       {mode === 'cal' && (

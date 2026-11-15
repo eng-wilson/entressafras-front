@@ -5,6 +5,7 @@ import type { Resiliencia } from '../logic/resiliencia'
 import { textoCritico, type Diagnostico, type PeriodoCritico } from '../logic/diagnostico'
 import { useConjunto } from '../state/conjunto'
 import { COR_ROT } from '../logic/aptidao'
+import { t } from '../i18n'
 
 // Barra com rótulo = safra (na ordem de safras da rotação) e ganha a cor da própria resiliência; sem rótulo = pousio.
 const minuscula = (t: string) => t.charAt(0).toLowerCase() + t.slice(1)
@@ -41,7 +42,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
   const statuses = useMemo(
     () => ROTATIONS.map((_, ri) => {
       const rot = res?.rotacoes[ri]
-      return rot ? rotationStatus(rot.safras.map(s => [s.risco?.pct ?? null, s.nome.toLowerCase()])) : null
+      return rot ? rotationStatus(rot.safras.map(s => [s.risco?.pct ?? null, t(s.nome).toLowerCase()])) : null
     }),
     [res, ROTATIONS],
   )
@@ -55,7 +56,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
   return (
     <>
     {rascunho}
-    <div className="rlist" role="list" aria-label="Rotações de cultura">
+    <div className="rlist" role="list" aria-label={t('Rotações de cultura')}>
       {sorted.map(rot => {
         const ri = ROTATIONS.indexOf(rot)
         const st = statuses[ri]
@@ -63,7 +64,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
         const rank = rpos[ri] + 1
         const isLast = rpos[ri] === ROTATIONS.length - 1
         const criticos = diags?.[ri].criticos ?? []
-        const nome = rot.ct.c1, depois = minuscula(rot.ct.c2)
+        const nome = t(rot.ct.c1), depois = minuscula(t(rot.ct.c2))
         const marcada = !!cmp?.sel.includes(ri)
         // Na comparação, a linha marca para comparar; no calendário, seleciona a rotação.
         const acionar = () => (cmp ? cmp.onToggle(ri) : onSel(ri))
@@ -83,7 +84,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
                     checked={marcada}
                     disabled={marcada && cmp.sel.length === 1}
                     onChange={() => cmp.onToggle(ri)}
-                    aria-label={`Comparar ${nome} depois ${depois}`}
+                    aria-label={t('Comparar {a} depois {b}', { a: nome, b: depois })}
                   />
                 </label>
               )}
@@ -93,20 +94,22 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
                 className="nm nm-b"
                 aria-pressed={cmp ? marcada : ri === sel}
                 aria-label={cmp
-                  ? `${nome} depois ${depois}. ${marcada ? 'Tirar da comparação' : 'Comparar'}`
-                  : `${nome} depois ${depois}${diags?.[ri].decisivo ? `. Selecionar e ver o período que mais pesa: ${diags[ri].decisivo!.rotulo}` : '. Selecionar'}`}
+                  ? (marcada ? t('{a} depois {b}. Tirar da comparação', { a: nome, b: depois }) : t('{a} depois {b}. Comparar', { a: nome, b: depois }))
+                  : diags?.[ri].decisivo
+                    ? t('{a} depois {b}. Selecionar e ver o período que mais pesa: {periodo}', { a: nome, b: depois, periodo: diags[ri].decisivo!.rotulo })
+                    : t('{a} depois {b}. Selecionar', { a: nome, b: depois })}
                 onClick={e => { e.stopPropagation(); acionar() }}
               >
-                {nome} <span className="then">depois</span> {depois}
+                {nome} <span className="then">{t('depois')}</span> {depois}
               </button>
-              {rot.ct.atual && <span className="tag">Atual</span>}
-              {rot.salva && <span className="tag">Nova</span>}
+              {rot.ct.atual && <span className="tag">{t('Atual')}</span>}
+              {rot.salva && <span className="tag">{t('Nova')}</span>}
               {rot.maisPragas && (
                 <span className="pest">
                   <svg className="ic" aria-hidden="true">
                     <use href="/canvas-icons.svg#i-bug" />
                   </svg>
-                  Mais pragas
+                  {t('Mais pragas')}
                 </span>
               )}
               {/* StatusBadge: CSS tooltip via .ct-tip .ct-tip2 inside .stw */}
@@ -130,9 +133,9 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
               </span>
               )}
               {rot.salva && onRemoverSalva && (
-                <button type="button" className="rm-salva" aria-label={`Remover a rotação salva ${nome} depois ${depois}`}
+                <button type="button" className="rm-salva" aria-label={t('Remover a rotação salva {a} depois {b}', { a: nome, b: depois })}
                   onClick={e => { e.stopPropagation(); onRemoverSalva(rot.salva!.id) }}>
-                  Remover
+                  {t('Remover')}
                 </button>
               )}
             </div>
@@ -155,12 +158,12 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
                         type="button"
                         className={`crit ${p.cls}${p === diags?.[ri].decisivo ? ' top' : ''}`}
                         style={trecho(p, def.de, def.ate)}
-                        title={`${textoCritico(p)} Clique para ver na simulação.`}
-                        aria-label={`Período crítico. ${textoCritico(p)} Ver na simulação.`}
+                        title={t('{texto} Clique para ver na simulação.', { texto: textoCritico(p) })}
+                        aria-label={t('Período crítico. {texto} Ver na simulação.', { texto: textoCritico(p) })}
                         onClick={e => { e.stopPropagation(); onSel(ri, p.de) }}
                       />
                     ))}
-                    <span className="bl">{bar.label}</span>
+                    <span className="bl">{t(bar.label)}</span>
                   </div>
                 ) : (
                   <div key={bi} className="b bare" style={{ left, width }} />
@@ -178,7 +181,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
       {diags?.some(d => d.criticos.length) && (
         <p className="crit-lg">
           <span className="crit-sw" aria-hidden="true" />
-          Período crítico: fase com o maior déficit de água, segundo a API. Clique para ver na simulação.
+          {t('Período crítico: fase com o maior déficit de água, segundo a API. Clique para ver na simulação.')}
         </p>
       )}
     </>

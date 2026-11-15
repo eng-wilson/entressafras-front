@@ -6,6 +6,7 @@ import {
   arrastar, dataCurta, datasDe, diasEntre, faixaDecendio, N_DEC, textoLimite,
   type Classe, type Gesto, type Rascunho,
 } from '../../logic/rascunho'
+import { t } from '../../i18n'
 
 type Props = {
   rascunho: Rascunho
@@ -40,7 +41,7 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
     const d = datasDe(c, ano)
     const texto = motivo
       ? textoLimite(motivo, i, nomes, c)
-      : gesto === 'colheita' ? `Colheita: ${dataCurta(d.colheita)}` : `Plantio: ${dataCurta(d.plantio)}`
+      : gesto === 'colheita' ? t('Colheita: {data}', { data: dataCurta(d.colheita) }) : t('Plantio: {data}', { data: dataCurta(d.plantio) })
     setDica({ texto, x: ponto, limite: !!motivo })
     const mesmas = (j: number) => {
       const a = datasDe(r.culturas[j], ano), b = rascunho.culturas[j] && datasDe(rascunho.culturas[j], ano)
@@ -113,17 +114,17 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
         const [cMin, cMax] = limites(i, 'colheita')
         return (
           <div key={i} className={`cb${sel ? ' sel' : ''}${ativo === i ? ' arrastando' : ''}`} style={{ left: pct(c.s), width: pct(c.e - c.s) }}
-            role="group" aria-label={`${nome}: plantio ${dataCurta(datasDe(c, ano).plantio)}, colheita ${dataCurta(datasDe(c, ano).colheita)}`}>
+            role="group" aria-label={t('{nome}: plantio {plantio}, colheita {colheita}', { nome, plantio: dataCurta(datasDe(c, ano).plantio), colheita: dataCurta(datasDe(c, ano).colheita) })}>
             <div className={`b ${classes[i] ?? 'none'}${velho ? ' velho' : ''}`} title={nome} {...ponteiro(i, 'mover')}
               onClick={() => onSelect(i)}>
               <span className="bl">{nome}</span>
             </div>
-            <button type="button" className="hd l" role="slider" aria-label={`Plantio de ${minuscula(nome)}`}
+            <button type="button" className="hd l" role="slider" aria-label={t('Plantio de {nome}', { nome: minuscula(nome) })}
               aria-valuemin={pMin} aria-valuemax={pMax} aria-valuenow={c.s} aria-valuetext={faixaDecendio(c.s, ano)}
               onFocus={() => onSelect(i)} onKeyDown={e => tecla(e, i, 'plantio')} onBlur={() => setDica(null)} {...ponteiro(i, 'plantio')}>
               <i />
             </button>
-            <button type="button" className="hd r" role="slider" aria-label={`Colheita de ${minuscula(nome)}`}
+            <button type="button" className="hd r" role="slider" aria-label={t('Colheita de {nome}', { nome: minuscula(nome) })}
               aria-valuemin={cMin} aria-valuemax={cMax} aria-valuenow={c.e - 1} aria-valuetext={faixaDecendio(c.e - 1, ano)}
               onFocus={() => onSelect(i)} onKeyDown={e => tecla(e, i, 'colheita')} onBlur={() => setDica(null)} {...ponteiro(i, 'colheita')}>
               <i />
@@ -137,8 +138,8 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
         const dias = diasEntre(datasDe(a, ano).colheita, datasDe(b, ano).plantio) - 1
         return (
           <div key={`g${k}`} className="gap" role="note" style={{ left: pct(a.e), width: `calc(${pct(b.s - a.e)} - 2px)` }}
-            title={`${dias} dias sem cobertura entre ${minuscula(nomes[k] ?? '')} e ${minuscula(nomes[k + 1] ?? '')}`}>
-            {b.s - a.e >= 2 ? `${dias} dias sem cobertura` : `${dias}d`}
+            title={t('{n} dias sem cobertura entre {a} e {b}', { n: dias, a: minuscula(nomes[k] ?? ''), b: minuscula(nomes[k + 1] ?? '') })}>
+            {b.s - a.e >= 2 ? t('{n} dias sem cobertura', { n: dias }) : t('{n}d', { n: dias })}
           </div>
         )
       })}

@@ -7,6 +7,7 @@ import { periodoLabel, mesDe, decendioDoMes } from '../logic/periodo'
 import { inteiro } from '../logic/formato'
 import type { Diagnostico } from '../logic/diagnostico'
 import { ROTULO_CLASSE, type FaixaCalendario } from '../logic/rascunho'
+import { t } from '../i18n'
 
 type Props = {
   idx: number; decendios: Decendio[] | null; onIdx: (i: number) => void
@@ -35,8 +36,11 @@ export function MonthStrip({ idx, onIdx, decendios, diag = null, faixa = null }:
   const tituloFaixa = (i: number) => {
     const p = faixa?.pontos[i]
     if (!p) return undefined
-    const temp = p.temperaturaOk ? '' : ', temperatura fora dos limites da cultura'
-    return `Plantio em ${periodoLabel(i)}: ${ROTULO_CLASSE[p.cls].toLowerCase()}${temp}; ${p.regional ? 'dentro' : 'fora'} da data usual da região`
+    const temp = p.temperaturaOk ? '' : t(', temperatura fora dos limites da cultura')
+    const vars = { periodo: periodoLabel(i), classe: t(ROTULO_CLASSE[p.cls]).toLowerCase(), temp }
+    return p.regional
+      ? t('Plantio em {periodo}: {classe}{temp}; dentro da data usual da região', vars)
+      : t('Plantio em {periodo}: {classe}{temp}; fora da data usual da região', vars)
   }
   const activeM = mesDe(idx)
   const decInM = decendioDoMes(idx)
@@ -56,8 +60,8 @@ export function MonthStrip({ idx, onIdx, decendios, diag = null, faixa = null }:
   const meses = chuvaMeses(decendios)
   const periodo = climaDoPeriodo(decendios, idx)
   const mm = periodo.chuvaDecendio
-  const naZona = naZonaIdx ? ', período que mais pesa no clima da rotação' : ''
-  const sliderText = periodoLabel(idx) + naZona + (mm == null ? ', chuva sem dado' : `, ${ROTULO_CHUVA[classeChuvaDecendio(mm)]}, ${inteiro(mm)} milímetros no decêndio`) + (periodo.tmin == null || periodo.tmax == null ? '' : `, de ${inteiro(periodo.tmin)} a ${inteiro(periodo.tmax)} graus`)
+  const naZona = naZonaIdx ? t(', período que mais pesa no clima da rotação') : ''
+  const sliderText = periodoLabel(idx) + naZona + (mm == null ? t(', chuva sem dado') : t(', {chuva}, {mm} milímetros no decêndio', { chuva: t(ROTULO_CHUVA[classeChuvaDecendio(mm)]), mm: inteiro(mm) })) + (periodo.tmin == null || periodo.tmax == null ? '' : t(', de {min} a {max} graus', { min: inteiro(periodo.tmin), max: inteiro(periodo.tmax) }))
 
   const knobPct = `${((idx + 0.5) / 36 * 100).toFixed(3)}%`
   const fillPct  = `${(idx / 35 * 100).toFixed(3)}%`
@@ -69,7 +73,8 @@ export function MonthStrip({ idx, onIdx, decendios, diag = null, faixa = null }:
       <div className="months">
         {MONTHS_SHORT.map((month, mi) => {
           const mm = meses[mi]
-          const label = mm == null ? 'sem dado' : ROTULO_CHUVA[classeChuva(mm)]
+          const label = mm == null ? t('sem dado') : t(ROTULO_CHUVA[classeChuva(mm)])
+          const mes = t(month)
           const icon = mm == null ? null : iconeChuva(mm, mi)
           const isPast = mi <= 1
           const isActive = mi === activeM
@@ -80,11 +85,11 @@ export function MonthStrip({ idx, onIdx, decendios, diag = null, faixa = null }:
               type="button"
               className={`mo${isActive ? ' hi' : ''}${isPast ? ' past' : ''}`}
               onClick={() => onIdx(mi * 3 + decInM)}
-              title={`${month}: ${label}${mm == null ? "" : `, ${inteiro(mm)} mm no mês`}`}
+              title={mm == null ? t('{mes}: {chuva}', { mes, chuva: label }) : t('{mes}: {chuva}, {mm} mm no mês', { mes, chuva: label, mm: inteiro(mm) })}
               aria-pressed={isActive}
-              aria-label={`${month}: ${label}${mm == null ? "" : `, ${inteiro(mm)} milímetros no mês`}`}
+              aria-label={mm == null ? t('{mes}: {chuva}', { mes, chuva: label }) : t('{mes}: {chuva}, {mm} milímetros no mês', { mes, chuva: label, mm: inteiro(mm) })}
             >
-              <span className="t">{month}</span>
+              <span className="t">{mes}</span>
               <span className="wx-wrap">
                 {icon && <svg className="wx" aria-hidden="true">
                   <use href={icon} />
@@ -147,7 +152,7 @@ export function MonthStrip({ idx, onIdx, decendios, diag = null, faixa = null }:
           step={1}
           value={idx}
           onChange={e => onIdx(Number(e.target.value))}
-          aria-label="Arraste para simular um período"
+          aria-label={t('Arraste para simular um período')}
           aria-valuetext={sliderText}
         />
       </div>

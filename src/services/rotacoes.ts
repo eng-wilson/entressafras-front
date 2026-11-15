@@ -3,6 +3,7 @@
 // Se o servidor marcar valores como MOCK em `warnings` ou em `risk.method`, a tela os mostra como provisórios.
 import type { CustomCropInput, Ponto, Priorities, RotationRecommendations, SoilType, Textura } from '../types'
 import { API_URL } from './clima'
+import { t } from '../i18n'
 
 export type MotivoErroRotacoes = 'rede' | 'http' | 'parametros' | 'resposta_invalida'
 
@@ -106,7 +107,7 @@ export async function recomendarRotacoes(p: PedidoRotacoes, signal?: AbortSignal
   } catch (e) {
     if (!(e instanceof ErroRotacoes) || e.motivo !== 'parametros') throw e
     const dados = await pedirRotacoes({ ...p, custom: [] }, signal)
-    return { ...dados, custom_rotations: [], warnings: [...dados.warnings, AVISO_SALVAS_INVALIDAS] }
+    return { ...dados, custom_rotations: [], warnings: [...dados.warnings, t(AVISO_SALVAS_INVALIDAS)] }
   }
 }
 

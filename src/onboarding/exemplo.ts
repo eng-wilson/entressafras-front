@@ -1,5 +1,6 @@
 import type { Contorno, DadosTalhao, Ponto } from '../types'
 import { areaHa, centroide } from '../logic/geo'
+import { t } from '../i18n'
 
 /** Vista quando a localização do navegador não está disponível: Rio Verde, GO. */
 export const VISTA_INICIAL: Ponto & { zoom: number } = { lat: -17.95, lon: -51.05, zoom: 14 }
@@ -11,7 +12,7 @@ export const TALHAO_EXEMPLO: Contorno = [
 
 export function dadosExemplo(): DadosTalhao {
   return {
-    nome: 'Talhão exemplo', contorno: TALHAO_EXEMPLO, areaHa: areaHa(TALHAO_EXEMPLO), centro: centroide(TALHAO_EXEMPLO),
+    nome: t('Talhão exemplo'), contorno: TALHAO_EXEMPLO, areaHa: areaHa(TALHAO_EXEMPLO), centro: centroide(TALHAO_EXEMPLO),
     textura: 'argiloso', texturaInformada: true, texturaPeloLaudo: false, analise: null, historico: null,
   }
 }

@@ -3,6 +3,7 @@ import type { AnaliseSolo, Contorno, DadosTalhao, RegistroSafra, Talhao, Textura
 import { areaHa, centroide } from '../logic/geo'
 import { NAO_SEI, lerNumero, texturaEfetiva } from '../logic/solo'
 import { rotuloSafra, ultimaSafra } from '../logic/historico'
+import { t } from '../i18n'
 
 export type EscolhaTextura = Textura | typeof NAO_SEI | null
 export type FormSolo = { textura: EscolhaTextura; texturaManual: boolean; analise: AnaliseSolo | null }
@@ -24,7 +25,7 @@ export function dadosDo(f: Form, contorno: Contorno, talhao?: Talhao | null, hoj
   const r = f.registro
   const temAnalise = !!f.analise && Object.values(f.analise).some(v => lerNumero(v) !== null)
   return {
-    nome: f.nome.trim() || 'Talhão',
+    nome: f.nome.trim() || t('Talhão'),
     contorno,
     areaHa: areaHa(contorno),
     centro: centroide(contorno),

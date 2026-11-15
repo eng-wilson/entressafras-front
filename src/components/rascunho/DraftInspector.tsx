@@ -8,12 +8,14 @@ import {
   datasCultura, diasSemCobertura, MAX_CULTURAS, posicaoRanking, ROTULO_CLASSE, tituloRascunho, traduzirCheck, type Aviso,
 } from '../../logic/rascunho'
 import { lerSimulacao } from './leitura'
+import { ordinal, t } from '../../i18n'
 
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 const ESTAGIO: Record<string, string> = { initial: 'no início', development: 'no desenvolvimento', mid_season: 'na floração e enchimento', late_season: 'no fim do ciclo' }
 
 export function DraftInspector({ editor }: { editor: EditorRascunho }) {
-  const { rascunho: r, ano, nomes, sim } = editor
+  const { rascunho: r, ano, sim } = editor
+  const nomes = editor.nomes.map(n => t(n))
   const leitura = useMemo(() => lerSimulacao(r, sim), [r, sim])
   const dados = sim.atual ? sim.dados : null
   const rot = dados?.rotation ?? null
@@ -21,17 +23,17 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
   const nomeSel = sel != null ? minuscula(nomes[sel]) : null
 
   let veredito: string
-  if (r.culturas.length === 0) veredito = 'Adicione uma cultura'
-  else if (r.culturas.length < MAX_CULTURAS) veredito = 'Adicione a 2ª cultura para simular'
-  else if (sim.status === 'erro') veredito = 'A simulação não rodou com estas datas'
-  else if (leitura.pior.i < 0) veredito = 'Simulando…'
+  if (r.culturas.length === 0) veredito = t('Adicione uma cultura')
+  else if (r.culturas.length < MAX_CULTURAS) veredito = t('Adicione a 2ª cultura para simular')
+  else if (sim.status === 'erro') veredito = t('A simulação não rodou com estas datas')
+  else if (leitura.pior.i < 0) veredito = t('Simulando…')
   else {
     const n = nomes[leitura.pior.i]
     veredito = {
-      good: 'As duas culturas com clima favorável nestas datas',
-      warn: `${n}: clima arriscado nestas datas`,
-      risk: `${n}: clima desfavorável nestas datas`,
-      none: `Sem dado de risco para ${minuscula(n)}`,
+      good: t('As duas culturas com clima favorável nestas datas'),
+      warn: t('{nome}: clima arriscado nestas datas', { nome: n }),
+      risk: t('{nome}: clima desfavorável nestas datas', { nome: n }),
+      none: t('Sem dado de risco para {nome}', { nome: minuscula(n) }),
     }[leitura.pior.cls]
   }
 
@@ -39,24 +41,29 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
   if (r.culturas.length === MAX_CULTURAS) {
     const dias = diasSemCobertura(r, ano)
     limitacoes.push(dias > 0
-      ? { ok: false, titulo: 'Solo exposto', texto: `${dias} dias sem cobertura entre as culturas.` }
-      : { ok: true, titulo: 'Solo exposto', texto: 'Uma cultura entra logo depois da outra.' })
+      ? { ok: false, titulo: t('Solo exposto'), texto: t('{n} dias sem cobertura entre as culturas.', { n: dias }) }
+      : { ok: true, titulo: t('Solo exposto'), texto: t('Uma cultura entra logo depois da outra.') })
   }
   if (rot) {
     const nomesApi = rot.crops.map(c => c.crop.common_names[0] ?? c.crop.scientific_name)
     const checks = rot.checks.map(c => ({ ok: false, ...traduzirCheck(c, nomesApi, nomes) }))
-    limitacoes.push(...(checks.length ? checks : [{ ok: true, titulo: 'Filtros da recomendação', texto: 'Passa nos filtros de família, calendário e temperatura.' }]))
+    limitacoes.push(...(checks.length ? checks : [{ ok: true, titulo: t('Filtros da recomendação'), texto: t('Passa nos filtros de família, calendário e temperatura.') }]))
     const sp = rot.soil_protection
-    limitacoes.push({ ok: true, titulo: 'Cobertura do solo na safra', texto: `Cultura viva em ${sp.living_cover_days} de ${sp.season_days} dias.` })
+    limitacoes.push({ ok: true, titulo: t('Cobertura do solo na safra'), texto: t('Cultura viva em {vivos} de {total} dias.', { vivos: sp.living_cover_days, total: sp.season_days }) })
   }
   r.culturas.forEach((c, i) => {
-    if (c.ajustado) limitacoes.push({ ok: false, titulo: 'Ciclo ajustado', texto: `${nomes[i]}: a colheita passava de 31 ago e foi trazida para o fim da safra.` })
+    if (c.ajustado) limitacoes.push({ ok: false, titulo: t('Ciclo ajustado'), texto: t('{nome}: a colheita passava de 31 ago e foi trazida para o fim da safra.', { nome: nomes[i] }) })
   })
 
   // Anúncio para leitor de tela depois de cada resultado (500 ms sem mudança).
   const [anuncio, setAnuncio] = useState('')
   const resumo = rot && leitura.pior.i >= 0
-    ? `${rot.crops.map((c, i) => `${nomes[i]}: ${ROTULO_CLASSE[leitura.classes[i]].toLowerCase()}${c.crop.risk.risk_percentage != null ? `, risco em ${10 - anosDoRisco(c.crop.risk.risk_percentage)} de 10 anos` : ''}`).join('. ')}. ${rot.would_be_recommended ? `Ficaria em ${rot.rank}º.` : 'Fora das 4 melhores.'}`
+    ? `${rot.crops.map((c, i) => {
+      const classe = t(ROTULO_CLASSE[leitura.classes[i]]).toLowerCase()
+      return c.crop.risk.risk_percentage != null
+        ? t('{nome}: {classe}, risco em {n} de 10 anos', { nome: nomes[i], classe, n: 10 - anosDoRisco(c.crop.risk.risk_percentage) })
+        : t('{nome}: {classe}', { nome: nomes[i], classe })
+    }).join('. ')}. ${rot.would_be_recommended ? t('Ficaria em {ord}.', { ord: ordinal(rot.rank, 'm') }) : t('Fora das 4 melhores.')}`
     : ''
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   useEffect(() => {
@@ -66,24 +73,24 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
   }, [resumo])
 
   const scores = rot?.scores
-  const nota = (v: number | null | undefined) => (v == null ? 'Sem dado' : Math.round(v))
+  const nota = (v: number | null | undefined) => (v == null ? t('Sem dado') : Math.round(v))
 
   return (
-    <aside className="insp" aria-label="Detalhe da nova rotação">
-      <div className="eyebrow">Nova rotação · rascunho</div>
+    <aside className="insp" aria-label={t('Detalhe da nova rotação')}>
+      <div className="eyebrow">{t('Nova rotação · rascunho')}</div>
       <h2>{tituloRascunho(nomes)}</h2>
       <span className="verdict"><span className={`dot ${leitura.pior.i < 0 ? 'none' : leitura.pior.cls}`} />{veredito}</span>
 
       {leitura.ranking && (
         <div className="rankcard" style={leitura.velho ? { opacity: .6 } : undefined}>
-          <span>Posição no ranking<small>{leitura.ranking.recomendada ? 'Entre as 4 recomendadas' : 'Fora das 4 recomendadas'}</small></span>
+          <span>{t('Posição no ranking')}<small>{leitura.ranking.recomendada ? t('Entre as 4 recomendadas') : t('Fora das 4 recomendadas')}</small></span>
           <b>{posicaoRanking(leitura.ranking.rank, leitura.ranking.entre)}</b>
         </div>
       )}
 
       {r.culturas.length > 0 && (
         <div className="why">
-          <h3>Culturas</h3>
+          <h3>{t('Culturas')}</h3>
           <div className="list">
             {r.culturas.map((c, i) => {
               const cls = leitura.classes[i] ?? 'none'
@@ -96,9 +103,11 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
                     <span className="ci-t">
                       <b>{nomes[i]}</b>
                       <span>{datasCultura(c, ano)}</span>
-                      {risco != null && <span>Perda crítica em {10 - anosDoRisco(risco)} de 10 anos{estagio ? `, mais ${ESTAGIO[estagio]}` : ''}</span>}
+                      {risco != null && <span>{estagio && ESTAGIO[estagio]
+                        ? t('Perda crítica em {n} de 10 anos, mais {estagio}', { n: 10 - anosDoRisco(risco), estagio: t(ESTAGIO[estagio]) })
+                        : t('Perda crítica em {n} de 10 anos', { n: 10 - anosDoRisco(risco) })}</span>}
                     </span>
-                    <span className={`ci-s ${cls}`}>{ROTULO_CLASSE[cls]}</span>
+                    <span className={`ci-s ${cls}`}>{t(ROTULO_CLASSE[cls])}</span>
                   </button>
                 </div>
               )
@@ -109,21 +118,20 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
               <p className="hint">
                 <span className="zsw" /><span className="zsw warn" /><span className="zsw risk" />
                 <span>
-                  Cores no calendário: risco de plantar {nomeSel} em cada decêndio, com {minuscula(nomes[1 - sel] ?? '')} nas
-                  datas atuais. Soltando a barra ali, ela fica dessa cor.
+                  {t('Cores no calendário: risco de plantar {a} em cada decêndio, com {b} nas datas atuais. Soltando a barra ali, ela fica dessa cor.', { a: nomeSel, b: minuscula(nomes[1 - sel] ?? '') })}
                 </span>
               </p>
-              <p className="hint"><span className="zreg" aria-hidden="true">1</span><span>Sublinhado: data usual de plantio na região (±30 dias).</span></p>
+              <p className="hint"><span className="zreg" aria-hidden="true">1</span><span>{t('Sublinhado: data usual de plantio na região (±30 dias).')}</span></p>
             </>
           ) : sim.status !== 'erro' && (
-            <p className="hint">{editor.alca ? 'Mudando o ciclo: as cores do calendário voltam ao soltar.' : 'Recalculando as cores do calendário…'}</p>
+            <p className="hint">{editor.alca ? t('Mudando o ciclo: as cores do calendário voltam ao soltar.') : t('Recalculando as cores do calendário…')}</p>
           ))}
         </div>
       )}
 
       {limitacoes.length > 0 && (
         <div className="why">
-          <h3>Suas limitações</h3>
+          <h3>{t('Suas limitações')}</h3>
           <div className="list">
             {limitacoes.map((k, n) => (
               <div key={n} className="wi">
@@ -139,20 +147,20 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
 
       {scores && (
         <div className="why">
-          <h3>Notas da simulação (0–100)</h3>
+          <h3>{t('Notas da simulação (0–100)')}</h3>
           <div className="notas">
-            <div className="nota"><b>{nota(scores.productivity)}</b>Produtividade</div>
-            <div className="nota"><b>{nota(scores.water_security)}</b>Segurança hídrica</div>
-            <div className="nota"><b>{nota(scores.soil_protection)}</b>Proteção do solo</div>
+            <div className="nota"><b>{nota(scores.productivity)}</b>{t('Produtividade')}</div>
+            <div className="nota"><b>{nota(scores.water_security)}</b>{t('Segurança hídrica')}</div>
+            <div className="nota"><b>{nota(scores.soil_protection)}</b>{t('Proteção do solo')}</div>
           </div>
         </div>
       )}
 
       <span className="sr-only" aria-live="polite">{anuncio}</span>
       <p className="foot">
-        Arraste as pontas da barra para mudar plantio e colheita, ou o meio para mover a cultura sem mudar o ciclo.
-        Pelo teclado: Tab até a ponta, setas mudam um decêndio, Shift+setas movem a cultura.
-        Simulação da API Entressafras (balanço hídrico FAO-56 simplificado, não validado com o ZARC).
+        {t('Arraste as pontas da barra para mudar plantio e colheita, ou o meio para mover a cultura sem mudar o ciclo.')}{' '}
+        {t('Pelo teclado: Tab até a ponta, setas mudam um decêndio, Shift+setas movem a cultura.')}{' '}
+        {t('Simulação da API Entressafras (balanço hídrico FAO-56 simplificado, não validado com o ZARC).')}
       </p>
     </aside>
   )

@@ -8,6 +8,7 @@ import { PERFIS, type PerfilCultura } from '../data/perfis'
 import { CULTURAS, REFERENCIAS_CULTURAS } from '../data/culturas'
 import { NOMES_PT } from '../data/nomesCulturas'
 import { COR_ROT, faixa } from './aptidao'
+import { t } from '../i18n'
 import type { CustomCropInput, Historico, Priorities, Priority, Rotation, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
 
 const data = (iso: string) => {
@@ -97,9 +98,10 @@ export const prioridadesApi = (pr: Priority): Priorities => ({
 /** "Cobertura viva em 208 de 366 dias; a troca de cultura muda de família botânica." */
 export function textoProtecaoSolo(p: SoilProtection): string {
   const trocas = !p.transitions ? ''
-    : p.transitions === 1 ? `; a troca de cultura ${p.family_changes ? 'muda' : 'não muda'} de família botânica`
-      : `; ${p.family_changes} de ${p.transitions} trocas de cultura mudam de família botânica`
-  return `Cobertura viva em ${p.living_cover_days} de ${p.season_days} dias${trocas}`
+    : p.transitions === 1
+      ? (p.family_changes ? t('; a troca de cultura muda de família botânica') : t('; a troca de cultura não muda de família botânica'))
+      : t('; {n} de {total} trocas de cultura mudam de família botânica', { n: p.family_changes, total: p.transitions })
+  return t('Cobertura viva em {vivos} de {dias} dias{trocas}', { vivos: p.living_cover_days, dias: p.season_days, trocas })
 }
 
 /** Fases (I a IV) pela duração dos estágios FAO-56 e profundidade das raízes, quando o catálogo traz. */
@@ -224,4 +226,4 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
 }
 
 /** "Soja depois milho safrinha". */
-export const nomeRotacao = (r: RotacaoDef) => `${r.ct.c1} depois ${minuscula(r.ct.c2)}`
+export const nomeRotacao = (r: RotacaoDef) => t('{a} depois {b}', { a: t(r.ct.c1), b: minuscula(t(r.ct.c2)) })

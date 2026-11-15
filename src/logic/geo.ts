@@ -2,6 +2,7 @@
 // do centro do polígono: erro desprezível para talhões de até alguns quilômetros.
 // Portado de entressafras/src/utils/geo.js.
 import type { Contorno, Ponto } from '../types'
+import { numero } from '../i18n'
 
 const R = 6371008.8 // raio médio da Terra, m
 const RAD = Math.PI / 180
@@ -50,15 +51,14 @@ export function centroide(contorno: Contorno): Ponto {
   return { lat: lat0 + cy / R / RAD, lon: lon0 + cx / (R * k) / RAD }
 }
 
-const UMA_CASA = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })
-const INTEIRO = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
+const area = (ha: number) => numero(ha, ha < 10 ? { minimumFractionDigits: 1, maximumFractionDigits: 1 } : { maximumFractionDigits: 0 })
 
 /** "≈ 4,3 ha" abaixo de 10 ha; "≈ 43 ha" acima. */
-export const fmtHa = (ha: number) => `≈ ${ha < 10 ? UMA_CASA.format(ha) : INTEIRO.format(ha)} ha`
+export const fmtHa = (ha: number) => `≈ ${area(ha)} ha`
 
 /** "42 ha" (sem o ≈), para a Sidebar. */
-export const fmtHaCurto = (ha: number) => `${ha < 10 ? UMA_CASA.format(ha) : INTEIRO.format(ha)} ha`
+export const fmtHaCurto = (ha: number) => `${area(ha)} ha`
 
 /** "-17,95°, -51,05°" — usado quando não há nome de cidade. */
-const COORD = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-export const fmtCoord = (p: Ponto) => `${COORD.format(p.lat)}°, ${COORD.format(p.lon)}°`
+const coord = (v: number) => numero(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+export const fmtCoord = (p: Ponto) => `${coord(p.lat)}°, ${coord(p.lon)}°`

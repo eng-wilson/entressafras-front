@@ -1,4 +1,5 @@
 import type { SoilResult } from '../types'
+import { t } from '../i18n'
 
 // Widget de umidade do solo (padrão dos widgets da cena). A posição vem de soilGauge.ts em unidades da
 // trilha antiga (0–TRILHA); aqui vira porcentagem da largura do medidor.
@@ -12,7 +13,7 @@ export function SoilMoistureBar({ soil }: { soil: SoilResult }) {
     <div className="pl wg" aria-label={soil.aria}>
       <span className="wg-h">
         <svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-drop" /></svg>
-        Água para a cultura
+        {t('Água para a cultura')}
       </span>
       <span className="wg-v">{soil.val}</span>
       <span className={`pl-s wg-s ${cls}`}>

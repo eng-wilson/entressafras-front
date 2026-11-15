@@ -2,6 +2,7 @@
 // Popover acessível: abre com o foco no 1º item habilitado, ↑/↓ navegam, Esc e clique fora fecham e devolvem o foco.
 import { useEffect, useRef, type CSSProperties, type KeyboardEvent } from 'react'
 import type { ItemCatalogo } from '../../logic/rascunho'
+import { t } from '../../i18n'
 
 export type ModoPicker = 'add' | 'rep'
 
@@ -47,16 +48,16 @@ export function CropPicker({ modo, titulo, subtitulo, itens, erro, onTentar, onE
   }
 
   const grupos: [string, Item[]][] = itens
-    ? [['Mais comuns na região', itens.filter(i => i.comum)], ['Outras culturas', itens.filter(i => !i.comum)]]
+    ? [[t('Mais comuns na região'), itens.filter(i => i.comum)], [t('Outras culturas'), itens.filter(i => !i.comum)]]
     : []
 
   return (
     <div ref={ref} className={`picker pk-${modo}`} role="dialog" aria-label={titulo} style={style} onKeyDown={tecla}>
       <div className="pk-h"><b>{titulo}</b><span>{subtitulo}</span></div>
-      {!itens && !erro && <p className="pk-msg" role="status">Carregando as culturas…</p>}
+      {!itens && !erro && <p className="pk-msg" role="status">{t('Carregando as culturas…')}</p>}
       {erro && (
         <p className="pk-msg" role="alert">
-          Não foi possível carregar as culturas. <button className="link" type="button" onClick={onTentar}>Tentar de novo</button>
+          {t('Não foi possível carregar as culturas.')} <button className="link" type="button" onClick={onTentar}>{t('Tentar de novo')}</button>
         </p>
       )}
       {grupos.filter(([, l]) => l.length).map(([g, lista]) => (
@@ -64,9 +65,9 @@ export function CropPicker({ modo, titulo, subtitulo, itens, erro, onTentar, onE
           <div className="pk-g" aria-hidden="true">{g}</div>
           {lista.map(it => (
             <button key={it.code} type="button" className="pk-i" aria-disabled={it.desabilitado || undefined}
-              aria-label={it.nota ? `${it.nome}, ${it.nota}` : it.nome}
+              aria-label={it.nota ? `${t(it.nome)}, ${it.nota}` : t(it.nome)}
               onClick={() => { if (!it.desabilitado) onEscolher(it.code) }}>
-              <span>{it.nome}</span>
+              <span>{t(it.nome)}</span>
               {it.nota && <span className="pk-s" aria-hidden="true">{it.nota}</span>}
             </button>
           ))}

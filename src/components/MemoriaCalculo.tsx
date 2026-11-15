@@ -9,15 +9,24 @@ import { janelaLabel } from '../logic/periodo'
 import { useConjunto } from '../state/conjunto'
 import type { ResSafra } from '../logic/resiliencia'
 import type { EstagioFao, RotationCrop } from '../types'
+import { idioma, numero, ordinal, t } from '../i18n'
 
 const ESTAGIOS: EstagioFao[] = ['initial', 'development', 'mid_season', 'late_season']
 const ROMANO = ['I', 'II', 'III', 'IV'] as const
-const NOME_ESTAGIO = Object.fromEntries(ESTAGIOS.map((e, i) => [e, `${ROMANO[i]} · ${NOME_FASE[i].toLowerCase()}`])) as Record<EstagioFao, string>
+/** "I · estabelecimento" (no idioma atual: chamado na hora de exibir). */
+const nomeEstagio = (e: EstagioFao) => {
+  const i = ESTAGIOS.indexOf(e)
+  return i < 0 ? e : `${ROMANO[i]} · ${t(NOME_FASE[i]).toLowerCase()}`
+}
 const TEXTURA = { sandy: 'arenoso', medium: 'médio', clayey: 'argiloso' } as const
 
-const n1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
-const n2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const dataBr = (iso: string) => iso.split('-').reverse().join('/')
+const n1 = (v: number) => numero(v, { maximumFractionDigits: 1 })
+const n2 = (v: number) => numero(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+/** Data da API (AAAA-MM-DD): "dd/mm/aaaa" em português, "mm/dd/aaaa" em inglês. */
+const dataBr = (iso: string) => {
+  const [a, m, d] = iso.split('-')
+  return idioma() === 'en' && a && m && d ? `${m}/${d}/${a}` : iso.split('-').reverse().join('/')
+}
 const NAO_VEIO = 'não veio'
 
 /** Os devs veem os campos ao abrir em desenvolvimento ou com ?dev na URL; o agricultor pode ligar no botão. */
@@ -37,7 +46,7 @@ function Bloco({ titulo, origem, linhas, dev }: { titulo: string; origem: string
           {linhas.map(l => (
             <tr key={l.campo}>
               <th scope="row">{l.rotulo}</th>
-              <td className={l.valor === NAO_VEIO ? 'nv' : undefined}>{l.valor}</td>
+              <td className={l.valor === t(NAO_VEIO) ? 'nv' : undefined}>{l.valor}</td>
               {dev && <td className="mc-campo"><code>{l.campo} = {JSON.stringify(l.bruto ?? null)}</code></td>}
             </tr>
           ))}
@@ -48,10 +57,11 @@ function Bloco({ titulo, origem, linhas, dev }: { titulo: string; origem: string
 }
 
 const L = (rotulo: string, campo: string, bruto: unknown, fmt: (v: never) => string): Linha => ({
-  rotulo, campo, bruto, valor: bruto == null ? NAO_VEIO : fmt(bruto as never),
+  rotulo, campo, bruto, valor: bruto == null ? t(NAO_VEIO) : fmt(bruto as never),
 })
-const pctNum = (v: number) => `${n1.format(v)}%`
-const pctFrac = (v: number) => `${n1.format(v * 100)}%`
+const pctNum = (v: number) => `${n1(v)}%`
+const pctFrac = (v: number) => `${n1(v * 100)}%`
+const dias = (v: number) => t('{n} dias', { n: v })
 
 type Props = {
   s: ResSafra
@@ -73,7 +83,7 @@ export function MemoriaCalculo({ s, n, rotacao, rotId, api, onFechar }: Props) {
     return () => el.close()
   }, [])
   const conj = useConjunto()
-  const papel = n === 0 ? '1ª safra' : s.cobertura ? '2ª safra (cobertura)' : '2ª safra'
+  const papel = n === 0 ? t('{ord} safra', { ord: ordinal(1) }) : s.cobertura ? t('{ord} safra (cobertura)', { ord: ordinal(2) }) : t('{ord} safra', { ord: ordinal(2) })
   const base = `rotations[id=${rotId}].crops[${n}]`
   const risk = api?.crop.risk
   const wr = api?.crop.water_requirements
@@ -83,78 +93,78 @@ export function MemoriaCalculo({ s, n, rotacao, rotId, api, onFechar }: Props) {
     <dialog className="culturas-dialog mc" ref={dialogo} aria-labelledby="mc-titulo" onClose={e => { if (!e.currentTarget.open) onFechar() }}>
       <header>
         <div>
-          <h2 id="mc-titulo">De onde vêm os números: {s.nome}</h2>
-          <p className="mc-sub">{papel} de {rotacao} · {janelaLabel(s.de, s.ate)}</p>
+          <h2 id="mc-titulo">{t('De onde vêm os números: {nome}', { nome: t(s.nome) })}</h2>
+          <p className="mc-sub">{t('{papel} de {rotacao}', { papel, rotacao })} · {janelaLabel(s.de, s.ate)}</p>
         </div>
         <div className="mc-acoes">
           <label className="mc-dev">
-            <input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} /> Campos da API
+            <input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} /> {t('Campos da API')}
           </label>
-          <button className="tbtn" type="button" onClick={onFechar}>Fechar</button>
+          <button className="tbtn" type="button" onClick={onFechar}>{t('Fechar')}</button>
         </div>
       </header>
 
       <p className="mc-mock">
-        Só valores recebidos da API Entressafras, como vieram: a tela não faz conta nem completa o que falta.
-        {mock && <> <b>O servidor marca este risco como MOCK</b>: valores provisórios, não calculados para este talhão.</>}
-        {' '}Consumo de água, chuva e receita não estão aqui porque não vêm prontos da API.
+        {t('Só valores recebidos da API Entressafras, como vieram: a tela não faz conta nem completa o que falta.')}
+        {mock && <> <b>{t('O servidor marca este risco como MOCK')}</b>{t(': valores provisórios, não calculados para este talhão.')}</>}
+        {' '}{t('Consumo de água, chuva e receita não estão aqui porque não vêm prontos da API.')}
       </p>
 
       {!api ? (
-        <p className="mc-res nd"><b>Sem dados da API para esta safra.</b></p>
+        <p className="mc-res nd"><b>{t('Sem dados da API para esta safra.')}</b></p>
       ) : (
         <>
-          <Bloco dev={dev} titulo="Risco hídrico" origem={`POST /api/rotations/recommendations → ${base}.crop.risk`} linhas={[
-            L('Método', 'method', risk?.method, (v: string) => (v === 'MOCK' ? 'MOCK (provisório)' : v)),
-            L('Validado', 'validated', risk?.validated, (v: boolean) => (v ? 'sim' : 'não')),
-            L('Risco hídrico', 'risk_percentage', risk?.risk_percentage, pctNum),
-            L('Limiar de perda de uma safra crítica', 'loss_threshold_pct', risk?.loss_threshold_pct, pctNum),
-            L('Perda média estimada', 'estimated_yield_loss_pct', risk?.estimated_yield_loss_pct, pctNum),
-            L('Safras históricas usadas', 'valid_years', risk?.valid_years, (v: number) => String(v)),
-            L('Fase de maior déficit', 'critical_stage', risk?.critical_stage, (v: EstagioFao) => NOME_ESTAGIO[v] ?? v),
-            ...ESTAGIOS.map(e => L(`ISNA médio · fase ${NOME_ESTAGIO[e]}`, `mean_isna.${e}`, risk?.mean_isna?.[e], pctFrac)),
-            L('ISNA do ciclo inteiro', 'mean_season_isna', risk?.mean_season_isna, pctFrac),
+          <Bloco dev={dev} titulo={t('Risco hídrico')} origem={`POST /api/rotations/recommendations → ${base}.crop.risk`} linhas={[
+            L(t('Método'), 'method', risk?.method, (v: string) => (v === 'MOCK' ? t('MOCK (provisório)') : v)),
+            L(t('Validado'), 'validated', risk?.validated, (v: boolean) => (v ? t('sim') : t('não'))),
+            L(t('Risco hídrico'), 'risk_percentage', risk?.risk_percentage, pctNum),
+            L(t('Limiar de perda de uma safra crítica'), 'loss_threshold_pct', risk?.loss_threshold_pct, pctNum),
+            L(t('Perda média estimada'), 'estimated_yield_loss_pct', risk?.estimated_yield_loss_pct, pctNum),
+            L(t('Safras históricas usadas'), 'valid_years', risk?.valid_years, (v: number) => String(v)),
+            L(t('Fase de maior déficit'), 'critical_stage', risk?.critical_stage, (v: EstagioFao) => nomeEstagio(v)),
+            ...ESTAGIOS.map(e => L(t('ISNA médio · fase {fase}', { fase: nomeEstagio(e) }), `mean_isna.${e}`, risk?.mean_isna?.[e], pctFrac)),
+            L(t('ISNA do ciclo inteiro'), 'mean_season_isna', risk?.mean_season_isna, pctFrac),
           ]} />
-          {dev && <p className="mc-nota">ISNA = água que a cultura usou ÷ água de que precisava (0 a 1); exibido em %.</p>}
+          {dev && <p className="mc-nota">{t('ISNA = água que a cultura usou ÷ água de que precisava (0 a 1); exibido em %.')}</p>}
 
-          <Bloco dev={dev} titulo="Datas e calendário" origem={`POST /api/rotations/recommendations → ${base}`} linhas={[
-            L('Plantio', 'planting_date', api.planting_date, dataBr),
-            L('Colheita', 'harvest_date', api.harvest_date, dataBr),
-            L('Fonte do calendário', 'calendar.source', api.calendar?.source, (v: string) => v),
-            L('Base do calendário', 'calendar.data_source', api.calendar?.data_source, (v: string) => v),
-            L('Plantio de referência', 'calendar.reference_planting_date', api.calendar?.reference_planting_date, dataBr),
-            L('Ciclo', 'calendar.cycle_days', api.calendar?.cycle_days, (v: number) => `${v} dias`),
+          <Bloco dev={dev} titulo={t('Datas e calendário')} origem={`POST /api/rotations/recommendations → ${base}`} linhas={[
+            L(t('Plantio'), 'planting_date', api.planting_date, dataBr),
+            L(t('Colheita'), 'harvest_date', api.harvest_date, dataBr),
+            L(t('Fonte do calendário'), 'calendar.source', api.calendar?.source, (v: string) => v),
+            L(t('Base do calendário'), 'calendar.data_source', api.calendar?.data_source, (v: string) => v),
+            L(t('Plantio de referência'), 'calendar.reference_planting_date', api.calendar?.reference_planting_date, dataBr),
+            L(t('Ciclo'), 'calendar.cycle_days', api.calendar?.cycle_days, dias),
           ]} />
 
-          <Bloco dev={dev} titulo="Necessidade de água da cultura (FAO-56)" origem={`POST /api/rotations/recommendations → ${base}.crop.water_requirements`} linhas={wr ? [
-            L('Perfil', 'profile_name', wr.profile_name, (v: string) => v),
-            L('Kc inicial', 'crop_coefficient.initial', wr.crop_coefficient?.initial, (v: number) => n2.format(v)),
-            L('Kc no meio do ciclo', 'crop_coefficient.mid_season', wr.crop_coefficient?.mid_season, (v: number) => n2.format(v)),
-            L('Kc no fim', 'crop_coefficient.late_season', wr.crop_coefficient?.late_season, (v: number) => n2.format(v)),
-            ...ESTAGIOS.map(e => L(`Duração · fase ${NOME_ESTAGIO[e]}`, `stage_length_days.${e}`, wr.stage_length_days?.[e], (v: number) => `${v} dias`)),
-            L('Duração total', 'stage_length_days.total', wr.stage_length_days?.total, (v: number) => `${v} dias`),
-            L('Raiz no plantio', 'root_depth_m.initial', wr.root_depth_m?.initial, (v: number) => `${n2.format(v)} m`),
-            L('Raiz máxima', 'root_depth_m.max', wr.root_depth_m?.max, (v: number) => `${n2.format(v)} m`),
+          <Bloco dev={dev} titulo={t('Necessidade de água da cultura (FAO-56)')} origem={`POST /api/rotations/recommendations → ${base}.crop.water_requirements`} linhas={wr ? [
+            L(t('Perfil'), 'profile_name', wr.profile_name, (v: string) => v),
+            L(t('Kc inicial'), 'crop_coefficient.initial', wr.crop_coefficient?.initial, n2),
+            L(t('Kc no meio do ciclo'), 'crop_coefficient.mid_season', wr.crop_coefficient?.mid_season, n2),
+            L(t('Kc no fim'), 'crop_coefficient.late_season', wr.crop_coefficient?.late_season, n2),
+            ...ESTAGIOS.map(e => L(t('Duração · fase {fase}', { fase: nomeEstagio(e) }), `stage_length_days.${e}`, wr.stage_length_days?.[e], dias)),
+            L(t('Duração total'), 'stage_length_days.total', wr.stage_length_days?.total, dias),
+            L(t('Raiz no plantio'), 'root_depth_m.initial', wr.root_depth_m?.initial, (v: number) => `${n2(v)} m`),
+            L(t('Raiz máxima'), 'root_depth_m.max', wr.root_depth_m?.max, (v: number) => `${n2(v)} m`),
             ...[...ESTAGIOS, 'season' as const].map(e => L(
-              e === 'season' ? 'Ky do ciclo' : `Ky · fase ${NOME_ESTAGIO[e]}`, `yield_response_factor.${e}`, wr.yield_response_factor?.[e], (v: number) => n2.format(v))),
-          ] : [L('Necessidade de água', 'water_requirements', null, String)]} />
+              e === 'season' ? t('Ky do ciclo') : t('Ky · fase {fase}', { fase: nomeEstagio(e) }), `yield_response_factor.${e}`, wr.yield_response_factor?.[e], n2)),
+          ] : [L(t('Necessidade de água'), 'water_requirements', null, String)]} />
 
-          <Bloco dev={dev} titulo="Solo usado no cálculo" origem="POST /api/rotations/recommendations → soil" linhas={conj.solo ? [
-            L('Origem', 'source', conj.solo.source, (v: string) => (v === 'REQUEST_TEXTURE_CLASS' ? 'textura informada no cadastro' : v === 'SOILGRIDS_SAXTON_RAWLS_2006' ? 'estimado pelo local (SoilGrids + Saxton & Rawls)' : v)),
-            L('Textura', 'texture_class', conj.solo.texture_class, (v: keyof typeof TEXTURA) => TEXTURA[v] ?? v),
-            L('Água disponível', 'available_water_mm_per_m', conj.solo.available_water_mm_per_m, (v: number) => `${n1.format(v)} mm por metro de raiz`),
-            L('Distância do ponto amostrado', 'distance_km', conj.solo.distance_km, (v: number) => `${n1.format(v)} km`),
-          ] : [L('Solo', 'soil', null, String)]} />
+          <Bloco dev={dev} titulo={t('Solo usado no cálculo')} origem="POST /api/rotations/recommendations → soil" linhas={conj.solo ? [
+            L(t('Origem'), 'source', conj.solo.source, (v: string) => (v === 'REQUEST_TEXTURE_CLASS' ? t('textura informada no cadastro') : v === 'SOILGRIDS_SAXTON_RAWLS_2006' ? t('estimado pelo local (SoilGrids + Saxton & Rawls)') : v)),
+            L(t('Textura'), 'texture_class', conj.solo.texture_class, (v: keyof typeof TEXTURA) => (TEXTURA[v] ? t(TEXTURA[v]) : v)),
+            L(t('Água disponível'), 'available_water_mm_per_m', conj.solo.available_water_mm_per_m, (v: number) => t('{v} mm por metro de raiz', { v: n1(v) })),
+            L(t('Distância do ponto amostrado'), 'distance_km', conj.solo.distance_km, (v: number) => `${n1(v)} km`),
+          ] : [L(t('Solo'), 'soil', null, String)]} />
 
           {conj.propriedadesSolo && (
-            <Bloco dev={dev} titulo="Solo superficial (só exibição)" origem="POST /api/rotations/recommendations → soil_properties" linhas={[
-              L('Fonte', 'source', conj.propriedadesSolo.source, (v: string) => v),
-              L('Profundidade', 'depth', conj.propriedadesSolo.depth, (v: string) => v),
-              L('Argila', 'clay_pct', conj.propriedadesSolo.clay_pct, pctNum),
-              L('Areia', 'sand_pct', conj.propriedadesSolo.sand_pct, pctNum),
-              L('Silte', 'silt_pct', conj.propriedadesSolo.silt_pct, pctNum),
-              L('Carbono orgânico', 'organic_carbon_g_per_kg', conj.propriedadesSolo.organic_carbon_g_per_kg, (v: number) => `${n1.format(v)} g/kg`),
-              L('Distância do ponto amostrado', 'distance_km', conj.propriedadesSolo.distance_km, (v: number) => `${n1.format(v)} km`),
+            <Bloco dev={dev} titulo={t('Solo superficial (só exibição)')} origem="POST /api/rotations/recommendations → soil_properties" linhas={[
+              L(t('Fonte'), 'source', conj.propriedadesSolo.source, (v: string) => v),
+              L(t('Profundidade'), 'depth', conj.propriedadesSolo.depth, (v: string) => v),
+              L(t('Argila'), 'clay_pct', conj.propriedadesSolo.clay_pct, pctNum),
+              L(t('Areia'), 'sand_pct', conj.propriedadesSolo.sand_pct, pctNum),
+              L(t('Silte'), 'silt_pct', conj.propriedadesSolo.silt_pct, pctNum),
+              L(t('Carbono orgânico'), 'organic_carbon_g_per_kg', conj.propriedadesSolo.organic_carbon_g_per_kg, (v: number) => `${n1(v)} g/kg`),
+              L(t('Distância do ponto amostrado'), 'distance_km', conj.propriedadesSolo.distance_km, (v: number) => `${n1(v)} km`),
             ]} />
           )}
         </>

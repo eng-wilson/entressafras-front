@@ -11,6 +11,7 @@ import type { Resiliencia, ResRotacao, ResSafra } from '../logic/resiliencia'
 import { janelaLabel as janela } from '../logic/periodo'
 import { MemoriaCalculo } from './MemoriaCalculo'
 import type { Priority } from '../types'
+import { ordinal, reaisFmt, t } from '../i18n'
 
 const S = 360 // lado do SVG
 const C = S / 2 // centro = 0
@@ -32,16 +33,15 @@ const ponto = (k: Eixo, v: number): [number, number] => {
 }
 
 const SEM_DADO = { nivel: 0, rotulo: 'Sem dado', cls: 'nd' } as const
-const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 /** Resiliência usa os níveis de risco do ZARC; os demais eixos, a nota 0–100. */
 const faixaOu = (k: Eixo, v: number | null, rot: ResRotacao | null): Faixa | typeof SEM_DADO =>
   v == null ? SEM_DADO : k === 'risco' && rot?.anos != null ? faixaAnos(rot.anos) : faixa(v)
 
 /** Rótulo de origem: a rotação atual do talhão, uma salva pelo agricultor ou a posição na recomendação da API. */
 const origem = (rots: RotacaoDef[], i: number) =>
-  rots[i].historico ? 'Sua rotação atual (histórico)'
-    : rots[i].salva ? 'Salva'
-      : `Recomendada · ${rots.slice(0, i + 1).filter(x => !x.salva && !x.historico).length}ª`
+  rots[i].historico ? t('Sua rotação atual (histórico)')
+    : rots[i].salva ? t('Salva')
+      : t('Recomendada · {ord}', { ord: ordinal(rots.slice(0, i + 1).filter(x => !x.salva && !x.historico).length) })
 
 /** Eixo de maior nota: o número da rotação fica nesse vértice, para não depender só da cor. */
 const melhorEixo = (a: Record<Eixo, number | null>) =>
@@ -53,7 +53,7 @@ function Nota({ f }: { f: Faixa | typeof SEM_DADO }) {
       <span className={`qm-dots ${f.cls}`} aria-hidden="true">
         {[1, 2, 3].map(n => <i key={n} className={n <= f.nivel ? 'f' : undefined} />)}
       </span>
-      <span className={`qm-fx ${f.cls}`}>{f.rotulo}</span>
+      <span className={`qm-fx ${f.cls}`}>{t(f.rotulo)}</span>
     </>
   )
 }
@@ -65,16 +65,16 @@ function Safra({ r, n, s }: { r: RotacaoDef; n: 0 | 1; s: ResSafra }) {
   return (
     <li className="qm-sf">
       <span className="qm-sfh">
-        <b>{n === 0 ? '1ª safra' : s.cobertura ? '2ª safra · cobertura' : '2ª safra'}</b> <strong>{s.nome}</strong>
+        <b>{n === 0 ? t('{ord} safra', { ord: ordinal(1) }) : s.cobertura ? t('{ord} safra · cobertura', { ord: ordinal(2) }) : t('{ord} safra', { ord: ordinal(2) })}</b> <strong>{t(s.nome)}</strong>
         <span className="qm-sfd">{janela(s.de, s.ate)}</span>
       </span>
       <ul className="qm-ev">
         <li title={detalheSafra(s)}>
-          <span className="qm-en">{NOME.risco}</span>
+          <span className="qm-en">{t(NOME.risco)}</span>
           {s.anos == null ? (
             <>
               <Nota f={SEM_DADO} />
-              <span className="qm-why">sem critério do ZARC para esta cultura</span>
+              <span className="qm-why">{t('sem critério do ZARC para esta cultura')}</span>
             </>
           ) : (
             <>
@@ -83,16 +83,16 @@ function Safra({ r, n, s }: { r: RotacaoDef; n: 0 | 1; s: ResSafra }) {
             </>
           )}
         </li>
-        <li title="Consumo de água da cultura no ciclo (Kc × ET0) e chuva média na mesma janela">
-          <span className="qm-en">Consumo de água</span>
-          <span className="qm-why qm-span">{s.consumo == null ? 'sem dado' : `~${s.consumo} mm no ciclo`}{s.chuva != null && ` · chove ~${s.chuva} mm em média`}</span>
+        <li title={t('Consumo de água da cultura no ciclo (Kc × ET0) e chuva média na mesma janela')}>
+          <span className="qm-en">{t('Consumo de água')}</span>
+          <span className="qm-why qm-span">{s.consumo == null ? t('sem dado') : t('~{mm} mm no ciclo', { mm: s.consumo })}{s.chuva != null && ` · ${t('chove ~{mm} mm em média', { mm: s.chuva })}`}</span>
         </li>
         <li>
-          <span className="qm-en">Receita</span>
-          <span className="qm-why qm-span">{receita ? reais(receita) : 'não é vendida'}</span>
+          <span className="qm-en">{t('Receita')}</span>
+          <span className="qm-why qm-span">{receita ? reais(receita) : t('não é vendida')}</span>
         </li>
       </ul>
-      <button type="button" className="qm-more" onClick={() => setMemoria(true)}>De onde vêm estes números</button>
+      <button type="button" className="qm-more" onClick={() => setMemoria(true)}>{t('De onde vêm estes números')}</button>
       {memoria && (
         <MemoriaCalculo
           s={s} n={n} rotacao={nomeRot(r)} rotId={r.id} api={r.safras[n]?.api}
@@ -118,15 +118,15 @@ function PorSafra({ r, rot, num, onFechar }: { r: RotacaoDef; rot: ResRotacao; n
           <span className={`qm-num${r.ct.atual ? ' atual' : ''}`} style={{ '--qm-cor': COR_ROT[r.cor] } as CSSProperties} aria-hidden="true">{num}</span>
           <div>
             <h2 id="qm-ps-titulo">{nomeRot(r)}</h2>
-            <p className="qm-modal-sub">Por safra</p>
+            <p className="qm-modal-sub">{t('Por safra')}</p>
           </div>
         </div>
-        <button className="tbtn" type="button" onClick={onFechar}>Fechar</button>
+        <button className="tbtn" type="button" onClick={onFechar}>{t('Fechar')}</button>
       </header>
       <ul className="qm-sfs">
         {rot.safras.map((s, n) => <Safra key={n} r={r} n={n as 0 | 1} s={s} />)}
       </ul>
-      <p className="qm-sfn">Economia de água e saúde do solo valem para o ciclo inteiro: dependem de como as duas safras se combinam.</p>
+      <p className="qm-sfn">{t('Economia de água e saúde do solo valem para o ciclo inteiro: dependem de como as duas safras se combinam.')}</p>
     </dialog>,
     document.body,
   )
@@ -144,7 +144,7 @@ export function QuadMap({ sel, pr, res }: Props) {
     return { i, rot, a: aptidao(i, rot, rots) }
   })
   const resumo = dados
-    .map(d => `${d.i + 1}. ${nomeRot(rots[d.i])}: ${ORDEM.map(k => `${NOME[k]} ${faixaOu(k, d.a[k], d.rot).rotulo.toLowerCase()}`).join(', ')}`)
+    .map(d => `${d.i + 1}. ${nomeRot(rots[d.i])}: ${ORDEM.map(k => `${t(NOME[k])} ${t(faixaOu(k, d.a[k], d.rot).rotulo).toLowerCase()}`).join(', ')}`)
     .join('; ')
   // A seleção fica nas linhas das rotações, abaixo: o botão leva o foco até elas.
   const escolher = () => {
@@ -156,15 +156,15 @@ export function QuadMap({ sel, pr, res }: Props) {
   return (
     <section className="field qmap" aria-labelledby="t-qmap">
       <header className="qm-h">
-        <h2 id="t-qmap">Aptidão por prioridade</h2>
-        <p>Quanto mais perto do canto, melhor naquela prioridade. Quadrantes em azul: prioridades ligadas.</p>
+        <h2 id="t-qmap">{t('Aptidão por prioridade')}</h2>
+        <p>{t('Quanto mais perto do canto, melhor naquela prioridade. Quadrantes em azul: prioridades ligadas.')}</p>
       </header>
 
       {/* Com 3 ou mais, os cards ocupam duas linhas: o gráfico fica centrado na altura deles. */}
       <div className={`qm-g${sel.length >= 3 ? ' centro' : ''}`}>
         <div className="qm-chart">
           {/* O viewBox corta a margem vazia acima dos rótulos de cima e abaixo dos de baixo. */}
-          <svg className="qm-svg" viewBox={`0 12 ${S} ${S - 16}`} role="img" aria-label={`Mapa de aptidão. ${resumo}`}>
+          <svg className="qm-svg" viewBox={`0 12 ${S} ${S - 16}`} role="img" aria-label={t('Mapa de aptidão. {resumo}', { resumo })}>
             {/* quadrantes: prioridade marcada pelo agricultor ganha fundo azul */}
             {ORDEM.map(k => {
               const [dx, dy] = DIR[k]
@@ -198,12 +198,12 @@ export function QuadMap({ sel, pr, res }: Props) {
                     const [x, y] = ponto(k, a[k] ?? PISO)
                     return (
                       <circle key={k} cx={x} cy={y} r={4.5} className={`qm-pt${a[k] == null ? ' nd' : ''}`}>
-                        <title>{`${nomeRot(rots[i])} · ${NOME[k]}: ${a[k] ?? 'sem dado'}`}</title>
+                        <title>{`${nomeRot(rots[i])} · ${t(NOME[k])}: ${a[k] ?? t('sem dado')}`}</title>
                       </circle>
                     )
                   })}
                   <circle cx={bx} cy={by} r={9} className="qm-badge">
-                    <title>{`${nomeRot(rots[i])} · ${NOME[topo]}: ${a[topo] ?? 'sem dado'}`}</title>
+                    <title>{`${nomeRot(rots[i])} · ${t(NOME[topo])}: ${a[topo] ?? t('sem dado')}`}</title>
                   </circle>
                   <text x={bx} y={by} className="qm-badge-n" aria-hidden="true">{i + 1}</text>
                 </g>
@@ -212,10 +212,10 @@ export function QuadMap({ sel, pr, res }: Props) {
             <circle cx={C} cy={C} r={3} className="qm-o" />
 
             {/* nomes fora do quadrado, 100 nos cantos, 0 no centro */}
-            <text x={L} y={L - 12} className={`qm-lb${pr.risco ? ' on' : ''}`}>{NOME.risco}</text>
-            <text x={S - L} y={L - 12} textAnchor="end" className={`qm-lb${pr.agua ? ' on' : ''}`}>{NOME.agua}</text>
-            <text x={L} y={S - L + 22} className={`qm-lb${pr.prod ? ' on' : ''}`}>{NOME.prod}</text>
-            <text x={S - L} y={S - L + 22} textAnchor="end" className={`qm-lb${pr.solo ? ' on' : ''}`}>{NOME.solo}</text>
+            <text x={L} y={L - 12} className={`qm-lb${pr.risco ? ' on' : ''}`}>{t(NOME.risco)}</text>
+            <text x={S - L} y={L - 12} textAnchor="end" className={`qm-lb${pr.agua ? ' on' : ''}`}>{t(NOME.agua)}</text>
+            <text x={L} y={S - L + 22} className={`qm-lb${pr.prod ? ' on' : ''}`}>{t(NOME.prod)}</text>
+            <text x={S - L} y={S - L + 22} textAnchor="end" className={`qm-lb${pr.solo ? ' on' : ''}`}>{t(NOME.solo)}</text>
             <text x={C + 6} y={C - 6} className="qm-n">0</text>
             <text x={L - 6} y={L + 4} textAnchor="end" className="qm-n">100</text>
             <text x={S - L + 6} y={L + 4} className="qm-n">100</text>
@@ -241,7 +241,7 @@ export function QuadMap({ sel, pr, res }: Props) {
                   <div className="qm-ch">
                     <span className={`qm-num${atual ? ' atual' : ''}`} aria-hidden="true">{i + 1}</span>
                     <span className="qm-nome">{nomeRot(rots[i])}</span>
-                    {atual && <span className="ct-tag">Atual</span>}
+                    {atual && <span className="ct-tag">{t('Atual')}</span>}
                   </div>
                   <p className="qm-tipo">{origem(rots, i)}</p>
                   <ul className="qm-eixos">
@@ -253,15 +253,15 @@ export function QuadMap({ sel, pr, res }: Props) {
                       return (
                         <Fragment key={k}>
                           <li className={pr[k] ? 'on' : undefined} title={dica || undefined}>
-                            <span className="qm-en">{NOME[k]}</span>
+                            <span className="qm-en">{t(NOME[k])}</span>
                             <Nota f={faixaOu(k, a[k], rot)} />
                             <span className="qm-v">{a[k] ?? '—'}</span>
                           </li>
                           {/* Lucro estimado da API, dentro de Produtividade; só aparece quando o backend envia */}
                           {lucro != null && (
                             <li className="qm-lucro">
-                              <span className="qm-en">Lucro estimado</span>
-                              <span className={`qm-lucro-v${lucro < 0 ? ' neg' : ''}`}>{brl.format(lucro)}/ha</span>
+                              <span className="qm-en">{t('Lucro estimado')}</span>
+                              <span className={`qm-lucro-v${lucro < 0 ? ' neg' : ''}`}>{reaisFmt(lucro)}/ha</span>
                             </li>
                           )}
                         </Fragment>
@@ -270,7 +270,7 @@ export function QuadMap({ sel, pr, res }: Props) {
                   </ul>
                   {rot && (
                     <button type="button" className="qm-disc" aria-haspopup="dialog" onClick={() => setPorSafra(i)}>
-                      <span>Por safra</span>
+                      <span>{t('Por safra')}</span>
                       <svg viewBox="0 0 12 12" aria-hidden="true">
                         <path d="M4 2.5 7.5 6 4 9.5" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" />
                       </svg>
@@ -283,12 +283,12 @@ export function QuadMap({ sel, pr, res }: Props) {
           {porSafra != null && res?.rotacoes[porSafra] && (
             <PorSafra r={rots[porSafra]} rot={res.rotacoes[porSafra]} num={porSafra + 1} onFechar={() => setPorSafra(null)} />
           )}
-          {sel.length < 2 && <p className="qm-hint">Marque mais uma rotação na lista abaixo para comparar.</p>}
+          {sel.length < 2 && <p className="qm-hint">{t('Marque mais uma rotação na lista abaixo para comparar.')}</p>}
           <button type="button" className="qm-escolher" onClick={escolher}>
             <svg viewBox="0 0 16 16" aria-hidden="true">
               <path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" />
             </svg>
-            Escolher rotações na lista
+            {t('Escolher rotações na lista')}
           </button>
         </div>
       </div>

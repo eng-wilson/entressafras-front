@@ -5,6 +5,7 @@ import { montarCena, type Cena } from '../sim/cena'
 import { simulado, simular } from '../sim/motor'
 import { chaveNormais } from '../logic/talhaoSim'
 import { useConjunto } from '../state/conjunto'
+import { t } from '../i18n'
 
 // Cor da etiqueta por estágio (a amostra ao lado do nome da cultura).
 const FILL: Record<string, string> = {
@@ -45,9 +46,10 @@ const ESPERA_MAX = 700
 
 export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, pausado = false, alerta = null }: Props) {
   const fill = FILL[stageKey] ?? FILL.bare
+  // Cultura e fase vêm de src/data: traduzidas aqui, na exibição.
   const pill = cropName
-    ? cropName + ' · ' + stageName.toLowerCase()
-    : (stageKey === 'ready' ? 'Pronto para o plantio' : stageName)
+    ? t(cropName) + ' · ' + t(stageName).toLowerCase()
+    : (stageKey === 'ready' ? t('Pronto para o plantio') : t(stageName))
 
   const host = useRef<HTMLDivElement>(null)
   const cena = useRef<Cena | null>(null)
@@ -145,20 +147,20 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, paus
         className="iso-sim"
         ref={host}
         role="group"
-        aria-label={`Talhão em ${periodLabel}: ${pill}`}
+        aria-label={t('Talhão em {periodo}: {estado}', { periodo: periodLabel, estado: pill })}
       />
-      {estado === 'preparando' && <div className="iso-sim-msg" aria-hidden="true">Preparando a simulação…</div>}
-      {estado === 'simulando' && <div className="iso-sim-tag" role="status">Simulando a rotação…</div>}
-      {estado === 'erro' && <div className="iso-sim-msg">Não foi possível desenhar o talhão.</div>}
+      {estado === 'preparando' && <div className="iso-sim-msg" aria-hidden="true">{t('Preparando a simulação…')}</div>}
+      {estado === 'simulando' && <div className="iso-sim-tag" role="status">{t('Simulando a rotação…')}</div>}
+      {estado === 'erro' && <div className="iso-sim-msg">{t('Não foi possível desenhar o talhão.')}</div>}
       {alerta ? (
         // Em período crítico o chip é focável: o detalhe aparece no hover ou no foco do teclado
-        <div className={`fpill fp-al ${alerta.cls}`} tabIndex={0} role="note" aria-label={`${pill}. Período crítico: ${alerta.rotulo}. ${alerta.texto}`}>
+        <div className={`fpill fp-al ${alerta.cls}`} tabIndex={0} role="note" aria-label={t('{estado}. Período crítico: {rotulo}. {texto}', { estado: pill, rotulo: alerta.rotulo, texto: alerta.texto })}>
           <span className="fp-l" aria-hidden="true">
             <span className="fsw" style={{ background: fill }} />
             {pill}
             <span className="fp-st">
               <svg className="ic"><use href={`/canvas-icons.svg#${alerta.cls === 'risk' ? 'i-xc' : alerta.cls === 'warn' ? 'i-alert' : 'i-okc'}`} /></svg>
-              Período crítico
+              {t('Período crítico')}
             </span>
           </span>
           <span className="fp-tip" aria-hidden="true">

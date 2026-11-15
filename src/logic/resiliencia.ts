@@ -6,9 +6,10 @@
 // O consumo (Kc × ET0) continua no front porque a API não o entrega pronto; os dois fatores vêm da API
 // (Kc do catálogo, ET0 do clima por decêndio).
 import type { ClimaDecendios, CropCalendarInfo, Decendio, Textura } from '../types'
-import { MONTHS_SHORT, type SafraDef } from '../data/mock'
+import type { SafraDef } from '../data/mock'
 import { FASES, type CulturaRef } from '../data/zarc'
-import { diasDe, mesDe } from './periodo'
+import { diasDe, mesCurtoDe, mesDe } from './periodo'
+import { t } from '../i18n'
 
 export type Fase = 0 | 1 | 2 | 3
 export type Fracoes = [number, number, number, number]
@@ -120,7 +121,7 @@ function riscoApi(s: SafraDef): RiscoApi | null {
   }
 }
 
-const rotuloPadrao = (idx: number) => `${diasDe(idx)} ${MONTHS_SHORT[mesDe(idx)].toLowerCase()}`
+const rotuloPadrao = (idx: number) => t('{dias} {mes}', { dias: diasDe(idx), mes: mesCurtoDe(mesDe(idx)) })
 const somaOuNulo = (v: (number | null)[]) =>
   v.length && v.every(x => x != null) ? Math.round((v as number[]).reduce((a, b) => a + b, 0)) : null
 
@@ -129,12 +130,12 @@ function safra(s: SafraDef, dec: Decendio[] | null): ResSafra {
   const kc = s.kc ?? null
   const decendios: CalcDecendio[] = []
   for (let i = s.de; i <= s.ate; i++) {
-    const t = (i - s.de + 0.5) / (s.ate - s.de + 1)
+    const tc = (i - s.de + 0.5) / (s.ate - s.de + 1)
     const d = dec?.[i]
-    const k = kc ? kcNoCiclo(kc, t, fases) : null
+    const k = kc ? kcNoCiclo(kc, tc, fases) : null
     const et0 = d?.et0_media ?? null
     decendios.push({
-      idx: i, rotulo: d?.rotulo ?? rotuloPadrao(i), fase: faseNoCiclo(t, fases),
+      idx: i, rotulo: d?.rotulo ?? rotuloPadrao(i), fase: faseNoCiclo(tc, fases),
       chuvaMedia: d?.chuva_media ?? null, chuvaP20: d?.chuva_p20 ?? null, et0,
       kc: k, consumo: k != null && et0 != null ? k * et0 : null,
     })
@@ -159,7 +160,7 @@ export function resiliencia(clima: ClimaDecendios | null, textura: Textura | nul
   const h = clima?.safras ?? []
   return {
     rotacoes,
-    periodo: h.length ? `${h[0]} a ${h.at(-1)}` : '',
+    periodo: h.length ? t('{de} a {ate}', { de: h[0], ate: h.at(-1) }) : '',
     nSafras: h.length,
     fonte: clima?.fonte ?? '',
     aviso: clima?.aviso_resolucao ?? '',
