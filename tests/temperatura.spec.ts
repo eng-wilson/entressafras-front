@@ -3,7 +3,7 @@ import { comTalhaoSalvo } from './fixtures/talhao'
 import { CLIMA_T07, comClimaFixo } from './fixtures/clima'
 
 async function rotulosSemCorte(indicador: Locator) {
-  const rotulos = indicador.locator('.vtag')
+  const rotulos = indicador.locator('.wg-v')
   for (const rotulo of await rotulos.all()) {
     const semCorte = await rotulo.evaluate(el => {
       const r = el.getBoundingClientRect()
@@ -26,16 +26,17 @@ test('temperaturas minima e maxima ficam visiveis ao mudar o periodo', async ({ 
   await comClimaFixo(page)
   await page.goto('/')
   const indicador = page.locator('.pl').filter({ hasText: 'Temperatura' })
-  await expect(indicador.locator('.vtag')).toHaveText('mín 21° máx 29°')
+  // Widget da cena: mínima e máxima do decêndio em destaque ("21° a 29°").
+  await expect(indicador.locator('.wg-v')).toHaveText('21° a 29°')
   await rotulosSemCorte(indicador)
 
   await page.getByRole('slider').focus()
   await page.keyboard.press('Home')
-  await expect(indicador.locator('.vtag')).toHaveText(['mín 19°', 'máx 35°'])
+  await expect(indicador.locator('.wg-v')).toHaveText('19° a 35°')
   await rotulosSemCorte(indicador)
 })
 
-test('faixa estreita de temperatura tem rotulo compacto', async ({ page }, testInfo) => {
+test('faixa estreita de temperatura cabe numa linha', async ({ page }, testInfo) => {
   await comTalhaoSalvo(page)
   await page.route(/\/api\/clima\/decendios/, r => r.fulfill({
     json: {
@@ -45,9 +46,10 @@ test('faixa estreita de temperatura tem rotulo compacto', async ({ page }, testI
   }))
   await page.goto('/')
   const indicador = page.locator('.pl').filter({ hasText: 'Temperatura' })
-  const rotulo = indicador.locator('.vtag')
-  await expect(rotulo).toHaveText('mín 27° máx 29°')
+  const rotulo = indicador.locator('.wg-v')
+  await expect(rotulo).toHaveText('27° a 29°')
   await rotulosSemCorte(indicador)
-  expect((await rotulo.boundingBox())!.height).toBeLessThan(26)
+  // Valor numa linha só, dentro do widget.
+  expect((await rotulo.boundingBox())!.height).toBeLessThan(40)
   await indicador.screenshot({ path: testInfo.outputPath('temperatura-27-29.png') })
 })

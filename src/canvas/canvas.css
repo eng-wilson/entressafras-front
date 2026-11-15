@@ -75,6 +75,7 @@
   .sub{color:var(--label2);font-size:12px;overflow:hidden;text-overflow:ellipsis}
   .tag{font-size:11px;font-weight:600;color:var(--label2);background:var(--fill);border-radius:5px;padding:1px 6px}
   .st{margin-left:auto;display:flex;align-items:center;gap:6px;font-weight:500;padding-left:12px}
+  .st.nd{color:var(--label2)}
   .tl{position:relative;height:24px}
   .b{position:absolute;top:0;height:24px;left:calc(var(--s) / 12 * 100%);width:calc((var(--e) - var(--s)) / 12 * 100% - 2px);border-radius:6px;font-size:12px;font-weight:600;line-height:24px;padding:0 9px;white-space:nowrap;overflow:hidden}
   .b.good{background:var(--good);color:#0B2E15}
@@ -264,6 +265,10 @@
   .fsrc{font-size:12px;font-weight:600;border-radius:6px;padding:1px 7px;background:#E9E9EE;color:#3A3A3C}
   .fsrc.obs{background:#DDF3E3;color:#14672F}
   .iso{display:block;width:100%;height:auto;margin-top:4px}
+  /* Talhão da simulação portátil (/simulacao): a cena fica num Shadow DOM dentro de .iso-sim */
+  .iso-sim{display:block;width:100%;margin-top:4px;border-radius:12px;overflow:hidden}
+  .iso-sim-tag{position:absolute;left:12px;top:12px;z-index:2;font-size:12px;font-weight:600;color:#3A3A3C;background:rgba(255,255,255,.85);border-radius:8px;padding:3px 8px;pointer-events:none}
+  .iso-sim-msg{position:absolute;left:0;right:0;top:50%;text-align:center;font-size:13px;color:#6E6E73;pointer-events:none}
   .fpill{position:absolute;left:50%;top:2px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.94);border-radius:14px;padding:4px 10px;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.15);white-space:nowrap}
   .fsw{width:10px;height:10px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
   .fstat{display:grid;grid-template-columns:auto 1fr;gap:16px;margin-top:2px}
@@ -512,3 +517,181 @@
 .culturas-requisitos dt { font-weight: 600; margin-bottom: 6px; }
 .culturas-requisitos dd { margin: 0; line-height: 1.5; font-size: 13px; }
 .culturas-nota { color: #6E6E73; font-size: 12px; line-height: 1.5; }
+.mc { font-size: 14px; line-height: 1.5; }
+.mc header { align-items: flex-start; }
+.mc-sub { margin: 4px 0 0; color: #6E6E73; font-size: 13px; }
+.mc-res { margin: 0 0 16px; padding: 12px 14px; border-radius: 10px; background: #F5F5F7; }
+.mc-res.good { background: #E3F5E8; } .mc-res.warn { background: #FFF1DB; } .mc-res.risk { background: #FDE2E4; }
+.mc-passos { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 18px; }
+.mc-passos > li::marker { font-weight: 700; color: #6E6E73; }
+.mc-passos h3 { margin: 0 0 4px; font-size: 15px; }
+.mc-passos p { margin: 0 0 8px; }
+.mc-passos ul { margin: 0; padding-left: 18px; }
+.mc-nota { color: #6E6E73; font-size: 12px; }
+.mc-mock { margin: -8px 0 16px; padding: 8px 12px; border-radius: 8px; background: #F5F5F7; color: #3A3A3C; font-size: 12px; }
+.mc a { color: #0A64D6; }
+.mc-tab tr.crit td, .mc-tab tr.crit th { background: #F2F7FE; }
+.mc-tab td.abaixo { color: #C4000F; font-weight: 600; }
+.mc-tab { overflow-x: auto; margin: 8px 0; }
+.mc-tab table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
+.mc-tab th, .mc-tab td { padding: 5px 8px; text-align: right; border-bottom: 1px solid #E5E5EA; white-space: nowrap; }
+.mc-tab th:first-child { text-align: left; }
+.mc-tab thead th { font-weight: 600; color: #6E6E73; vertical-align: bottom; white-space: normal; }
+.mc-tab tbody th { font-weight: 500; }
+.mc-tab tfoot th, .mc-tab tfoot td { font-weight: 700; border-bottom: 0; }
+.mc-tab tr.ok td:last-child { color: #1B7F3A; font-weight: 600; }
+.mc-tab tr.no td:last-child { color: #C4000F; font-weight: 600; }
+
+/* mapa de aptidão (modo Comparação): ocupa o lugar do talhão */
+.qmap .fh { flex-wrap: wrap; }
+.qm-sub { font-size: 12px; color: #6E6E73; }
+.qm-g { display: flex; align-items: center; justify-content: center; gap: 28px; flex-wrap: wrap; padding: 8px 0 4px; }
+.qm-svg { width: 100%; max-width: 340px; height: auto; overflow: visible; }
+.qm-q { fill: #F7F7F9; }
+.qm-q.on { fill: #E3EEFD; }
+.qm-ring { fill: none; stroke: rgba(60,60,67,.12); }
+.qm-ring.out { stroke: rgba(60,60,67,.45); stroke-width: 1.5; }
+.qm-ax { stroke: rgba(60,60,67,.45); stroke-width: 1.2; }
+.qm-diag { stroke: rgba(60,60,67,.18); stroke-dasharray: 2 3; }
+.qm-o { fill: #1D1D1F; }
+.qm-poly { fill: currentColor; fill-opacity: .16; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.qm-poly.atual { fill-opacity: .06; stroke-dasharray: 5 4; }
+.qm-pt { fill: #fff; stroke: currentColor; stroke-width: 2; }
+.qm-rot { transition: opacity .15s; }
+.qm-svg:hover .qm-rot { opacity: .3; }
+.qm-svg .qm-rot:hover { opacity: 1; }
+.qm-lb { font-size: 12px; font-weight: 600; fill: #6E6E73; }
+.qm-lb.on { fill: #0A4FA8; }
+.qm-n { font-size: 10px; fill: #8E8E93; font-variant-numeric: tabular-nums; }
+.qm-lg { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; min-width: 280px; max-width: 400px; }
+.qm-lg li { display: flex; gap: 10px; align-items: flex-start; }
+.qm-lg b { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.qm-sw { flex: none; width: 14px; height: 14px; margin-top: 2px; border-radius: 4px; background: currentColor; opacity: .85; }
+.qm-sw.atual { background: transparent; border: 2px dashed currentColor; opacity: 1; }
+.qm-ev { list-style: none; margin: 6px 0 0; padding: 0; display: grid; grid-template-columns: auto auto auto 1fr; column-gap: 10px; row-gap: 3px; font-size: 12px; }
+.qm-ev li { display: contents; }
+.qm-en { color: #3A3A3C; }
+.qm-ev li.on .qm-en { color: #0A4FA8; font-weight: 600; }
+.qm-dots { display: inline-flex; align-items: center; gap: 3px; }
+.qm-dots i { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; opacity: .5; }
+.qm-dots i.f { background: currentColor; opacity: 1; }
+.qm-dots.good, .qm-fx.good { color: #1B7F3A; }
+.qm-dots.warn, .qm-fx.warn { color: #A35200; }
+.qm-dots.risk, .qm-fx.risk { color: #C4000F; }
+.qm-fx { font-weight: 600; }
+.qm-why { color: #6E6E73; }
+.qm-hint { font-size: 12px; color: #6E6E73; }
+.qm-dots.nd, .qm-fx.nd { color: #8E8E93; }
+.qm-pt.nd { stroke-dasharray: 2 2; }
+.qm-span { grid-column: 2 / -1; }
+.qm-more { margin-top: 6px; padding: 0; border: 0; background: none; font: inherit; font-size: 12px; font-weight: 600; color: #0A64D6; cursor: pointer; }
+.qm-more:hover { text-decoration: underline; }
+.qm-more:focus-visible { outline: 2px solid #0A64D6; outline-offset: 2px; border-radius: 3px; }
+.qm-sfs { list-style: none; margin: 8px 0 0; padding: 8px 0 0 10px; border-left: 2px solid #E5E5EA; display: flex; flex-direction: column; gap: 10px; }
+.qm-lg .qm-sf { display: block; }
+.qm-sfh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 6px; font-size: 12px; color: #1D1D1F; }
+.qm-lg .qm-sfh b { display: inline; font-size: 11px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: #6E6E73; }
+.qm-sfd { color: #8E8E93; font-variant-numeric: tabular-nums; }
+.qm-sf .qm-ev { margin-top: 4px; }
+.qm-sfn { margin: 8px 0 0; font-size: 11px; color: #8E8E93; max-width: 360px; }
+@media (prefers-reduced-motion: reduce) { .qm-rot { transition: none; } }
+
+/* caixas de seleção da tabela, na cor da rotação no mapa */
+.ct-ck { position: relative; flex: none; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 5px; box-shadow: inset 0 0 0 1.5px #C7C7CC; background: #fff; cursor: pointer; }
+.ct-ck input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+.ct-ck.on { background: currentColor; box-shadow: none; }
+.ct-ck.on::after { content: ""; width: 5px; height: 9px; margin-top: -2px; border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.ct-ck:focus-within { outline: 3px solid rgba(0,122,255,.5); outline-offset: 2px; }
+.ct-ck-ghost { flex: none; width: 18px; }
+
+/* Calendário: rotação selecionável e períodos críticos (docs/PERIODOS_CRITICOS.md) */
+.row.rsel { cursor: pointer; }
+.row.rsel:not(.sel):hover { background: rgba(120,120,128,.06); margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.nm-b { background: none; border: 0; padding: 0; margin: 0; font: inherit; font-weight: 600; font-size: 14px; color: inherit; cursor: pointer; text-align: left; border-radius: 4px; }
+.nm-b:focus-visible { outline: 3px solid rgba(0,122,255,.5); outline-offset: 2px; }
+
+/* Rótulo da barra com o fundo da própria barra, para não ficar sobre a hachura */
+.b .bl { position: relative; z-index: 1; pointer-events: none; margin-left: -5px; padding: 0 5px; border-radius: 4px; background: inherit; }
+
+/* Hachura neutra: a cor do nível já é a da barra. A fase que mais pesa ganha listras mais fortes e contorno. */
+.crit { position: absolute; top: 0; bottom: 0; z-index: 0; padding: 0; margin: 0; border: 0; cursor: pointer;
+  background: repeating-linear-gradient(-45deg, rgba(0,0,0,.16) 0 2px, transparent 2px 6px); }
+.crit.top { background: repeating-linear-gradient(-45deg, rgba(0,0,0,.30) 0 2px, transparent 2px 5px); box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.35); }
+.crit:hover { background-color: rgba(0,0,0,.08); }
+.crit:focus-visible { outline: 2px solid #0A64D6; outline-offset: -2px; }
+.crit-lg { display: flex; align-items: center; gap: 8px; margin: 10px 0 14px; font-size: 12px; color: #6E6E73; }
+.crit-sw { flex: none; width: 18px; height: 12px; border-radius: 3px; background: repeating-linear-gradient(-45deg, rgba(0,0,0,.30) 0 2px, transparent 2px 5px), #C7C7CC; box-shadow: inset 0 0 0 1.5px rgba(0,0,0,.35); }
+
+/* Cursor do decêndio simulado na linha selecionada */
+.tl-cur { position: absolute; top: -2px; height: 28px; width: calc(100% / 36); border: 2px solid #007AFF; border-radius: 5px; box-shadow: 0 0 0 1.5px #fff; pointer-events: none; z-index: 2; transition: left .12s ease-out; }
+
+/* Zona que mais pesa na faixa de meses: fundo em cada número (cobre a divisória dos meses), pontas arredondadas */
+.dec i.zc { position: relative; margin: -2px 0; line-height: 19px; background: var(--zb); color: var(--z); font-weight: 700; }
+.dec i.zs { border-radius: 9px 0 0 9px; } .dec i.ze { border-radius: 0 9px 9px 0; } .dec i.zs.ze { border-radius: 9px; }
+.dec i.zcur { background: var(--z); color: #fff; }
+.dec i.good { --z: #1B7F3A; --zb: #E3F5E8; } .dec i.warn { --z: #A35200; --zb: #FFF1DB; } .dec i.risk { --z: #C4000F; --zb: #FDE2E4; }
+.zrail { position: absolute; top: 12px; height: 4px; left: calc(100% / 72); right: calc(100% / 72); pointer-events: none; }
+.zseg { position: absolute; top: 0; bottom: 0; border-radius: 2px; }
+.zseg.good { background: #34C759; } .zseg.warn { background: #FF9F0A; } .zseg.risk { background: #D70015; }
+
+/* Chip do talhão: estágio + "Período crítico"; o detalhe aparece no hover/foco */
+.fpill .fp-l { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.fpill.fp-al { z-index: 3; cursor: help; outline: none; }
+.fpill.fp-al:focus-visible { box-shadow: 0 0 0 3px rgba(0,122,255,.45), 0 2px 8px rgba(0,0,0,.15); }
+.fpill.good { --z: #1B7F3A; } .fpill.warn { --z: #A35200; } .fpill.risk { --z: #C4000F; }
+.fp-st { display: inline-flex; align-items: center; gap: 4px; margin-left: 2px; padding-left: 8px; border-left: 1px solid rgba(60,60,67,.18); color: var(--z); font-weight: 600; }
+.fp-st .ic { width: 14px; height: 14px; stroke-width: 2.4; }
+.fp-tip { display: none; position: absolute; top: calc(100% + 8px); left: 50%; transform: translateX(-50%); width: 300px; padding: 10px 12px; border-radius: 10px; background: #fff; box-shadow: 0 4px 16px rgba(0,0,0,.16), 0 0 0 .5px rgba(0,0,0,.08); white-space: normal; font-size: 12px; font-weight: 400; line-height: 1.4; color: #3A3A3C; text-align: left; }
+.fp-tip b { display: block; margin-bottom: 2px; font-size: 13px; color: var(--z); }
+.fpill.fp-al:hover .fp-tip, .fpill.fp-al:focus-visible .fp-tip { display: block; }
+
+/* Cena do talhão (Simulation.tsx): a simulação ocupa o campo inteiro; chuva e umidade flutuam à esquerda,
+   temperatura à direita, em cartões verticais. */
+.trio-g .field.cena { position: relative; padding: 0; margin: 4px 0 0; border-radius: 16px; overflow: hidden; }
+.trio-g .cena .isow { padding-top: 0; max-width: none; margin: 0; }
+.cena .iso-sim { margin: 0; border-radius: 16px; }
+.cena .isow .fpill { top: 12px; z-index: 3; }
+/* O céu vem do canvas (render/clima.js, pelo clima do dia simulado); este fundo só aparece antes do 1º quadro. */
+.cena .iso-sim { background: linear-gradient(180deg, #EDF5F8, #E9EFEA); }
+.cena .isow .fpill {
+  background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.08); border-radius: 999px; padding: 5px 12px;
+}
+
+/* Widgets da cena (RainGauge, SoilMoistureBar, TempRangeBar), no padrão dos widgets do iOS: material
+   translúcido, legenda em versalete na cor secundária, valor em SF Rounded, status colorido com símbolo e
+   medidor linear em cápsula. Chuva e umidade empilhadas à esquerda; temperatura à direita, sob o zoom. */
+.cena-esq, .cena-dir { position: absolute; top: 16px; z-index: 2; display: flex; flex-direction: column; gap: 10px; width: 188px; pointer-events: none; }
+.cena-esq { left: 16px; }
+.cena-dir { right: 16px; top: 72px; }
+.cena-card {
+  pointer-events: auto; padding: 12px 14px; border-radius: 18px;
+  background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 0 0 .5px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.06);
+}
+.wg, .pl.wg { display: flex; flex-direction: column; align-items: stretch; gap: 2px; width: auto; min-height: 0; padding: 0; text-align: left; cursor: default; }
+.wg-h { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: rgba(60,60,67,.6); white-space: nowrap; }
+.wg-h .ic { width: 12px; height: 12px; }
+.wg-v { margin-top: 4px; font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; font-size: 26px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; color: #1D1D1F; white-space: nowrap; }
+.wg-v small { font-family: -apple-system, system-ui, sans-serif; font-size: 15px; font-weight: 500; color: rgba(60,60,67,.6); }
+.wg-s, .pl-s.wg-s { display: inline-flex; align-self: flex-start; align-items: center; gap: 4px; margin: 0; padding: 0; background: none; border-radius: 0; font-size: 13px; font-weight: 600; line-height: 1.3; }
+.wg-s .ic { width: 13px; height: 13px; stroke-width: 2.4; }
+.wg-s.good { color: #248A3D; } .wg-s.warn { color: #C93400; } .wg-s.risk { color: #D70015; } .wg-s.neu { color: rgba(60,60,67,.6); }
+.wg-s.chuva-dry { color: #C93400; } .wg-s.chuva-low { color: #A05A00; } .wg-s.chuva-good { color: #0071E3; } .wg-s.chuva-wet { color: #3634A3; } .wg-s.chuva-nd { color: rgba(60,60,67,.6); }
+.wg-g { position: relative; margin-top: 10px; }
+.wg-tr { position: relative; height: 6px; border-radius: 3px; background-color: rgba(120,120,128,.16); }
+.wg-tr b { position: absolute; top: -2px; bottom: -2px; width: 1.5px; margin-left: -.75px; border-radius: 1px; background: rgba(60,60,67,.3); }
+.wg-tr b.claro { background: rgba(255,255,255,.9); }
+.wg-tr b.forte { background: rgba(60,60,67,.5); }
+.wg-chuva { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 3px; background: linear-gradient(90deg, #64A8F0, #0A64D6); }
+.wg-apagado { position: absolute; inset: 0; border-radius: 3px; background: rgba(255,255,255,.6); }
+.wg-cap { position: absolute; top: -1px; bottom: -1px; min-width: 8px; border-radius: 4px; box-shadow: 0 0 0 1.5px #fff, 0 1px 3px rgba(0,0,0,.2); }
+.wg-dot { position: absolute; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: #fff; box-shadow: 0 0 0 .5px rgba(0,0,0,.12), 0 1px 3px rgba(0,0,0,.3); }
+.wg-sc { position: relative; height: 13px; margin-top: 4px; }
+.wg-sc span { position: absolute; transform: translateX(-50%); font-size: 10px; color: rgba(60,60,67,.6); font-variant-numeric: tabular-nums; }
+.wg-f { margin-top: 8px; font-size: 11px; line-height: 1.3; color: rgba(60,60,67,.6); }
+
+@media (max-width: 760px) {
+  .cena-esq, .cena-dir { position: static; width: auto; flex-direction: row; flex-wrap: wrap; padding: 8px 0 0; }
+  .cena-card { flex: 1 1 170px; }
+}

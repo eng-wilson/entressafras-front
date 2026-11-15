@@ -1,0 +1,105 @@
+/* HUD no padrão macOS/iOS da solução: grupos claros e cores semânticas compartilhadas. */
+.painel-impacto { position: relative; grid-area: 1 / 1; justify-self: start; align-self: start; z-index: 1; width: clamp(170px, 22%, 230px); box-sizing: border-box; min-width: 0; margin: 16px 0 76px 12px; padding: 12px; border-radius: 16px; background: color-mix(in srgb, var(--group) 68%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.painel-impacto:empty { display: none; }
+.pi-hud { height: 100%; color: var(--label); }
+.pi-hud-h { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.pi-hud-h > span { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--label2); }
+.pi-hud-h .ic { width: 13px; height: 13px; }
+.pi-hud-h small { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--label2); }
+/* Medidores independentes: apenas medalhão, barra e legenda, sem cartões. */
+.pi-sinais { display: flex; flex-direction: column; justify-content: space-between; height: 100%; gap: 16px; padding: 2px 4px 4px; }
+.pi-sinal { --sinal: var(--label2); --sinal-fill: var(--none); --sinal-bg: var(--fill); min-width: 0; min-height: 64px; padding: 4px 0; text-align: left; border-radius: 8px; }
+.pi-sinal.good { --sinal: var(--good-ink); --sinal-fill: var(--good); --sinal-bg: var(--good-bg); }
+.pi-sinal.warn { --sinal: var(--warn-ink); --sinal-fill: var(--warn); --sinal-bg: var(--warn-bg); }
+.pi-sinal.risk { --sinal: var(--risk-ink); --sinal-fill: var(--risk); --sinal-bg: var(--risk-bg); }
+.pi-medidor { display: flex; align-items: flex-start; min-height: 39px; }
+.pi-icone { position: relative; z-index: 1; width: 32px; height: 32px; flex: none; display: grid; place-items: center; color: var(--sinal); background: var(--sinal-bg); border: 3px solid var(--group); border-radius: 50%; box-shadow: 0 0 0 1px var(--sep), 0 1px 2px var(--sep); transition: box-shadow .15s, transform .15s; }
+.pi-icone .ic { width: 17px; height: 17px; }
+.pi-escala-estado { flex: 1; min-width: 0; margin: 10px 0 0 -3px; }
+.pi-trilho { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; height: 12px; }
+.pi-segmento { background: var(--track); box-shadow: inset 0 0 0 .5px var(--sep); border-radius: 3px; }
+.pi-segmento:first-child { border-radius: 0 3px 3px 0; }
+.pi-segmento:last-child { border-radius: 3px 6px 6px 3px; }
+.pi-segmento.ativo { background: var(--sinal-fill); box-shadow: inset 0 0 0 .5px var(--sinal); }
+.pi-faixas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; margin-top: 3px; color: var(--label2); font-size: 9px; text-align: center; line-height: 1.3; }
+.pi-faixas .ativa { color: var(--sinal); font-weight: 600; }
+.pi-sinal-txt { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 2px 6px; margin: 4px 0 0 2px; }
+.pi-sinal-txt small { font-size: 12px; font-weight: 600; color: var(--label); }
+.pi-sinal-txt b { color: var(--sinal); font-size: 11px; font-weight: 500; }
+.pi-medida { display: block; margin: 3px 0 0 2px; color: var(--label2); font-size: 11px; line-height: 1.3; }
+.pi-condicao { color: var(--sinal); }
+.pi-sinal:hover .pi-icone { transform: translateY(-1px); box-shadow: 0 0 0 2px var(--sinal-bg), 0 1px 3px var(--sep); }
+.pi-sinal[aria-pressed="true"] .pi-icone { box-shadow: 0 0 0 2px var(--sinal), 0 1px 3px var(--sep); }
+.pi-sinal[aria-pressed="true"] .pi-sinal-txt small { color: var(--tint); }
+/* Inspeção segue os grupos e separadores da lateral existente. */
+.insp { scroll-behavior: smooth; }
+.pi-inspector-h { margin-bottom: 16px; }
+.pi-inspector-h h2 { margin: 4px 0; font-size: 16px; }
+.pi-inspector-h p { margin: 0; color: var(--label2); font-size: 12px; }
+.pi-inspector-h p + p { margin-top: 4px; }
+.pi-nome-rotacao { display: flex; align-items: baseline; gap: 6px; }
+.pi-nome-rotacao h2 { flex: 1; min-width: 0; }
+.pi-nome-rotacao button { display: grid; place-items: center; width: 24px; height: 24px; flex: none; color: var(--label2); border-radius: 6px; }
+.pi-nome-rotacao button:hover { background: var(--side); color: var(--tint); }
+.pi-nome-rotacao .ic { width: 14px; height: 14px; }
+.pi-supra { display: block; color: var(--label2); font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+/* Produtividade estimada: valor da mediana e régua de zero ao potencial (faixa = ano ruim a ano bom). */
+.pi-produtividade ul { margin: 0; padding: 4px 12px; list-style: none; background: var(--side); border-radius: 12px; }
+.pi-prod { --cor: var(--label2); padding: 10px 0; }
+.pi-prod.good { --cor: var(--good-ink); }
+.pi-prod.warn { --cor: var(--warn-ink); }
+.pi-prod.risk { --cor: var(--risk-ink); }
+.pi-prod + .pi-prod { border-top: 1px solid var(--sep); }
+.pi-prod-h { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.pi-prod-h span { min-width: 0; font-size: 12px; font-weight: 600; overflow-wrap: anywhere; }
+.pi-prod-h b { flex: none; color: var(--cor); font-size: 18px; letter-spacing: -.02em; white-space: nowrap; }
+.pi-prod-h b small { color: var(--label2); font-size: 11px; font-weight: 500; letter-spacing: 0; }
+.pi-regua { position: relative; height: 6px; margin: 8px 0 6px; background: var(--track); border-radius: 3px; }
+.pi-regua-faixa { position: absolute; top: 0; bottom: 0; background: var(--cor); opacity: .3; border-radius: 3px; }
+.pi-regua-ponto { position: absolute; top: 50%; width: 10px; height: 10px; background: var(--cor); border: 2px solid var(--side); border-radius: 50%; transform: translate(-50%, -50%); }
+.pi-prod p { margin: 0; color: var(--label2); font-size: 11px; line-height: 1.4; }
+/* Lateral: o que fazer. Uma linha por parâmetro; o estado aparece só na cor do ícone. */
+.pi-fazer { margin-top: 24px; }
+.pi-fazer-h { display: flex; flex-direction: column; gap: 2px; margin-bottom: 8px; }
+.pi-fazer-h h3 { margin: 0; font-size: 13px; }
+.pi-fazer-h span { color: var(--label2); font-size: 11px; }
+.pi-acoes { margin: 0; padding: 4px; list-style: none; background: var(--side); border-radius: 12px; }
+.pi-acao { --cor: var(--label2); --cor-bg: var(--fill); position: relative; }
+.pi-acao.good { --cor: var(--good-ink); --cor-bg: var(--good-bg); }
+.pi-acao.warn { --cor: var(--warn-ink); --cor-bg: var(--warn-bg); }
+.pi-acao.risk { --cor: var(--risk-ink); --cor-bg: var(--risk-bg); }
+.pi-acao + .pi-acao::before { content: ""; position: absolute; top: 0; left: 42px; right: 8px; height: 1px; background: var(--sep); }
+.pi-acao > button, .pi-acao > div:first-child { width: 100%; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 8px; align-items: start; padding: 9px 8px; text-align: left; border-radius: 8px; }
+.pi-acao > button:hover { background: var(--track); }
+.pi-acao > button[aria-expanded="true"] { background: var(--group); box-shadow: 0 0 0 .5px var(--sep); }
+.pi-acao-i { display: grid; place-items: center; width: 26px; height: 26px; color: var(--cor); background: var(--cor-bg); border-radius: 50%; }
+.pi-acao-i .ic { width: 14px; height: 14px; }
+.pi-acao-txt small, .pi-acao-txt b, .pi-acao-txt em { display: block; overflow-wrap: anywhere; }
+.pi-acao-txt small { color: var(--cor); font-size: 11px; font-weight: 600; }
+.pi-acao-txt b { margin-top: 1px; color: var(--label); font-size: 12px; font-weight: 600; line-height: 1.35; }
+.pi-acao.calma .pi-acao-txt b { color: var(--label2); font-weight: 400; }
+.pi-acao-txt em { margin-top: 3px; color: var(--label2); font-size: 11px; font-style: normal; line-height: 1.4; }
+.pi-acao-seta { align-self: center; color: var(--label2); transition: transform .15s; }
+.pi-acao-seta .ic { width: 12px; height: 12px; }
+button[aria-expanded="true"] .pi-acao-seta { transform: rotate(90deg); }
+.pi-acao-detalhe { margin: 4px 8px 8px 42px; font-size: 12px; }
+.pi-acao-detalhe > b { display: block; font-weight: 600; }
+.pi-acao-detalhe > p { margin: 3px 0 0; color: var(--label2); line-height: 1.45; }
+.pi-sem-ajuste { display: flex; align-items: center; gap: 6px; margin: 10px 4px 0; color: var(--label2); font-size: 11px; }
+.pi-sem-ajuste .ic { width: 12px; height: 12px; color: var(--good-ink); }
+.pi-criterio { margin: 6px 0 0; font-size: 12px; }
+.pi-criterio summary { color: var(--tint); cursor: pointer; }
+.pi-criterio p { color: var(--label2); line-height: 1.5; }
+/* Leitura local permanece junto do diorama e do seletor de ano da cena. */
+.pi-cena-h { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; min-height: 42px; padding: 2px 10px 12px; border-bottom: 1px solid var(--sep); }
+.pi-cena-contexto { font-size: 14px; font-weight: 400; color: var(--label); }
+@media (max-width: 760px) {
+    .painel-impacto { width: 145px; margin: 10px 0 72px 6px; padding: 8px; }
+    .painel-impacto .pi-sinais { gap: 10px; }
+    .painel-impacto .pi-sinal { min-height: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .insp { scroll-behavior: auto; }
+    .pi-acao-seta { transition: none; }
+    .pi-icone { transition: none; }
+}

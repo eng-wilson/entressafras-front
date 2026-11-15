@@ -1,59 +1,31 @@
 import type { SoilResult } from '../types'
 
-export function SoilMoistureBar({ soil }: { soil: SoilResult }) {
-  const W = 268
-  const statusColor = soil.cls === 'good' ? 'var(--good)' : soil.cls === 'warn' ? 'var(--warn)' : 'var(--risk)'
+// Widget de umidade do solo (padrão dos widgets da cena). A posição vem de soilGauge.ts em unidades da
+// trilha antiga (0–TRILHA); aqui vira porcentagem da largura do medidor.
+const TRILHA = 268
+const pct = (x: number) => `${Math.max(0, Math.min(TRILHA, x)) / TRILHA * 100}%`
 
+export function SoilMoistureBar({ soil }: { soil: SoilResult }) {
+  const grad = `linear-gradient(90deg, ${soil.c0} 0, ${soil.c1} 33%, ${soil.c2} 33%, ${soil.c3} 60%, ${soil.c4} 60%, ${soil.c5} 100%)`
   return (
-    <div className="pl" aria-label={soil.aria}>
-      <div className="pl-r">
-        <svg className="ic" aria-hidden="true">
-          <use href="/canvas-icons.svg#i-drop" />
-        </svg>
-        <span>Umidade do solo</span>
-        <span className={`pl-s ${soil.cls}`}>
-          <svg className="ic" aria-hidden="true">
-            <use href={`/canvas-icons.svg#${soil.icon.replace('#', '')}`} />
-          </svg>
-          {soil.label}
-        </span>
-      </div>
-      <div className="pl-b" style={{ position: 'relative' }} aria-hidden="true">
-        <svg viewBox="-8 0 284 16" width="100%" height="16">
-          <defs>
-            <linearGradient id="sg-grad" x1="0" x2="1">
-              <stop offset="0" stopColor={soil.c0} />
-              <stop offset=".33" stopColor={soil.c1} />
-              <stop offset=".33" stopColor={soil.c2} />
-              <stop offset=".6" stopColor={soil.c3} />
-              <stop offset=".6" stopColor={soil.c4} />
-              <stop offset="1" stopColor={soil.c5} />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="5" width={W} height="6" rx="3" fill="url(#sg-grad)" />
-          {soil.m1 != null && (
-            <line x1={soil.m1} y1="2" x2={soil.m1} y2="14"
-              stroke="white" strokeWidth="1.5" opacity=".6" />
-          )}
-          {soil.m2 != null && (
-            <line x1={soil.m2} y1="2" x2={soil.m2} y2="14"
-              stroke="white" strokeWidth="1.5" opacity=".6" />
-          )}
-          <circle cx={soil.cx} cy="8" r="5.5" fill="white" stroke={statusColor} strokeWidth="2" />
-        </svg>
-        <div
-          className="vtag"
-          style={{
-            position: 'absolute',
-            top: '100%',
-            left: `calc(${soil.cx / W * 100}% - 24px)`,
-            marginTop: 4,
-          }}
-        >
-          <span className="mk">{soil.val}</span>
+    <div className="pl wg" aria-label={soil.aria}>
+      <span className="wg-h">
+        <svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-drop" /></svg>
+        Umidade do solo
+      </span>
+      <span className="wg-v">{soil.val}</span>
+      <span className={`pl-s wg-s ${soil.cls}`}>
+        <svg className="ic" aria-hidden="true"><use href={`/canvas-icons.svg#${soil.icon.replace('#', '')}`} /></svg>
+        {soil.label}
+      </span>
+      <div className="wg-g" aria-hidden="true">
+        <div className="wg-tr" style={{ background: grad }}>
+          {soil.m1 != null && <b className="claro" style={{ left: pct(soil.m1) }} />}
+          {soil.m2 != null && <b className="claro" style={{ left: pct(soil.m2) }} />}
+          <span className={`wg-dot ${soil.cls}`} style={{ left: pct(soil.cx) }} />
         </div>
       </div>
-      <div style={{ fontSize: 11, color: 'var(--label2)', marginTop: 4 }}>{soil.unit}</div>
+      <span className="wg-f">{soil.unit}</span>
     </div>
   )
 }
