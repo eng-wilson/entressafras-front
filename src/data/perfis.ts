@@ -1,6 +1,6 @@
 // MOCK — perfil local de cada cultura que a API de rotações pode devolver, pelo código EcoPort.
 // A API traz a cultura, as datas, o risco hídrico, os scores e a proteção do solo; o resto (nome exibido, produção e
-// preço, efeito nas pragas e score de água) ainda não vem do backend. Valores ilustrativos, os
+// preço, efeito nas pragas e score de água) ainda não vem do backend. O consumo de água do ciclo é Σ Kc × ET0 (dados da API). Valores ilustrativos, os
 // mesmos do conjunto local quando a cultura coincide. Pendências: docs/PLANO_INTEGRACAO.md, "Fase 5".
 import type { CulturaRef, ZarcId } from './zarc'
 
@@ -14,8 +14,6 @@ export type PerfilCultura = {
   zarc: ZarcId | null
   zarc2?: ZarcId | null
   cobertura?: boolean
-  /** Água que a cultura consome no ciclo, texto da tabela. */
-  agua: string
   /** Produtividade, unidade e preço por unidade; null = não é vendida. */
   prod: { y: string; u: string; p: string } | null
   /** Efeito nas pragas como 2ª safra depois da soja. (O efeito no solo vem da API: proteção do solo planejada.) */
@@ -26,31 +24,31 @@ export type PerfilCultura = {
 
 export const PERFIS: Record<number, PerfilCultura> = {
   1150: {
-    id: 'soja', nome: 'Soja', zarc: 'soja', agua: '450–800 mm',
+    id: 'soja', nome: 'Soja', zarc: 'soja',
     prod: { y: '58', u: 'sc/ha', p: 'R$ 152,45' },
     pragas: { nivel: 'Maior risco', porque: 'Soja depois de soja mantém as pragas e os nematoides no talhão.' },
     score: { agua: -5 },
   },
   2175: {
-    id: 'milho', nome: 'Milho', nome2: 'Milho safrinha', zarc: null, zarc2: 'milho2', agua: '380–550 mm',
+    id: 'milho', nome: 'Milho', nome2: 'Milho safrinha', zarc: null, zarc2: 'milho2',
     prod: { y: '98', u: 'sc/ha', p: 'R$ 66,60' },
     pragas: { nivel: 'Maior risco', porque: 'Soja e milho em sequência: pragas como o percevejo passam de uma para a outra.' },
     score: { agua: -4 },
   },
   48747: {
-    id: 'sorgo', nome: 'Sorgo', zarc: 'sorgoGranifero', agua: '~450 mm',
+    id: 'sorgo', nome: 'Sorgo', zarc: 'sorgoGranifero',
     prod: { y: '62', u: 'sc/ha', p: 'R$ 44,00' },
     pragas: { nivel: 'Menor risco', porque: 'O sorgo não hospeda as principais pragas da soja.' },
     score: { agua: -7 },
   },
   8418: {
-    id: 'milheto', nome: 'Milheto', zarc: 'coberturaMilheto', cobertura: true, agua: 'Sem dado',
+    id: 'milheto', nome: 'Milheto', zarc: 'coberturaMilheto', cobertura: true,
     prod: null,
     pragas: { nivel: 'Menor risco', porque: 'O milheto quebra a sequência de hospedeiros das pragas da soja.' },
     score: { agua: -8 },
   },
   1160: {
-    id: 'algodao', nome: 'Algodão', nome2: 'Algodão 2ª safra', zarc: null, agua: 'Sem dado',
+    id: 'algodao', nome: 'Algodão', nome2: 'Algodão 2ª safra', zarc: null,
     prod: { y: '280', u: '@/ha', p: 'R$ 62,00' },
     pragas: { nivel: 'Maior risco', porque: 'Soja e algodão compartilham pragas como a mosca-branca e o percevejo.' },
     score: { agua: -2 },

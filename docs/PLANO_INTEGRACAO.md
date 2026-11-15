@@ -124,6 +124,8 @@ Mapa completo do que é API e do que é mock, elemento por elemento: [MOCK_E_DAD
 - **Cache:** `entressafras.rotacoes.v2`, chave por ponto, solo (ou "auto"), histórico e prioridades. Tempo limite da consulta passou de 20 s para 90 s, porque a API agora simula cada rotação com balanço hídrico diário.
 - **Script de cobertura:** pede como a tela pede (sem textura, com histórico e prioridades) e, se um endpoint estiver fora do ar, marca "fora do ar" e não altera o documento (antes marcaria como "pendente").
 
+- **Umidade necessária** (tabela de comparação): passou a ser o consumo do ciclo, Σ Kc × ET0 com dados da API, no lugar das faixas ilustrativas por cultura. **Propriedades do solo superficial** (`soil_properties`, SoilGrids): exibidas na memória de cálculo.
+
 **Pendência:** durante toda a integração (15/11/2026, cerca de 30 tentativas) o endpoint respondeu 500. A fixture de testes foi montada pelo contrato (ver o cabeçalho de `src/data/rotacoesFixture.ts`) e a tabela de cobertura abaixo ainda é a de antes do contrato novo. Quando o endpoint voltar: trocar a fixture pela resposta real, rodar `npm run dados:status` e conferir se o risco deixou de ser MOCK.
 
 ## Fase 7: atendimento à demanda por fase (widget e "Atenção no ciclo")

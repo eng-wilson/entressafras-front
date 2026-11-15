@@ -31,7 +31,7 @@ const deRotacoes = (a, tem) => (tem(a) ? (temMock(a) ? 'mock' : 'real') : null)
  * já consome o valor da API. `precisa`: o que falta do backend enquanto não é real.
  */
 export const DADOS = [
-  { dado: 'Chuva, ET0 e temperatura por decêndio', fonte: 'decendios', front: 'Indicadores do decêndio, consumo de água, chuva no ano (lateral)', emUso: true,
+  { dado: 'Chuva, ET0 e temperatura por decêndio', fonte: 'decendios', front: 'Indicadores do decêndio, consumo de água (tabela e memória), chuva no ano (lateral)', emUso: true,
     servido: a => (a.decendios?.decendios?.length === 36 ? 'real' : null), precisa: '—' },
   { dado: 'Requisitos das culturas (EcoCrop)', fonte: 'cultura', front: 'Temperatura, catálogo "Dados das culturas"', emUso: true,
     servido: a => (a.cultura?.eco_port_code === SOJA ? 'real' : null), precisa: '—' },
@@ -71,7 +71,7 @@ export const DADOS = [
     servido: a => (rot0(a)?.soil_protection ? 'real' : null), precisa: '—' },
   { dado: 'Solo usado na simulação (textura, água por metro)', fonte: 'rotacoes', front: 'Lateral (solo estimado quando não informado), memória de cálculo', emUso: true,
     servido: a => (a.rotacoes?.soil?.texture_class ? 'real' : null), precisa: '—' },
-  { dado: 'Propriedades do solo superficial (SoilGrids)', fonte: 'rotacoes', front: 'Ainda não exibido', emUso: false,
+  { dado: 'Propriedades do solo superficial (SoilGrids)', fonte: 'rotacoes', front: 'Memória de cálculo (só exibição)', emUso: true,
     servido: a => (a.rotacoes?.soil_properties ? 'real' : null), precisa: '—' },
   { dado: 'Economia de água da rotação', fonte: null, front: 'Eixo "Economia de água" (`src/data/perfis.ts`, mock)', emUso: false,
     servido: () => null, precisa: 'Indicador de consumo ou eficiência de água por rotação' },

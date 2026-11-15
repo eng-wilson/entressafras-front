@@ -7,7 +7,7 @@ import type { Resiliencia, ResSafra } from '../logic/resiliencia'
 import { FONTE_FASES, FONTE_FASES_API, FONTE_KC_API, NOME_FASE, type Fonte } from '../data/zarc'
 import { janelaLabel } from '../logic/periodo'
 import { useConjunto } from '../state/conjunto'
-import type { CropCalendarInfo, SoilInfo } from '../types'
+import type { CropCalendarInfo, SoilInfo, SoilProperties } from '../types'
 
 const ROMANO = ['I', 'II', 'III', 'IV'] as const
 
@@ -36,6 +36,14 @@ function textoSolo(s: SoilInfo): string {
       : s.source
   const gran = s.clay_pct != null && s.sand_pct != null ? ` Argila ${n1.format(s.clay_pct)}%, areia ${n1.format(s.sand_pct)}%.` : ''
   return `Solo ${TEXTURA_API[s.texture_class]}, com ${n1.format(s.available_water_mm_per_m)} mm de água disponível por metro de raiz, ${origem}.${gran}`
+}
+
+/** "Solo superficial (0–30 cm), SoilGrids: argila 52%, …; carbono orgânico 14 g/kg; ponto a 0,2 km." Só exibição. */
+function textoPropriedades(p: SoilProperties): string {
+  const prof = p.depth ? ` (${p.depth})` : ''
+  return `Solo superficial${prof} estimado pelo local (SoilGrids, ponto a ${n1.format(p.distance_km)} km): ` +
+    `argila ${n1.format(p.clay_pct)}%, areia ${n1.format(p.sand_pct)}%, silte ${n1.format(p.silt_pct)}%, ` +
+    `carbono orgânico ${n1.format(p.organic_carbon_g_per_kg)} g/kg. Mapas de 250 m; não substituem a análise de laboratório.`
 }
 
 function Link({ f }: { f: Fonte }) {
@@ -92,6 +100,7 @@ export function MemoriaCalculo({ s, n, rotacao, res, onFechar }: Props) {
               {r.isnaCiclo != null && <> ISNA do ciclo inteiro: {pct(r.isnaCiclo)}.</>}
             </p>
             {conj.solo && <p>{textoSolo(conj.solo)}</p>}
+            {conj.propriedadesSolo && <p className="mc-nota">{textoPropriedades(conj.propriedadesSolo)}</p>}
             <div className="mc-tab">
               <table>
                 <thead>

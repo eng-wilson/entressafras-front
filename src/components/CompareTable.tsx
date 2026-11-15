@@ -71,7 +71,8 @@ const unidade = (u: string | undefined, y: string) =>
 const CONTENTS: CSSProperties = { display: 'contents' }
 
 export function CompareTable({ sel, onToggleSel, res }: Props) {
-  const { rotacoes } = useConjunto()
+  const conj = useConjunto()
+  const { rotacoes } = conj
   const rpos = useMemo(() => rankRotations(rotacoes), [rotacoes])
 
   // Renderiza já na ordem do ranking: foco e leitor de tela seguem a ordem visual
@@ -100,8 +101,16 @@ export function CompareTable({ sel, onToggleSel, res }: Props) {
           const rowB: CSSProperties = { gridRow: rb }
           const rowSpan: CSSProperties = { gridRow: `${ra} / span 2` }
 
-          const w1nd = /Sem/.test(r.w1) ? ' ct-nd' : ''
-          const w2nd = /Sem/.test(r.w2) ? ' ct-nd' : ''
+          // Rotações da API: consumo do ciclo (Σ Kc × ET0, com Kc e ET0 da API); sem clima ou sem Kc, sem dado.
+          // Conjunto local dos testes: a faixa ilustrativa antiga.
+          const consumo = (n: 0 | 1) => {
+            if (conj.origem !== 'api') return n === 0 ? r.w1 : r.w2
+            const c = res?.rotacoes[i]?.safras[n]?.consumo
+            return c == null ? 'Sem dado' : `~${c} mm`
+          }
+          const w1 = consumo(0), w2 = consumo(1)
+          const w1nd = /Sem/.test(w1) ? ' ct-nd' : ''
+          const w2nd = /Sem/.test(w2) ? ' ct-nd' : ''
           const y1nd = /^\d/.test(r.y1) ? '' : ' ct-nd'
           const y2nd = /^\d/.test(r.y2) ? '' : ' ct-nd'
           const pestCls = /Menor/.test(r.pest) ? 'ct-lo' : 'ct-hi'
@@ -136,11 +145,11 @@ export function CompareTable({ sel, onToggleSel, res }: Props) {
               {/* Umidade necessária + histórico */}
               <div role="cell" style={CONTENTS}>
                 <div className={`ct-c ct-top ct-num ct-wv${w1nd}`} style={rowA}>
-                  <span className="ct-wn">{r.w1}</span>
+                  <span className="ct-wn">{w1}</span>
                   <HintIcon h={hist(res?.rotacoes[i].safras[0])} />
                 </div>
                 <div className={`ct-c ct-2 ct-num ct-wv${w2nd}`} style={rowB}>
-                  <span className="ct-wn">{r.w2}</span>
+                  <span className="ct-wn">{w2}</span>
                   <HintIcon h={hist(res?.rotacoes[i].safras[1])} />
                 </div>
               </div>
@@ -165,7 +174,8 @@ export function CompareTable({ sel, onToggleSel, res }: Props) {
         })}
       </div>
       <p className="cfoot">
-        Umidade necessária: água que a cultura consome no ciclo (valores ilustrativos); o ícone mostra o risco hídrico
+        Umidade necessária: água que a cultura consome no ciclo, Kc × ET0 somados nos decêndios da safra (Kc do catálogo e ET0
+        do clima, ambos da API; sem o clima do talhão, sem dado); o ícone mostra o risco hídrico
         da safra calculado pela API (passe o mouse). Produção: sacas de 60 kg por hectare (algodão em arrobas), valores
         ilustrativos. A chuva anual do catálogo de culturas é uma referência separada do consumo por ciclo.
       </p>

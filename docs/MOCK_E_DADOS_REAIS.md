@@ -74,7 +74,7 @@ A tela envia a `POST /api/rotations/recommendations` o centro do talhão, a text
 | Mapa de aptidão: Saúde do solo | **API** | `scores.soil_protection`: índice de cobertura viva e troca de família botânica (planejamento, não medida do solo) |
 | Mapa de aptidão: Economia de água | **Mock** | Score ilustrativo relativo entre as rotações (`perfis.ts`) |
 | Texto de Saúde do solo | **API** | `soil_protection`: dias de cobertura viva e trocas de família |
-| Tabela: umidade necessária (mm) | Mock | Faixas ilustrativas por cultura |
+| Tabela: umidade necessária (mm) | Front sobre API | Consumo do ciclo, Σ Kc × ET0 (Kc do catálogo, ET0 do clima); sem clima, sem dado. Substituiu as faixas ilustrativas por cultura |
 | Tabela: ícone de histórico | **API (MOCK)** | Risco hídrico da safra |
 | Tabela: risco de pragas | Mock | `perfis.ts` |
 | Tabela: produção (sc/ha) | Mock | `perfis.ts` |
@@ -95,7 +95,7 @@ A tela envia a `POST /api/rotations/recommendations` o centro do talhão, a text
 
 ## Memória de cálculo ("De onde vêm estes números")
 
-Tudo da API, exibido como vem: risco, perda média, limiar, fase crítica, ISNA por fase e do ciclo, método, solo usado na simulação (textura, água por metro, origem SoilGrids), origem das datas (calendário GGCMI/CONAB ou referência FAO-56), Kc e estágios. A única conta é o consumo por decêndio (Kc × ET0).
+Tudo da API, exibido como vem: risco, perda média, limiar, fase crítica, ISNA por fase e do ciclo, método, solo usado na simulação (textura, água por metro, origem SoilGrids), propriedades do solo superficial (argila, areia, silte, carbono orgânico), origem das datas (calendário GGCMI/CONAB ou referência FAO-56), Kc e estágios. A única conta é o consumo por decêndio (Kc × ET0).
 
 ## Dados das culturas
 
@@ -115,7 +115,6 @@ Tudo da API (EcoCrop e FAO-56): temperatura, chuva anual, pH, ciclo, requisitos 
 |---|---|---|
 | Economia de água (eixo e prioridade) | `src/data/perfis.ts` (`score.agua`) | Indicador de consumo ou eficiência de água por rotação |
 | Produção (sc/ha), preço e receita | `src/data/perfis.ts` | Produtividade e preço por cultura e região, com data |
-| Umidade necessária (faixa em mm) | `src/data/perfis.ts` | Consumo por ciclo da cultura (ou usar o Σ Kc × ET0 do front) |
 | Efeito nas pragas e tag "Mais pragas" | `src/data/perfis.ts` | Efeito da sequência de culturas nas pragas |
 | Nome exibido das culturas ("Milho safrinha") | `src/data/perfis.ts` | Nome comum em português e papel na rotação |
 | Umidade do solo atual | Não exibida (as tabelas `WAT2`/`SOIL` saíram do widget) | Leitura atual com data, origem e unidade |

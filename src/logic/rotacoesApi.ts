@@ -119,7 +119,8 @@ function linha(a: SafraDef, b: SafraDef, pa: PerfilCultura | undefined, pb: Perf
   const sem = 'Sem dado'
   return {
     c1: a.nome, c2: b.nome,
-    w1: pa?.agua ?? sem, w2: pb?.agua ?? sem,
+    // A tabela mostra o consumo calculado (Σ Kc × ET0, dados da API); estes textos ficam só para o conjunto local.
+    w1: sem, w2: sem,
     soil: sem, soilWhy: 'Sem dado sobre o efeito no solo',
     pest: pb?.pragas.nivel ?? sem, pestWhy: pb?.pragas.porque ?? 'Sem dado sobre pragas para esta sequência.',
     y1: pa?.prod?.y ?? '-', y2: pb?.prod?.y ?? '-',

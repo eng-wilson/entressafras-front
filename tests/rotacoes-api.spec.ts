@@ -63,3 +63,28 @@ test('sem textura informada, não manda solo e a lateral mostra o solo estimado 
   expect(pedidos[0].soil_type).toBeUndefined()
   await expect(page.locator('.side')).toContainText('Argiloso (estimado)')
 })
+
+test('comparação: consumo do ciclo calculado com a API no lugar da faixa ilustrativa; solo superficial do SoilGrids na memória', async ({ page }) => {
+  await comTalhaoSalvo(page)
+  await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ json: CLIMA_T07 }))
+  await page.route(/\/api\/rotations\/recommendations/, r => {
+    const resp = structuredClone(ROTACOES_FIXTURE)
+    resp.soil_properties = {
+      source: 'SoilGrids', depth: '0–30 cm', organic_carbon_g_per_kg: 14.2,
+      sand_pct: 31.5, silt_pct: 16.5, clay_pct: 52, texture_class: 'clayey',
+      sampled_location: { lat: -12.54, lon: -55.72 }, distance_km: 0.2,
+    }
+    return r.fulfill({ json: resp })
+  })
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Comparação' }).click()
+  const celulas = page.locator('.ctab .ct-wn')
+  await expect(celulas.first()).toHaveText(/^~\d+ mm$/)
+  await expect(page.locator('.ctab')).not.toContainText('450–800')
+
+  await page.getByRole('button', { name: 'Ver por safra' }).first().click()
+  await page.getByRole('button', { name: 'De onde vêm estes números' }).first().click()
+  const memoria = page.getByRole('dialog')
+  await expect(memoria).toContainText('Solo superficial (0–30 cm) estimado pelo local')
+  await expect(memoria).toContainText('carbono orgânico 14,2 g/kg')
+})
