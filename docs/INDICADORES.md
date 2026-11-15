@@ -1,5 +1,7 @@
 # Indicadores das rotações
 
+> **Revisão de 15/11/2026:** com o contrato novo da API, Resiliência, Produtividade e Saúde do solo vêm das escalas 0–100 da API (`scores`), e a ordem vem do `rank` calculado pelas prioridades enviadas. Economia de água continua mock. As seções de Saúde do solo e Produtividade abaixo descrevem o mock anterior e ficam como histórico. Mapa atualizado: [MOCK_E_DADOS_REAIS.md](MOCK_E_DADOS_REAIS.md).
+
 > **Regra do projeto (14/11/2026):** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. A resiliência climática e a ordem das rotações vêm da API (`POST /api/rotations/recommendations`). O balanço hídrico ZARC que o front fazia foi removido. Água, solo e produtividade continuam ilustrativos (mock), porque a API ainda não os entrega. Detalhes: [PLANO_INTEGRACAO.md](PLANO_INTEGRACAO.md), fase 5.
 
 Revisão de 14/11/2026. Este documento descreve como a tela calcula cada um dos quatro indicadores (Resiliência climática, Economia de água, Saúde do solo e Produtividade) e a ordenação das rotações. Para cada um, indica a fórmula, a origem de cada dado (API real ou mock), as faixas de nota, onde a regra está no código e o que falta para sair do mock.
@@ -12,9 +14,9 @@ As pendências com o backend estão detalhadas em [PLANO_INTEGRACAO.md](PLANO_IN
 |---|---|---|---|---|
 | Resiliência climática | Risco hídrico por cultura da API (`risk`) | Fixa: 10 pontos por ano em 10 | Sim | Da API (hoje marcado MOCK pelo servidor) |
 | Economia de água | `SCORE.agua` (mock) | Relativa às 4 rotações | Não | Ilustrativo |
-| Saúde do solo | `SCORE.solo` e `soilWhy` (mock) | Relativa às 4 rotações | Não | Ilustrativo |
-| Produtividade | Receita em R$/ha, de sacas e preços em `CT` (mock) | Proporcional à melhor rotação | Só o R$/ha | Ilustrativo (dados), coerente (nota = receita) |
-| Ordenação (1º a 4º) | `rank` da API | Posição | Não | Da API (hoje marcado MOCK pelo servidor) |
+| Saúde do solo | `scores.soil_protection` e `soil_protection` da API | Fixa: 0–100 | Não | Da API (índice de planejamento) |
+| Produtividade | `scores.productivity` da API (produção preservada) | Fixa: 0–100 | Só o R$/ha (mock) | Da API (hoje marcado MOCK pelo servidor) |
+| Ordenação (1º a 4º) | `rank` da API, pelas prioridades enviadas | Posição | Não | Da API (hoje marcado MOCK pelo servidor) |
 
 "Escala relativa" significa que a nota de uma rotação depende das outras: em água e solo, a melhor das quatro recebe 100 e a pior recebe 12. Na produtividade, a melhor recebe 100 e as demais ficam proporcionais à receita dela. Se uma rotação entrar ou sair, essas notas mudam. A resiliência é a única com escala fixa, o que é pré-requisito para o futuro montador de rotação.
 
@@ -126,11 +128,9 @@ Até 14/11/2026 a nota vinha de `SCORE.prod`, um mock sem unidade que não batia
 
 ## Ordenação das rotações (1º a 4º)
 
-**Código:** [`src/logic/rank.ts`](../src/logic/rank.ts).
+**Código:** [`src/logic/rank.ts`](../src/logic/rank.ts) e [`src/logic/rotacoesApi.ts`](../src/logic/rotacoesApi.ts) (`prioridadesApi`).
 
-A ordem é o `rank` da API. A tela não reordena. As prioridades marcadas em "O que importa" só destacam os quadrantes do mapa de aptidão.
-
-Até 14/11/2026 a ordem era calculada no front a partir das prioridades. Pela regra do projeto, isso foi removido quando a API passou a entregar o rank.
+A ordem é o `rank` da API. As prioridades de "O que importa" vão na requisição (`priorities`): Resiliência → `water_security`, Produtividade → `productivity`, Saúde do solo → `soil_protection`. Com todas desligadas, a API ordena pelo pior risco hídrico. Economia de água não existe na API e não muda a ordem. O front não reordena.
 
 ## Glossário
 

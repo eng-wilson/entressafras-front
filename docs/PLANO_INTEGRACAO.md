@@ -13,7 +13,7 @@ Base: `VITE_API_URL`, com fallback para `https://entressafras-backend-production
 | `GET /api/clima/decendios?lat&lon` | 36 decêndios climatológicos, fonte e safras | Indicadores de chuva e temperatura e resumo mensal |
 | `GET /api/clima/diario?lat&lon&inicio&fim` | Série histórica diária | Adiado; sem serviço, hook, cache ou chamadas no frontend |
 | `GET /api/crops` e `/api/crops/{eco_port_code}` | Catálogo e requisitos das culturas, com `water_requirements` (FAO-56) | Enriquecimento das culturas (fase 3) e Kc da resiliência (fase 5) |
-| `POST /api/rotations/recommendations` | Até 4 rotações de 2 culturas, datas de plantio e colheita, risco hídrico por cultura | Rotações exibidas na tela (fase 5) |
+| `POST /api/rotations/recommendations` | Até 4 rotações de 2 culturas, datas (calendário GGCMI), risco hídrico por cultura, ranking pelas prioridades, escalas 0–100, proteção do solo, solo usado (SoilGrids) | Rotações, ordem, mapa de aptidão e solo estimado (fases 5 e 6) |
 
 O contrato diário contém `gwettop` e `gwetroot` históricos, mas não fornece uma leitura atual garantida de umidade. Na consulta de referência para o T-07 em 14/11/2026, a série termina em **31/08/2026**. Esses campos não serão usados para alimentar a lateral ou o indicador de solo nesta etapa. Não há integração de previsão futura neste escopo.
 
@@ -109,6 +109,22 @@ Implementada em 14/11/2026. As 4 rotações fixas do protótipo (`SAFRAS`/`CT`) 
 | Rotação atual do agricultor | Só aparece se a API recomendar a mesma sequência | Incluir a rotação atual do histórico na resposta, para comparação |
 
 Paridade visual: os goldens de `tests/ui-parity.spec.ts` retratam as 4 rotações antigas e falham com as da API. Não foram atualizados.
+
+## Fase 6: contrato de 15/11/2026 das rotações
+
+Mapa completo do que é API e do que é mock, elemento por elemento: [MOCK_E_DADOS_REAIS.md](MOCK_E_DADOS_REAIS.md).
+
+- **Requisição:** `soil_type` só quando o agricultor informou a textura (sem ela, a API estima pelo SoilGrids; o "médio" que o front assumia saiu); `crop_history` com as 3 últimas safras em códigos EcoCrop; `priorities` a partir de "O que importa" (Resiliência → `water_security`, Produtividade → `productivity`, Saúde do solo → `soil_protection`; Economia de água não existe na API).
+- **Ordem:** o `rank` da resposta, agora calculado pelas prioridades. Trocar uma prioridade refaz a consulta; enquanto a nova ordem chega, a lista anterior segue na tela e a rotação selecionada é mantida pelo `id`. Cada rotação mantém a cor ao ser reordenada.
+- **Mapa de aptidão:** Resiliência, Produtividade e Saúde do solo vêm de `scores` (escala absoluta 0–100). Saíram a nota de produtividade pela receita e o score de solo ilustrativo. Economia de água continua mock.
+- **Saúde do solo:** texto e nota pela proteção do solo planejada (`soil_protection`: dias de cobertura viva e trocas de família botânica). O efeito no solo escrito à mão em `perfis.ts` saiu.
+- **Solo:** sem textura informada, a lateral mostra a textura estimada pela API ("Argiloso (estimado)"); a memória de cálculo mostra o solo usado na simulação e de onde veio.
+- **Datas:** a memória de cálculo mostra a origem (calendário regional GGCMI, com a estatística CONAB/MIRCA, ou referência FAO-56) e a duração do ciclo. Também mostra o ISNA do ciclo inteiro.
+- **Validação:** a resposta precisa trazer `soil`, `priorities` e, em cada rotação, `scores`, `soil_protection` e `calendar` por cultura. `risk.method` aceita qualquer texto (antes só `MOCK` ou `FAO56_SIMPLIFIED_KY`).
+- **Cache:** `entressafras.rotacoes.v2`, chave por ponto, solo (ou "auto"), histórico e prioridades. Tempo limite da consulta passou de 20 s para 90 s, porque a API agora simula cada rotação com balanço hídrico diário.
+- **Script de cobertura:** pede como a tela pede (sem textura, com histórico e prioridades) e, se um endpoint estiver fora do ar, marca "fora do ar" e não altera o documento (antes marcaria como "pendente").
+
+**Pendência:** durante toda a integração (15/11/2026, cerca de 30 tentativas) o endpoint respondeu 500. A fixture de testes foi montada pelo contrato (ver o cabeçalho de `src/data/rotacoesFixture.ts`) e a tabela de cobertura abaixo ainda é a de antes do contrato novo. Quando o endpoint voltar: trocar a fixture pela resposta real, rodar `npm run dados:status` e conferir se o risco deixou de ser MOCK.
 
 ## Cobertura dos dados pelo backend
 

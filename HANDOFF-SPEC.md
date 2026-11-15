@@ -197,8 +197,8 @@ Cada componente reaproveita as classes de `canvas.css`. Não renomeie as classes
 | Elemento | Estado | Comportamento |
 |---|---|---|
 | Switch (`.sw`) | off / on | `#E1E1E6` / `--good`; bolinha 18px em `left` 2px → 16px. **Troca instantânea** (sem transição no canva) |
-| Switch | clique | inverte a prioridade e destaca o quadrante no mapa de aptidão; **não reordena** as rotações (a ordem vem da API) |
-| Ordenação | regra | A ordem é o `rank` de `POST /api/rotations/recommendations`; o front não reordena (regra: o que a API resolve não é calculado no front). Detalhes em `docs/INDICADORES.md`. Linha `.rlast` perde a borda inferior |
+| Switch | clique | inverte a prioridade, destaca o quadrante no mapa e **pede a nova ordem à API** (`priorities`); a lista anterior fica na tela até a resposta. Economia de água não existe na API e não reordena |
+| Ordenação | regra | A ordem é o `rank` de `POST /api/rotations/recommendations`, calculado pelas prioridades enviadas; o front não reordena (regra: o que a API resolve não é calculado no front). Detalhes em `docs/INDICADORES.md`. Linha `.rlast` perde a borda inferior |
 | Ranking | números | `.rk` mostra a posição (1–4); inspector mostra "Por que ficou em {posição da rotação atual}º" |
 | Segmentado | Calendário / Comparação | ativo: fundo branco + sombra + 600; `aria-pressed`; troca o conteúdo abaixo do slider (calendário e slider sempre visíveis) |
 | Mês (`button.mo`) | hover | fundo `rgba(0,0,0,.04)` no círculo do ícone |
