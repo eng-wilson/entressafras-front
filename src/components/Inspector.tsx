@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { safraLimitante } from '../logic/aptidao'
+import { porQueRanking } from '../logic/porQueRanking'
 import type { Resiliencia, ResSafra } from '../logic/resiliencia'
 import { classeAnos } from '../logic/status'
 import type { ClimaDecendios } from '../types'
@@ -52,6 +53,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   const culturaSelecionada = def.safras.findIndex(s => atencao.idx >= s.de && atencao.idx <= s.ate)
   const provisorio = rot?.safras.some(s => s.risco?.metodo === 'MOCK') ?? false
   const rankingTeste = conj.avisos.some(a => /\bMOCK\b/i.test(a))
+  const porQue = conj.origem === 'api' ? porQueRanking(conj.rotacoes, rotIdx, conj.prioridades) : null
   const faltantes = rot?.safras.filter(s => !s.risco).map(s => s.nome).join(', ')
   const titulo = incompleto ? 'Faltam dados de risco' : cls === 'good' ? 'Favorável no risco geral da API' : 'Atenção à água'
   const [route, setRoute] = useState<{ rotation: string; page: Page; moment?: MomentoAtencao }>({ rotation: def.id, page: 'overview' })
@@ -92,9 +94,13 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           {incompleto && <p className="insp-caption">{rot ? `O risco de ${faltantes || 'uma das safras'} não foi informado.` : 'Risco ainda indisponível.'}</p>}
           {provisorio && <p className="insp-provisional"><Icon name="i-info" /><span><strong>Provisório</strong> · sem cálculo para este talhão</span></p>}
         </section>
-        <div className="insp-rank" aria-label={`Posição no ranking: ${rotIdx + 1} de ${conj.rotacoes.length} opções recebidas`}>
-          <div><span>Posição no ranking</span><small>{rankingTeste ? 'Ordem provisória da API' : 'Entre as opções recebidas'}</small></div>
-          <strong>{rotIdx + 1}ª de {conj.rotacoes.length}</strong>
+        <div className="insp-rank">
+          <div className="insp-rank-h">
+            <div><span>Posição no ranking</span><small>{rankingTeste ? 'Ordem provisória da API' : 'Entre as opções recebidas'}</small></div>
+            <strong aria-label={`${rotIdx + 1}ª de ${conj.rotacoes.length} opções recebidas`}>{rotIdx + 1}ª de {conj.rotacoes.length}</strong>
+          </div>
+          {/* Por que nesta posição: média das prioridades ligadas nas escalas da API, contra a vizinha na lista */}
+          {porQue && <p className="insp-rank-why">{porQue} <span>Economia de água não entra na ordem: a API ainda não a calcula.</span></p>}
         </div>
         <section className="insp-section" aria-label="Safras da rotação">
           <h3>Safras</h3>
@@ -158,7 +164,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             <p>A fase de maior déficit é apontada pela API; o percentual de risco não é uma probabilidade de seca nessas datas. As datas da fase são posicionadas no calendário pelos estágios do ciclo{rot?.safras.some(s => s.calc.fonteFases === 'local') ? ', com proporções locais quando os estágios não vieram da API' : ' recebidos da API'}.</p>
           </>}
           {page === 'sources' && <>
-            <p>{conj.origem === 'api' ? 'Rotações e datas: API Entressafras. A ordem é recebida da API; os motivos de cada posição não são fornecidos.' : 'Rotações e datas ilustrativas.'}{rankingTeste ? ' O ranking ainda é de teste.' : ''}</p>
+            <p>{conj.origem === 'api' ? 'Rotações e datas: API Entressafras. A ordem é recebida da API: a média das prioridades ligadas nas escalas 0–100 dela (economia de água não entra).' : 'Rotações e datas ilustrativas.'}{rankingTeste ? ' O ranking ainda é de teste.' : ''}</p>
             <p>{clima ? `Chuva e temperatura: ${clima.fonte}, média de ${clima.safras.length} safras${clima.safras.length ? ` (${clima.safras[0]} a ${clima.safras.at(-1)})` : ''}.` : 'Clima indisponível. Os dados de risco recebidos são exibidos sem estimativa adicional.'}</p>
             {clima?.aviso_resolucao && <p>{clima.aviso_resolucao}</p>}
             <p>Requisitos das culturas: catálogo EcoCrop, quando disponível. Proteção do solo e atendimento à demanda de água por fase: API. Pragas, produção e preços são ilustrativos. Receita bruta ilustrativa não representa lucro: os custos não foram considerados.</p>
