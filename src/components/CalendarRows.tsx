@@ -41,9 +41,9 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
   const statuses = useMemo(
     () => ROTATIONS.map((_, ri) => {
       const rot = res?.rotacoes[ri]
-      return rot ? rotationStatus(rot.safras.map(s => [s.risco?.pct ?? null, s.nome.toLowerCase()]), diags?.[ri].decisivo ?? null) : null
+      return rot ? rotationStatus(rot.safras.map(s => [s.risco?.pct ?? null, s.nome.toLowerCase()])) : null
     }),
-    [res, diags, ROTATIONS],
+    [res, ROTATIONS],
   )
 
   // Sort rows in DOM order by rank position (not CSS order)

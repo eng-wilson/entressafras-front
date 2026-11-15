@@ -489,6 +489,8 @@
   .stw.good{color:#1B7F3A}.stw.warn{color:#A35200}.stw.risk{color:#C4000F}
   .stw:focus-visible{box-shadow:0 0 0 3px rgba(0,122,255,.4)}
   .stw:hover .ct-tip,.stw:focus-visible .ct-tip{display:flex}
+  /* Cada .row tem z-index próprio: sobe a linha enquanto o tooltip do selo está aberto, senão a linha de baixo o cobre */
+  .rlist .row:has(.stw:hover,.stw:focus-visible){z-index:60}
   .ct-tip.tip-r{left:auto;right:-6px;transform:none}
   .ct-tip.tip-r::before{left:auto;right:12px;margin-left:0}
 

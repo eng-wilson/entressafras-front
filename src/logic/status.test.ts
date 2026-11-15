@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { classeAnos, rotationStatus } from './status'
+import { classeAnos, rotationStatus, rotuloCritico } from './status'
 import type { PeriodoCritico } from './diagnostico'
 
 describe('classeAnos (níveis de risco do ZARC)', () => {
@@ -33,15 +33,20 @@ describe('rotationStatus', () => {
     expect(r.cls).toBe('warn')
     expect(r.text).toContain('milho')
   })
-  it('com o período que mais pesa, o selo já diz o motivo', () => {
+  it('o selo do calendário não explica o motivo (fica no painel direito)', () => {
+    const r = rotationStatus([[10, 'soja'], [40, 'sorgo']])
+    expect(r.label).toBe('Clima arriscado')
+    expect(r.text).toBe('Risco hídrico de 40% (sorgo), da API')
+  })
+})
+
+describe('rotuloCritico', () => {
+  it('nível + motivo curto do período', () => {
     const p: PeriodoCritico = {
       safra: 1, nome: 'Sorgo', fase: 2, nomeFase: 'Floração e enchimento de grãos', de: 22, ate: 25,
       rotulo: '11 abr a 20 mai', falhas: 4, cls: 'warn', pct: 40, isna: 0.45, deficitMedio: 74, deficitSeco: 138,
     }
-    const r = rotationStatus([[10, 'soja'], [40, 'sorgo']], p)
-    expect(r.label).toBe('Arriscado · seca na floração (abr–mai)')
-    expect(r.text).toBe('Risco hídrico de 40% (sorgo), da API. Sorgo, floração e enchimento de grãos (11 abr a 20 mai): risco hídrico de 40% (API), maior déficit de água nesta fase.')
-    expect(r.aria).toContain('risco hídrico de 40% (API)')
-    expect(rotationStatus([[40, 'sorgo']], { ...p, de: 23, ate: 23 }).label).toBe('Arriscado · seca na floração (abr)')
+    expect(rotuloCritico(p)).toBe('Arriscado · seca na floração (abr–mai)')
+    expect(rotuloCritico({ ...p, de: 23, ate: 23 })).toBe('Arriscado · seca na floração (abr)')
   })
 })
