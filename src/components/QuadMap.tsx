@@ -148,7 +148,7 @@ export function QuadMap({ sel, pr, res }: Props) {
 
           {/* uma área por rotação selecionada */}
           {dados.map(({ i, a }) => (
-            <g key={i} className="qm-rot" style={{ color: COR_ROT[i] }}>
+            <g key={i} className="qm-rot" style={{ color: COR_ROT[rots[i].cor] }}>
               <polygon
                 points={ORDEM.map(k => ponto(k, a[k] ?? PISO).join(',')).join(' ')}
                 className={`qm-poly${rots[i].ct.atual ? ' atual' : ''}`}
@@ -182,7 +182,7 @@ export function QuadMap({ sel, pr, res }: Props) {
             const aberta = abertas.includes(i) && !!rot
             return (
             <li key={i}>
-              <span className={`qm-sw${rots[i].ct.atual ? ' atual' : ''}`} style={{ color: COR_ROT[i] }} />
+              <span className={`qm-sw${rots[i].ct.atual ? ' atual' : ''}`} style={{ color: COR_ROT[rots[i].cor] }} />
               <div>
                 <b>
                   {nomeRot(rots[i])}

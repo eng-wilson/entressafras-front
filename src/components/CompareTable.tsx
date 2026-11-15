@@ -111,7 +111,7 @@ export function CompareTable({ sel, onToggleSel, res }: Props) {
               {/* Rotação: 2 sub-linhas */}
               <div role="cell" style={CONTENTS}>
                 <div className={`ct-c ct-rot ct-top${cur}`} style={rowA}>
-                  <label className={`ct-ck${sel.includes(i) ? ' on' : ''}`} style={{ color: COR_ROT[i] }}>
+                  <label className={`ct-ck${sel.includes(i) ? ' on' : ''}`} style={{ color: COR_ROT[d.cor] }}>
                     <input
                       type="checkbox"
                       checked={sel.includes(i)}
@@ -165,9 +165,9 @@ export function CompareTable({ sel, onToggleSel, res }: Props) {
         })}
       </div>
       <p className="cfoot">
-        Umidade necessária: água que a cultura consome no ciclo; o ícone mostra em quantos de
-        10 anos a chuva da sua região bastou para aquela safra (passe o mouse). Produção: sacas de 60 kg por hectare
-        (algodão em arrobas), valores ilustrativos. A chuva anual do catálogo de culturas é uma referência separada do consumo por ciclo.
+        Umidade necessária: água que a cultura consome no ciclo (valores ilustrativos); o ícone mostra o risco hídrico
+        da safra calculado pela API (passe o mouse). Produção: sacas de 60 kg por hectare (algodão em arrobas), valores
+        ilustrativos. A chuva anual do catálogo de culturas é uma referência separada do consumo por ciclo.
       </p>
     </>
   )

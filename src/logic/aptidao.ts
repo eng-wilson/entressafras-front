@@ -8,33 +8,42 @@ export type Eixo = keyof Priority
 
 // O piso de 12 evita que a pior rotação de um eixo desapareça no centro do mapa.
 export const PISO = 12
-const EIXOS_MOCK = ['agua', 'solo'] as const
 
 /** Posição no mapa da resiliência (escala fixa): 10 pontos por ano, em 10, em que a safra atendeu ao ZARC. */
 export const notaAnos = (anos: number) => anos * 10
 
+/** Escala da API (0–100, absoluta) na posição do mapa, com o piso para o ponto não sumir no centro. */
+const doApi = (v: number | null | undefined) => (v == null ? null : Math.max(PISO, Math.round(v)))
+
+/** Mock relativo (menor = melhor): 100 à melhor rotação e o piso à pior. Só para o que a API não entrega. */
+function relativa(k: 'agua' | 'solo', r: RotacaoDef, rots: RotacaoDef[]) {
+  const v = rots.map(x => x[k])
+  const min = Math.min(...v)
+  const max = Math.max(...v)
+  return max === min ? 100 : Math.round(PISO + ((100 - PISO) * (max - r[k])) / (max - min))
+}
+
 /**
- * Nota 0–100 por eixo.
- * - Resiliência: escala fixa (10 por ano), null enquanto o clima não chega.
- * - Produtividade: proporcional à receita da melhor rotação (100 = maior R$/ha).
- * - Água e solo: SCORE (mock), relativa: 100 = melhor e 12 = pior entre as rotações.
+ * Nota 0–100 por eixo. Com a resposta da API (`scores`), três eixos são dela, em escala absoluta:
+ * - Resiliência = `water_security` (100 − risco hídrico da pior cultura).
+ * - Produtividade = `productivity` (100 − perda estimada por falta de água).
+ * - Saúde do solo = `soil_protection` (cobertura viva e troca de família botânica).
+ * - Economia de água: a API não entrega; segue o score ilustrativo (mock), relativo entre as rotações.
+ * Sem `scores` (conjunto local dos testes): resiliência pelos anos, produtividade pela receita e solo pelo mock.
  */
 export function aptidao(i: number, rot: ResRotacao | null, rots: RotacaoDef[]): Record<Eixo, number | null> {
   const r = rots[i]
+  const agua = relativa('agua', r, rots)
+  if (r.scores) {
+    return { risco: doApi(r.scores.water_security), agua, solo: doApi(r.scores.soil_protection), prod: doApi(r.scores.productivity) }
+  }
   const maior = Math.max(...rots.map(x => receitaHa(x.ct)))
-  const out: Record<Eixo, number | null> = {
+  return {
     risco: rot?.anos != null ? Math.max(PISO, notaAnos(rot.anos)) : null,
-    agua: 0,
-    solo: 0,
+    agua,
+    solo: relativa('solo', r, rots),
     prod: maior > 0 ? Math.max(PISO, Math.round((100 * receitaHa(r.ct)) / maior)) : PISO,
   }
-  for (const k of EIXOS_MOCK) {
-    const v = rots.map(x => x[k])
-    const min = Math.min(...v)
-    const max = Math.max(...v)
-    out[k] = max === min ? 100 : Math.round(PISO + ((100 - PISO) * (max - r[k])) / (max - min))
-  }
-  return out
 }
 
 // Nome de cada eixo: todos femininos e no sentido "mais = melhor"
@@ -119,7 +128,10 @@ export function detalheSafra(s: ResSafra): string {
 export function motivo(r: RotacaoDef, k: Eixo, rot: ResRotacao | null): string | null {
   if (k === 'risco') return rot ? motivoSafra(safraLimitante(rot)) : 'aguardando as rotações'
   if (k === 'solo') return minuscula(r.ct.soilWhy)
-  if (k === 'prod') return reais(receitaHa(r.ct))
+  if (k === 'prod') {
+    const p = r.scores?.productivity
+    return p != null ? `produção preservada de ${Math.round(p)}% (perda por falta de água: ${Math.round(100 - p)}%)` : reais(receitaHa(r.ct))
+  }
   return null
 }
 
@@ -129,7 +141,7 @@ export function motivoDetalhe(k: Eixo, rot: ResRotacao | null): string | null {
   return detalheSafra(safraLimitante(rot))
 }
 
-// Cor fixa por rotação (posição no conjunto), usada no mapa e na caixa de seleção da tabela.
+// Cor fixa por rotação (RotacaoDef.cor), usada no mapa e na caixa de seleção da tabela.
 // A rotação atual é desenhada tracejada.
 export const COR_ROT = ['#0A64D6', '#1B9E3E', '#E07A00', '#3A3A3C']
 export const nomeRot = (r: RotacaoDef) => `${r.ct.c1} → ${r.ct.c2}`

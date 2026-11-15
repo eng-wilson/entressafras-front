@@ -45,7 +45,7 @@ function motivosMock(d: RotacaoDef) {
   const r = d.ct
   const cor = (bom: boolean) => (bom ? COR_WHY.good : COR_WHY.warn)
   return [
-    { ...cor(r.soil === 'Melhora'), icon: 'i-leaf', title: NOME_EIXO.solo, desc: `${r.soilWhy}.` },
+    { ...cor(r.soil === 'Melhora' || r.soil === 'Ótima'), icon: 'i-leaf', title: NOME_EIXO.solo, desc: `${r.soilWhy}.` },
     { ...cor(r.pest === 'Menor risco'), icon: 'i-bug', title: 'Pragas', desc: r.pestWhy },
     ...(r.atual ? [{ ...COR_WHY.good, icon: 'i-check', title: 'O que você ganha', desc: 'Você já conhece as duas culturas e vende os grãos.' }] : []),
   ]

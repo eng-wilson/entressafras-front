@@ -5,7 +5,7 @@
 //
 // O consumo (Kc × ET0) continua no front porque a API não o entrega pronto; os dois fatores vêm da API
 // (Kc do catálogo, ET0 do clima por decêndio).
-import type { ClimaDecendios, Decendio, Textura } from '../types'
+import type { ClimaDecendios, CropCalendarInfo, Decendio, Textura } from '../types'
 import { MONTHS_SHORT, type SafraDef } from '../data/mock'
 import { FASES, type CulturaRef } from '../data/zarc'
 import { diasDe, mesDe } from './periodo'
@@ -48,8 +48,10 @@ export type RiscoApi = {
   /** ISNA médio por fase (I a IV), da API. */
   isna: [number | null, number | null, number | null, number | null]
   anosValidos: number
-  /** MOCK = valor provisório do servidor, não calculado com o clima. */
-  metodo: 'MOCK' | 'FAO56_SIMPLIFIED_KY'
+  /** Método do servidor; 'MOCK' = valor provisório, não calculado com o clima. */
+  metodo: string
+  /** ISNA do ciclo inteiro, da API (null se não veio). */
+  isnaCiclo: number | null
 }
 
 /** Risco da API na régua do ZARC (só a escala de leitura): 30% → 7 de 10 anos sem perda crítica. */
@@ -89,6 +91,8 @@ export type ResSafra = {
     fases: Fracoes
     fonteFases: 'api' | 'local'
     decendios: CalcDecendio[]
+    /** Origem das datas e do ciclo (API); null no conjunto local. */
+    calendario: CropCalendarInfo | null
   }
 }
 /** anos: o da safra mais arriscada (a API dá o risco por cultura); null se alguma safra não tem risco. */
@@ -112,6 +116,7 @@ function riscoApi(s: SafraDef): RiscoApi | null {
     pct: r.risk_percentage, perda: r.estimated_yield_loss_pct, limiar: r.loss_threshold_pct,
     fase: r.critical_stage ? ESTAGIO_FASE[r.critical_stage] : null,
     isna: [m.initial, m.development, m.mid_season, m.late_season], anosValidos: r.valid_years, metodo: r.method,
+    isnaCiclo: r.mean_season_isna ?? null,
   }
 }
 
@@ -140,7 +145,7 @@ function safra(s: SafraDef, dec: Decendio[] | null): ResSafra {
     anos: risco ? anosDoRisco(risco.pct) : null, risco,
     consumo: somaOuNulo(decendios.map(d => d.consumo)),
     chuva: somaOuNulo(decendios.map(d => d.chuvaMedia)),
-    calc: { kc, fases, fonteFases: s.fases ? 'api' : 'local', decendios },
+    calc: { kc, fases, fonteFases: s.fases ? 'api' : 'local', decendios, calendario: s.calendario ?? null },
   }
 }
 

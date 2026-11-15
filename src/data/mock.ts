@@ -1,5 +1,5 @@
 import type { CulturaRef, ZarcId } from './zarc'
-import type { CropRisk } from '../types'
+import type { CropCalendarInfo, CropRisk, Priorities, RotationScores, SoilInfo, SoilProperties, SoilProtection } from '../types'
 
 // TMIN, TMAX e THIS_RAIN alimentam apenas testes e a fixture de clima.
 // Temperaturas mínimas por décimo (setembro décimo 0 → agosto décimo 35)
@@ -69,6 +69,8 @@ export type SafraDef = {
   raiz?: { ini: number; max: number }
   /** Risco hídrico da cultura, da API: é a única fonte da resiliência na tela (mesmo enquanto MOCK). */
   risco?: CropRisk
+  /** De onde vieram a data de plantio e o ciclo (calendário regional GGCMI ou referência FAO-56). */
+  calendario?: CropCalendarInfo
 }
 
 /** Barra do calendário, em meses desde 1º de setembro (0–12); sem rótulo = pousio. */
@@ -84,15 +86,23 @@ export type CTRow = {
   atual?: boolean
 }
 
-/** Uma rotação exibida: janelas das safras, textos da tabela e scores ilustrativos (menor = melhor). */
+/** Uma rotação exibida: janelas das safras, textos da tabela e scores. */
 export type RotacaoDef = {
   id: string
   safras: SafraDef[]
   ct: CTRow
+  /** Score ilustrativo de água (mock, menor = melhor); a API não entrega economia de água. */
   agua: number
+  /** Score ilustrativo de solo (mock, menor = melhor); só no conjunto local. Na API vale `scores.soil_protection`. */
   solo: number
   barras: BarDef[]
   maisPragas?: boolean
+  /** Posição em COR_ROT, estável quando a API só reordena as mesmas rotações. */
+  cor: number
+  /** Escalas 0–100 da API (produtividade preservada, segurança hídrica, proteção do solo, média). */
+  scores?: RotationScores
+  /** Índice de proteção do solo planejada, da API. */
+  protecaoSolo?: SoilProtection
 }
 
 /** Rotações da tela: da API (POST /api/rotations/recommendations) ou o conjunto local dos testes. */
@@ -103,6 +113,12 @@ export type ConjuntoRotacoes = {
   rotacoes: RotacaoDef[]
   /** Avisos do backend e do adaptador (ex.: ranking MOCK, rotação sem dado suficiente). */
   avisos: string[]
+  /** Solo usado na simulação da API (textura informada ou estimada pelo local). */
+  solo?: SoilInfo
+  /** Propriedades do solo superficial estimadas pelo local (SoilGrids), só exibição. */
+  propriedadesSolo?: SoilProperties | null
+  /** Prioridades que a API usou no ranking. */
+  prioridades?: Priorities
 }
 
 // Conjunto local (o protótipo original): 4 rotações fixas, na ordem de CT. Hoje alimenta só testes e fixtures.
@@ -140,7 +156,7 @@ export const CONJUNTO_LOCAL: ConjuntoRotacoes = {
   ano: 2026,
   avisos: [],
   rotacoes: SAFRAS.map((safras, i) => ({
-    id: `r${i + 1}`, safras, ct: CT[i], agua: SCORE.agua[i], solo: SCORE.solo[i], barras: BARRAS_LOCAIS[i], maisPragas: i === 3,
+    id: `r${i + 1}`, safras, ct: CT[i], agua: SCORE.agua[i], solo: SCORE.solo[i], barras: BARRAS_LOCAIS[i], maisPragas: i === 3, cor: i,
   })),
 }
 

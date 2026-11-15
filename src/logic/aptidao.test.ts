@@ -62,7 +62,7 @@ describe('faixa e motivo', () => {
     const r = resApi.rotacoes[2]
     expect(safraLimitante(r).nome).toBe('Milho safrinha')
     expect(motivo(API[2], 'risco', r)).toBe('milho safrinha: risco hídrico de 30% (API, provisório)')
-    expect(motivo(API[2], 'solo', r)).toBe('solo descoberto por 4 meses')
+    expect(motivo(API[2], 'solo', r)).toBe('cobertura viva em 208 de 366 dias; a troca de cultura muda de família botânica')
     expect(motivo(API[2], 'agua', r)).toBeNull()
   })
 

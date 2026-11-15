@@ -174,25 +174,97 @@ export type EstagioFao = 'initial' | 'development' | 'mid_season' | 'late_season
 export type CropRisk = {
   /** % das safras simuladas com perda acima de loss_threshold_pct. Não é queda de produtividade. */
   risk_percentage: number | null
+  /** Perda média de produtividade por falta de água, Ky × (1 − ETr/ETc), %. */
   estimated_yield_loss_pct: number | null
   loss_threshold_pct: number
   critical_stage: EstagioFao | null
   mean_isna: Record<EstagioFao, number | null>
+  /** ISNA do ciclo inteiro (ΣETr/ΣETc), média das safras. */
+  mean_season_isna?: number | null
   valid_years: number
-  method: 'MOCK' | 'FAO56_SIMPLIFIED_KY'
-  validated?: false
+  /** Ex.: 'MOCK' (provisório) ou o nome do método de cálculo do servidor. */
+  method: string
+  validated?: boolean
 }
 /** Detalhe completo da cultura (igual a /api/crops/{code}) mais o risco hídrico dela; só o que o front usa. */
 export type CropWithRisk = Pick<CropSummary, 'eco_port_code' | 'scientific_name' | 'common_names'> & {
   water_requirements: WaterRequirements | null
   risk: CropRisk
 }
-export type RotationCrop = { crop: CropWithRisk; planting_date: string; harvest_date: string }
-export type Rotation = { id: string; rank: number; crops: [RotationCrop, RotationCrop] }
+/** De onde vieram a data de plantio e a duração do ciclo. */
+export type CropCalendarInfo = {
+  source: 'GGCMI_PHASE3_V1_01' | 'FAO56_REFERENCE' | string
+  cycle_days: number
+  reference_planting_date?: string | null
+  /** Estatística por trás da célula do calendário (ex.: 'Brazil CONAB'). */
+  data_source?: string | null
+  grid_cell?: Ponto | null
+}
+export type RotationCrop = { crop: CropWithRisk; planting_date: string; harvest_date: string; calendar: CropCalendarInfo }
+/** Proteção do solo planejada: índice de planejamento (cobertura viva e troca de família), não medida de saúde do solo. */
+export type SoilProtection = {
+  score: number
+  living_cover_days: number
+  season_days: number
+  cover_fraction: number
+  family_change_fraction: number
+  transitions: number
+  family_changes: number
+  botanical_families: string[]
+  includes_history: boolean
+  weights: { cover: number; diversity: number }
+  method: string
+  validated?: boolean
+}
+/** Escalas absolutas 0–100 (100 = melhor possível), independentes das prioridades. null = risco desconhecido. */
+export type RotationScores = {
+  /** 100 − perda estimada por falta de água (pior das duas culturas). */
+  productivity: number | null
+  /** 100 − risco hídrico (pior das duas culturas). */
+  water_security: number | null
+  soil_protection: number
+  /** Média das três. */
+  overall: number | null
+  aggregation?: string
+}
+export type Rotation = {
+  id: string; rank: number; crops: [RotationCrop, RotationCrop]
+  soil_protection: SoilProtection
+  scores: RotationScores
+}
+/** Prioridades do ranking na API: 1 liga o indicador, 0 desliga. */
+export type Priorities = { productivity: 0 | 1; water_security: 0 | 1; soil_protection: 0 | 1 }
+/** Solo usado na simulação e de onde veio (textura informada ou estimativa pelo local). */
+export type SoilInfo = {
+  source: 'SOILGRIDS_SAXTON_RAWLS_2006' | 'REQUEST_TEXTURE_CLASS' | string
+  texture_class: SoilType
+  /** Capacidade de campo menos ponto de murcha, mm por metro de raiz. */
+  available_water_mm_per_m: number
+  sand_pct?: number | null; silt_pct?: number | null; clay_pct?: number | null
+  organic_matter_pct?: number | null
+  field_capacity?: number | null; wilting_point?: number | null
+  sampled_location?: Ponto | null
+  distance_km?: number | null
+}
+/** Propriedades do solo superficial estimadas pelo local (SoilGrids), só para exibição. */
+export type SoilProperties = {
+  source?: string; depth?: string
+  organic_carbon_g_per_kg: number
+  sand_pct: number; silt_pct: number; clay_pct: number
+  texture_class: SoilType
+  sampled_location: Ponto
+  distance_km: number
+}
 export type RotationRecommendations = {
   agricultural_year: number
   soil_type: SoilType
+  soil: SoilInfo
+  soil_properties?: SoilProperties | null
+  priorities: Priorities
   rotations: Rotation[]
-  assumptions: { loss_threshold_pct: number; initial_soil_water_fraction: number; spinup_days: number; planting_gap_days: number }
+  assumptions: {
+    loss_threshold_pct: number; initial_soil_water_fraction: number; spinup_days: number; planting_gap_days: number
+    planting_tolerance_days?: number
+  }
   warnings: string[]
 }

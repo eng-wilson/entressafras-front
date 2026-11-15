@@ -14,7 +14,8 @@ import { reverso } from './services/geocoding'
 import { classeDaTextura } from './logic/solo'
 import type { ConjuntoRotacoes } from './data/mock'
 import { useRotacoes } from './hooks/useRotacoes'
-import { conjuntoDaApi } from './logic/rotacoesApi'
+import { conjuntoDaApi, historicoEcoCrop, prioridadesApi } from './logic/rotacoesApi'
+import { soloDaTextura } from './services/rotacoes'
 import { ConjuntoContext } from './state/conjunto'
 import { useCultura } from './hooks/useCultura'
 import { CatalogoCulturas } from './components/CatalogoCulturas'
@@ -58,20 +59,34 @@ export default function App() {
 
   const clima = useClimaDecendios(talhao?.centro ?? null)
   const textura = talhao?.textura ?? null
-  const recomendadas = useRotacoes(talhao?.centro ?? null, textura)
   const historico = talhao?.historico ?? null
+  // Textura só vai à API quando o agricultor a informou; sem ela, a API estima o solo pelo local (SoilGrids).
+  const recomendadas = useRotacoes({
+    ponto: talhao?.centro ?? null,
+    solo: talhao?.texturaInformada === false ? null : soloDaTextura(textura),
+    historico: historicoEcoCrop(historico),
+    prioridades: prioridadesApi(state.pr),
+  })
+  // Trocando só as prioridades, a resposta anterior segue na tela até a nova ordem chegar.
+  const resposta = recomendadas.dados ?? recomendadas.anterior
   const conj = useMemo(
-    () => (recomendadas.dados ? conjuntoDaApi(recomendadas.dados, historico) : null),
-    [recomendadas.dados, historico],
+    () => (resposta ? conjuntoDaApi(resposta, historico) : null),
+    [resposta, historico],
   )
-  // Conjunto novo (outro talhão ou solo): volta à rotação inicial e às marcadas da comparação.
+  // Conjunto novo: a seleção e as marcadas da comparação acompanham as mesmas rotações (pelo id) quando a API só
+  // reordenou; rotação que sumiu volta à inicial (a atual do agricultor ou a 1ª).
   const [conjVisto, setConjVisto] = useState<ConjuntoRotacoes | null>(null)
   if (conj !== conjVisto) {
     setConjVisto(conj)
     if (conj) {
-      const i = inicial(conj)
+      const ids = conj.rotacoes.map(r => r.id)
+      const idDe = (i: number) => conjVisto?.rotacoes[i]?.id
+      const sel = ids.indexOf(idDe(state.rot) ?? '')
+      const i = sel >= 0 ? sel : inicial(conj)
       setState(s => ({ ...s, rot: i }))
-      setCmpSel(conj.rotacoes.length > 1 ? [...new Set([i, i === 0 ? 1 : 0])].sort() : [0])
+      const marcadas = cmpSel.map(idDe).map(id => ids.indexOf(id ?? '')).filter(x => x >= 0)
+      setCmpSel(marcadas.length ? [...new Set(marcadas)].sort()
+        : conj.rotacoes.length > 1 ? [...new Set([i, i === 0 ? 1 : 0])].sort() : [0])
     }
   }
   const rotOk = !!conj && state.rot < conj.rotacoes.length
@@ -176,7 +191,11 @@ export default function App() {
             <button className="link" type="button" onClick={recomendadas.recarregar}>Tentar de novo</button>
           </div>
         )}
-        {recomendadas.status === 'carregando' && <p className="aviso" role="status">Buscando as rotações recomendadas para o talhão…</p>}
+        {recomendadas.status === 'carregando' && (
+          <p className="aviso" role="status">
+            {recomendadas.anterior ? 'Reordenando as rotações pelas prioridades marcadas…' : 'Buscando as rotações recomendadas para o talhão… pode levar até um minuto.'}
+          </p>
+        )}
         {conj && conj.rotacoes.length === 0 && <p className="aviso" role="status">Nenhuma rotação recomendada para este talhão.</p>}
         {pronto && <>
         <Simulation idx={state.idx} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={state.mode === 'cmp' ? { sel: cmpSel, pr: state.pr, res } : null} />

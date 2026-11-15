@@ -1,4 +1,5 @@
-import type { EstadoClima, Priority, Talhao } from '../types'
+import type { EstadoClima, Priority, SoilInfo, Talhao } from '../types'
+import { useConjunto } from '../state/conjunto'
 import { fmtCoord, fmtHaCurto } from '../logic/geo'
 import { rotuloSolo } from '../logic/solo'
 import { registroMaisRecente, resumoSafra } from '../logic/historico'
@@ -29,11 +30,24 @@ function chuvaAno(clima: EstadoClima): { value: string; dica?: string } {
   return { value: `${inteiro(mm)} mm`, dica: `Média de ${clima.dados.safras.length} safras, NASA POWER` }
 }
 
-function infoDo(t: Talhao, clima: EstadoClima): Info[] {
+const TEXTURA_API = { sandy: 'Arenoso', medium: 'Médio', clayey: 'Argiloso' } as const
+
+/** Sem textura informada, a API estima o solo pelo local: a lateral mostra a estimativa dela, marcada como tal. */
+function solo(t: Talhao, api: SoilInfo | undefined): { value: string; dica?: string } {
+  if (!t.textura && api?.source === 'SOILGRIDS_SAXTON_RAWLS_2006') {
+    return {
+      value: `${TEXTURA_API[api.texture_class]} (estimado)`,
+      dica: `Estimado pela API a partir do local (SoilGrids): ${Math.round(api.available_water_mm_per_m)} mm de água por metro de raiz. Editar o solo do talhão`,
+    }
+  }
+  return { value: rotuloSolo(t) }
+}
+
+function infoDo(t: Talhao, clima: EstadoClima, api: SoilInfo | undefined): Info[] {
   const ultima = resumoSafra(registroMaisRecente(t.historico)?.registro)
   return [
     { label: t.nome, value: fmtHaCurto(t.areaHa), acao: { a: 'redesenhar', dica: 'Redesenhar o contorno do talhão' } },
-    { label: 'Solo', value: rotuloSolo(t), acao: { a: 'solo', dica: 'Editar o solo do talhão' } },
+    { label: 'Solo', ...(() => { const s = solo(t, api); return { value: s.value, acao: { a: 'solo' as const, dica: s.dica ?? 'Editar o solo do talhão' } } })() },
     { label: 'Histórico', value: ultima || 'Registrar', acao: { a: 'historico', dica: 'Registrar as safras anteriores' } },
     // A umidade saiu daqui: a cena mostra a do decêndio simulado. A chuva do ano situa o talhão no regime de chuvas.
     { label: 'Chuva no ano', ...chuvaAno(clima) },
@@ -50,6 +64,7 @@ const PRIORITIES = [
 ]
 
 export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props) {
+  const conj = useConjunto()
   return (
     <aside className="side" aria-label="Ajustes">
       <div className="sec">
@@ -61,7 +76,7 @@ export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props
           </button>
         </div>
         <div className="list">
-          {infoDo(talhao, clima).map(item => item.acao ? (
+          {infoDo(talhao, clima, conj.solo).map(item => item.acao ? (
             <button
               key={item.label}
               type="button"
@@ -84,7 +99,7 @@ export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props
 
       <div className="sec">
         <h3>O que importa</h3>
-        <p className="prh">Destaca no mapa de aptidão o que você marcar. A ordem das rotações vem da recomendação da API.</p>
+        <p className="prh">A ordem das rotações segue o que você marcar (calculada pela API). Economia de água ainda não entra na ordem.</p>
         <div className="list">
           {PRIORITIES.map(({ k, label, icon }) => (
             <div key={k} className="item">

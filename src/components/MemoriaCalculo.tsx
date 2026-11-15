@@ -6,6 +6,8 @@ import { SEM_CRITERIO, detalheApi, faixaAnos } from '../logic/aptidao'
 import type { Resiliencia, ResSafra } from '../logic/resiliencia'
 import { FONTE_FASES, FONTE_FASES_API, FONTE_KC_API, NOME_FASE, type Fonte } from '../data/zarc'
 import { janelaLabel } from '../logic/periodo'
+import { useConjunto } from '../state/conjunto'
+import type { CropCalendarInfo, SoilInfo } from '../types'
 
 const ROMANO = ['I', 'II', 'III', 'IV'] as const
 
@@ -13,6 +15,28 @@ const n0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
 const n2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const mm = (v: number | null) => (v == null ? '—' : `${n0.format(v)} mm`)
 const pct = (v: number | null) => (v == null ? '—' : `${n0.format(v * 100)}%`)
+
+const TEXTURA_API = { sandy: 'arenoso', medium: 'médio', clayey: 'argiloso' } as const
+const n1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+const dataBr = (iso: string) => iso.split('-').reverse().join('/')
+
+/** "Calendário regional GGCMI (Brazil CONAB), plantio de referência 15/10/2027; ciclo de 85 dias." */
+function textoCalendario(c: CropCalendarInfo): string {
+  const fonte = c.source === 'GGCMI_PHASE3_V1_01'
+    ? `calendário regional de plantio GGCMI${c.data_source ? ` (${c.data_source})` : ''}`
+    : c.source === 'FAO56_REFERENCE' ? 'referência FAO-56 (sem calendário regional para o local)' : c.source
+  const ref = c.reference_planting_date ? `, plantio de referência em ${dataBr(c.reference_planting_date)}` : ''
+  return `Datas: ${fonte}${ref}; ciclo de ${c.cycle_days} dias.`
+}
+
+/** "Argiloso, 140 mm de água por metro de raiz, estimado pelo local (SoilGrids, ponto a 0,3 km)." */
+function textoSolo(s: SoilInfo): string {
+  const origem = s.source === 'REQUEST_TEXTURE_CLASS' ? 'pela textura que você informou'
+    : s.source === 'SOILGRIDS_SAXTON_RAWLS_2006' ? `estimado pelo local (mapas SoilGrids e equações de Saxton & Rawls)${s.distance_km != null ? `, ponto a ${n1.format(s.distance_km)} km` : ''}`
+      : s.source
+  const gran = s.clay_pct != null && s.sand_pct != null ? ` Argila ${n1.format(s.clay_pct)}%, areia ${n1.format(s.sand_pct)}%.` : ''
+  return `Solo ${TEXTURA_API[s.texture_class]}, com ${n1.format(s.available_water_mm_per_m)} mm de água disponível por metro de raiz, ${origem}.${gran}`
+}
 
 function Link({ f }: { f: Fonte }) {
   return <a href={f.url} target="_blank" rel="noreferrer">{f.titulo}</a>
@@ -28,7 +52,8 @@ export function MemoriaCalculo({ s, n, rotacao, res, onFechar }: Props) {
     return () => el.close()
   }, [])
 
-  const { kc, fases, fonteFases, decendios } = s.calc
+  const { kc, fases, fonteFases, decendios, calendario } = s.calc
+  const conj = useConjunto()
   const r = s.risco
   const f = s.anos != null ? faixaAnos(s.anos) : null
   const papel = n === 0 ? '1ª safra' : s.cobertura ? '2ª safra (cobertura)' : '2ª safra'
@@ -64,7 +89,9 @@ export function MemoriaCalculo({ s, n, rotacao, res, onFechar }: Props) {
               {' '}Uma safra conta como crítica quando a perda por falta de água passa de {r.limiar}%.
               {r.perda != null && <> Perda média estimada: {r.perda}%.</>}
               {r.fase != null && <> Fase com o maior déficit: <b>{ROMANO[r.fase]} · {NOME_FASE[r.fase].toLowerCase()}</b>.</>}
+              {r.isnaCiclo != null && <> ISNA do ciclo inteiro: {pct(r.isnaCiclo)}.</>}
             </p>
+            {conj.solo && <p>{textoSolo(conj.solo)}</p>}
             <div className="mc-tab">
               <table>
                 <thead>
@@ -83,6 +110,7 @@ export function MemoriaCalculo({ s, n, rotacao, res, onFechar }: Props) {
           <h3>Fases no calendário</h3>
           <p>
             {janelaLabel(s.de, s.ate)}: {decendios.length} decêndios, com as datas de plantio e colheita da rotação recomendada.
+            {calendario && <> {textoCalendario(calendario)}</>}
             {' '}Fases: {NOME_FASE.map((nm, i) => `${ROMANO[i]} ${nm.toLowerCase()} (${pct(fases[i])})`).join(', ')}.
             {' '}{fonteFases === 'api'
               ? <>Proporção dos estágios FAO-56 da cultura. Fonte: <Link f={FONTE_FASES_API} />.</>

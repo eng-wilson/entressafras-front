@@ -1,7 +1,7 @@
 // Rotações recomendadas pela API Entressafras (POST /api/rotations/recommendations), com cache em memória e no
 // navegador. Como em clima.ts, o erro é lançado: a tela distingue "carregando", "falhou, tentar de novo" e "ok".
 // O backend avisa em `warnings` que o ranking e o risco ainda são MOCK; o contrato é final.
-import type { Ponto, RotationRecommendations, SoilType, Textura } from '../types'
+import type { Ponto, Priorities, RotationRecommendations, SoilType, Textura } from '../types'
 import { API_URL } from './clima'
 
 export type MotivoErroRotacoes = 'rede' | 'http' | 'parametros' | 'resposta_invalida'
@@ -17,14 +17,15 @@ export class ErroRotacoes extends Error {
   }
 }
 
-/** Textura do cadastro → tipo de solo da API. Sem textura informada, o solo médio. */
+/** Textura do cadastro → tipo de solo da API. Sem textura informada, null: a API estima o solo pelo local (SoilGrids). */
 export const SOLO_API: Record<Textura, SoilType> = { arenoso: 'sandy', medio: 'medium', argiloso: 'clayey' }
-export const soloDaTextura = (t: Textura | null): SoilType => (t ? SOLO_API[t] : 'medium')
+export const soloDaTextura = (t: Textura | null): SoilType | null => (t ? SOLO_API[t] : null)
 
 const objeto = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const numOuNulo = (v: unknown) => v === null || (typeof v === 'number' && Number.isFinite(v))
 const finito = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
 const DATA = /^\d{4}-\d{2}-\d{2}$/
+const SOLOS = ['sandy', 'medium', 'clayey']
 const ESTAGIOS = ['initial', 'development', 'mid_season', 'late_season']
 
 function kcValido(w: unknown): boolean {
@@ -42,32 +43,49 @@ function culturaValida(c: unknown): boolean {
   return objeto(r) && numOuNulo(r.risk_percentage) && numOuNulo(r.estimated_yield_loss_pct) && finito(r.loss_threshold_pct)
     && (r.critical_stage === null || ESTAGIOS.includes(r.critical_stage as string))
     && objeto(r.mean_isna) && ESTAGIOS.every(k => numOuNulo((r.mean_isna as Record<string, unknown>)[k]))
-    && Number.isInteger(r.valid_years) && (r.method === 'MOCK' || r.method === 'FAO56_SIMPLIFIED_KY')
+    && Number.isInteger(r.valid_years) && typeof r.method === 'string'
 }
 
-/** Formato mínimo que a tela precisa: até 4 rotações de 2 culturas, cada uma com datas em ordem. */
-export function rotacoesValidas(x: unknown): x is RotationRecommendations {
-  if (!objeto(x) || !Number.isInteger(x.agricultural_year) || !Array.isArray(x.rotations) || !Array.isArray(x.warnings)) return false
-  if (!objeto(x.assumptions) || !x.warnings.every(w => typeof w === 'string')) return false
-  if (x.rotations.length < 1 || x.rotations.length > 4) return false
-  return x.rotations.every(r => objeto(r) && typeof r.id === 'string' && Number.isInteger(r.rank)
-    && Array.isArray(r.crops) && r.crops.length === 2
+const escala = (v: unknown) => v === null || (finito(v) && v >= 0 && v <= 100)
+function rotacaoValida(r: unknown): boolean {
+  if (!objeto(r) || typeof r.id !== 'string' || !Number.isInteger(r.rank) || !Array.isArray(r.crops) || r.crops.length !== 2) return false
+  const sc = r.scores, sp = r.soil_protection
+  return objeto(sc) && escala(sc.productivity) && escala(sc.water_security) && finito(sc.soil_protection) && escala(sc.overall)
+    && objeto(sp) && finito(sp.score) && Number.isInteger(sp.living_cover_days) && Number.isInteger(sp.season_days)
+    && finito(sp.cover_fraction) && finito(sp.family_change_fraction) && Array.isArray(sp.botanical_families)
     && r.crops.every(c => objeto(c) && culturaValida(c.crop)
       && typeof c.planting_date === 'string' && DATA.test(c.planting_date)
       && typeof c.harvest_date === 'string' && DATA.test(c.harvest_date)
-      && c.planting_date < c.harvest_date)
-    && (r.crops[0] as { harvest_date: string }).harvest_date < (r.crops[1] as { planting_date: string }).planting_date)
+      && c.planting_date < c.harvest_date
+      && objeto(c.calendar) && typeof c.calendar.source === 'string' && Number.isInteger(c.calendar.cycle_days))
+    && (r.crops[0] as { harvest_date: string }).harvest_date < (r.crops[1] as { planting_date: string }).planting_date
+}
+
+/** Formato mínimo que a tela precisa: solo, prioridades e até 4 rotações de 2 culturas com scores e datas em ordem. */
+export function rotacoesValidas(x: unknown): x is RotationRecommendations {
+  if (!objeto(x) || !Number.isInteger(x.agricultural_year) || !Array.isArray(x.rotations) || !Array.isArray(x.warnings)) return false
+  if (!objeto(x.assumptions) || !x.warnings.every(w => typeof w === 'string')) return false
+  if (!objeto(x.soil) || !SOLOS.includes(x.soil.texture_class as string) || !finito(x.soil.available_water_mm_per_m)) return false
+  if (!objeto(x.priorities)) return false
+  if (x.rotations.length < 1 || x.rotations.length > 4) return false
+  return x.rotations.every(rotacaoValida)
 }
 
 const ehAbort = (e: unknown) => e instanceof Error && e.name === 'AbortError'
 
-export type PedidoRotacoes = { ponto: Ponto; solo: SoilType; ano?: number }
+/**
+ * O que a tela envia: o ponto, a textura só quando o agricultor a informou (senão a API estima), o histórico em
+ * códigos EcoCrop (mais antigo primeiro) e as prioridades da lateral.
+ */
+export type PedidoRotacoes = { ponto: Ponto; solo: SoilType | null; historico: number[]; prioridades: Priorities; ano?: number }
 
 /** Rotações recomendadas para o ponto e o solo. Lança ErroRotacoes; se cancelado, repassa o AbortError. */
 export async function recomendarRotacoes(p: PedidoRotacoes, signal?: AbortSignal): Promise<RotationRecommendations> {
   const corpo = {
-    soil_type: p.solo,
     location: { lat: p.ponto.lat, lon: p.ponto.lon },
+    ...(p.solo ? { soil_type: p.solo } : {}),
+    ...(p.historico.length ? { crop_history: p.historico } : {}),
+    priorities: p.prioridades,
     ...(p.ano ? { agricultural_year: p.ano } : {}),
   }
   let r: Response
@@ -95,15 +113,18 @@ export async function recomendarRotacoes(p: PedidoRotacoes, signal?: AbortSignal
 }
 
 // ---------- Cache ----------
-// O ranking ainda é MOCK no backend e o "ano que vem" muda: um dia basta. Mesma chave de ponto do clima, mais o solo.
-export const CHAVE_CACHE_ROTACOES = 'entressafras.rotacoes.v1'
+// O "ano que vem" muda e o backend ainda evolui: um dia basta. Chave: ponto, solo, histórico e prioridades.
+// v2: formato com scores, proteção do solo, solo do SoilGrids e calendário.
+export const CHAVE_CACHE_ROTACOES = 'entressafras.rotacoes.v2'
 export const TTL_ROTACOES = 24 * 60 * 60 * 1000
 const MAX_ENTRADAS = 20
 
 type Entrada = { em: number; dados: RotationRecommendations }
 const memoria = new Map<string, Entrada>()
 
-export const chaveRotacoes = (p: PedidoRotacoes) => `${p.ponto.lat.toFixed(2)},${p.ponto.lon.toFixed(2)},${p.solo},${p.ano ?? ''}`
+const bits = (q: Priorities) => `${q.water_security}${q.productivity}${q.soil_protection}`
+export const chaveRotacoes = (p: PedidoRotacoes) =>
+  `${p.ponto.lat.toFixed(2)},${p.ponto.lon.toFixed(2)},${p.solo ?? 'auto'},${p.historico.join('-')},${bits(p.prioridades)},${p.ano ?? ''}`
 
 function tabela(): Record<string, Entrada> {
   try {

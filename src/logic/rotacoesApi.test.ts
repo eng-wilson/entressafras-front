@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
 import { climaDeMock } from '../data/climaFixture'
-import { conjuntoDaApi, decendioDaData, mesDaData, nomeRotacao } from './rotacoesApi'
+import { conjuntoDaApi, decendioDaData, historicoEcoCrop, mesDaData, nomeRotacao, prioridadesApi, textoProtecaoSolo } from './rotacoesApi'
 import { resiliencia } from './resiliencia'
 import { diagnostico } from './diagnostico'
 import { aptidao } from './aptidao'
@@ -91,5 +91,47 @@ describe('as rotações da API na conta da tela', () => {
     const fase3 = res.rotacoes[3].safras[1].calc.decendios.filter(d => d.fase === 2)
     expect(flor.from).toBe(fase3[0].idx)
     expect(est.find(e => e.ref === 'algodao' && e.k === 'mat')!.from).toBe(fase3.at(-1)!.idx + 1)
+  })
+})
+
+describe('contrato de 15/11/2026: prioridades, histórico, scores e proteção do solo', () => {
+  it('histórico do talhão em códigos EcoCrop, do mais antigo ao mais recente, só as 3 últimas safras', () => {
+    expect(historicoEcoCrop({
+      '2022/23': { c1: 'soja', c2: 'milho' },
+      '2023/24': { c1: 'soja', c2: 'nao_plantei' },
+      '2024/25': { c1: 'soja', c2: 'outra:girassol' },
+      '2025/26': { c1: 'soja', c2: 'sorgo' },
+    })).toEqual([1150, 1150, 1150, 48747])
+    expect(historicoEcoCrop(null)).toEqual([])
+  })
+
+  it('prioridades da lateral → API; economia de água não tem equivalente', () => {
+    expect(prioridadesApi({ risco: true, agua: true, solo: false, prod: true }))
+      .toEqual({ water_security: 1, productivity: 1, soil_protection: 0 })
+  })
+
+  it('cada rotação mantém a cor quando a API só reordena', () => {
+    const r = structuredClone(ROTACOES_FIXTURE)
+    r.rotations.reverse().forEach((x, i) => { x.rank = i + 1 })
+    const reordenado = conjuntoDaApi(r)
+    for (const rot of conj.rotacoes) expect(reordenado.rotacoes.find(x => x.id === rot.id)!.cor).toBe(rot.cor)
+  })
+
+  it('resiliência, produtividade e saúde do solo vêm dos scores da API (escala absoluta)', () => {
+    const r = conj.rotacoes[3]
+    expect(aptidao(3, null, conj.rotacoes)).toMatchObject({
+      risco: Math.round(r.scores!.water_security!),
+      prod: Math.round(r.scores!.productivity!),
+      solo: Math.round(r.scores!.soil_protection),
+    })
+    expect(r.ct.soilWhy).toBe(textoProtecaoSolo(r.protecaoSolo!))
+    expect(conj.solo?.texture_class).toBe('medium')
+  })
+
+  it('score ausente (risco desconhecido) fica sem nota, sem estimativa local', () => {
+    const r = structuredClone(ROTACOES_FIXTURE)
+    r.rotations[0].scores = { ...r.rotations[0].scores, water_security: null, productivity: null }
+    const c = conjuntoDaApi(r)
+    expect(aptidao(0, null, c.rotacoes)).toMatchObject({ risco: null, prod: null })
   })
 })

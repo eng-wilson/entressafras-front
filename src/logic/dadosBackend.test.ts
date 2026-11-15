@@ -20,13 +20,13 @@ describe('cobertura dos dados pelo backend', () => {
 
   it('MOCK no backend não conta como real; vira real sozinho quando o método muda', () => {
     expect(situacao(base, 'Risco hídrico por cultura')).toBe('mock')
-    expect(situacao(base, 'Ordem (rank) das rotações')).toBe('mock')
+    expect(situacao(base, 'Ordem das rotações pelas prioridades')).toBe('mock')
     const calculado = structuredClone(ROTACOES_FIXTURE)
     calculado.warnings = []
     for (const r of calculado.rotations) for (const c of r.crops) c.crop.risk.method = 'FAO56_SIMPLIFIED_KY'
     const a = { ...base, rotacoes: calculado }
     expect(situacao(a, 'Risco hídrico por cultura')).toBe('real_uso')
-    expect(situacao(a, 'Ordem (rank) das rotações')).toBe('real_uso')
+    expect(situacao(a, 'Ordem das rotações pelas prioridades')).toBe('real_uso')
   })
 
   it('estágios e raízes servidos pela API contam como reais em uso', () => {
@@ -48,5 +48,14 @@ describe('cobertura dos dados pelo backend', () => {
     expect(doc2.match(/dados-backend:inicio/g)).toHaveLength(1)
     expect(doc2).toContain('0 reais em uso')
     expect(doc2).toContain('## Dependências futuras do backend\n\nfim')
+  })
+})
+
+describe('endpoint fora do ar', () => {
+  it('dado de um endpoint que falhou aparece como fora do ar, não como pendente', () => {
+    const itens = avaliar({ ...base, falhou: { rotacoes: true } })
+    expect(itens.find(i => i.dado === 'Risco hídrico por cultura')!.situacao).toBe('fora')
+    expect(itens.find(i => i.dado === 'Kc por cultura')!.situacao).toBe('real_uso')
+    expect(itens.find(i => i.dado === 'Previsão do tempo')!.situacao).toBe('nenhum')
   })
 })
