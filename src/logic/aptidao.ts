@@ -69,6 +69,15 @@ export function faixaAnos(anos: number): Faixa {
   return cls === 'good' ? { nivel: 3, rotulo: 'Ótima', cls } : cls === 'warn' ? { nivel: 2, rotulo: 'Média', cls } : { nivel: 1, rotulo: 'Fraca', cls }
 }
 
+/**
+ * Faixa de uma nota no mapa, nos cards e no painel (uma regra só): a resiliência segue os níveis de risco do ZARC
+ * quando a API trouxe o risco; os demais eixos, a nota 0–100. null = sem dado.
+ */
+export function faixaDaNota(k: Eixo, v: number | null, rot: ResRotacao | null): Faixa | null {
+  if (v == null) return null
+  return k === 'risco' && rot?.anos != null ? faixaAnos(rot.anos) : faixa(v)
+}
+
 /** "risco 20% no ZARC" ou "acima do risco aceito pelo ZARC (40%)". */
 export function textoNivel(anos: number): string {
   const n = nivelZarc(anos)

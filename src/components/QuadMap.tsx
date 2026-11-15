@@ -4,9 +4,10 @@ import './quadmap.css'
 import type { RotacaoDef } from '../data/mock'
 import { useConjunto } from '../state/conjunto'
 import {
-  aptidao, COR_ROT, detalheSafra, faixa, faixaAnos, motivo, motivoDetalhe, NOME_EIXO as NOME, nomeRot,
+  aptidao, COR_ROT, detalheSafra, faixaAnos, faixaDaNota, motivo, motivoDetalhe, NOME_EIXO as NOME, nomeRot,
   PISO, resultadoSafra, textoNivel, reais, receitaSafra, type Eixo, type Faixa,
 } from '../logic/aptidao'
+import { BarraPrioridade } from './BarraPrioridade'
 import type { Resiliencia, ResRotacao, ResSafra } from '../logic/resiliencia'
 import { janelaLabel as janela } from '../logic/periodo'
 import { MemoriaCalculo } from './MemoriaCalculo'
@@ -34,8 +35,6 @@ const ponto = (k: Eixo, v: number): [number, number] => {
 
 const SEM_DADO = { nivel: 0, rotulo: 'Sem dado', cls: 'nd' } as const
 /** Resiliência usa os níveis de risco do ZARC; os demais eixos, a nota 0–100. */
-const faixaOu = (k: Eixo, v: number | null, rot: ResRotacao | null): Faixa | typeof SEM_DADO =>
-  v == null ? SEM_DADO : k === 'risco' && rot?.anos != null ? faixaAnos(rot.anos) : faixa(v)
 
 /** Rótulo de origem: a rotação atual do talhão, uma salva pelo agricultor ou a posição na recomendação da API. */
 const origem = (rots: RotacaoDef[], i: number) =>
@@ -144,7 +143,7 @@ export function QuadMap({ sel, pr, res }: Props) {
     return { i, rot, a: aptidao(i, rot, rots) }
   })
   const resumo = dados
-    .map(d => `${d.i + 1}. ${nomeRot(rots[d.i])}: ${ORDEM.map(k => `${t(NOME[k])} ${t(faixaOu(k, d.a[k], d.rot).rotulo).toLowerCase()}`).join(', ')}`)
+    .map(d => `${d.i + 1}. ${nomeRot(rots[d.i])}: ${ORDEM.map(k => `${t(NOME[k])} ${t(faixaDaNota(k, d.a[k], d.rot)?.rotulo ?? 'Sem dado').toLowerCase()}`).join(', ')}`)
     .join('; ')
   // A seleção fica nas linhas das rotações, abaixo: o botão leva o foco até elas.
   const escolher = () => {
@@ -252,10 +251,9 @@ export function QuadMap({ sel, pr, res }: Props) {
                       const lucro = k === 'prod' ? rots[i].lucro : null
                       return (
                         <Fragment key={k}>
-                          <li className={pr[k] ? 'on' : undefined} title={dica || undefined}>
-                            <span className="qm-en">{t(NOME[k])}</span>
-                            <Nota f={faixaOu(k, a[k], rot)} />
-                            <span className="qm-v">{a[k] ?? '—'}</span>
+                          {/* Mesma linha do painel direito (ícone, nome, barra, faixa), na escala do card */}
+                          <li className={`bp-linha bp-compacto${pr[k] ? ' on' : ''}`} title={dica || undefined}>
+                            <BarraPrioridade k={k} nota={a[k]} f={faixaDaNota(k, a[k], rot)} />
                           </li>
                           {/* Lucro estimado da API, dentro de Produtividade; só aparece quando o backend envia */}
                           {lucro != null && (

@@ -60,7 +60,7 @@
 .insp-row:hover { background: #ededf1; }
 .insp-row:active { background: #e0e5e1; }
 .insp-section > h3 { margin: 0 0 8px 4px; color: var(--insp-secondary); font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .055em; }
-.insp-culture-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 76px; text-align: left; padding: 10px 12px; position: relative; }
+.insp-culture-row { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 56px; text-align: left; padding: 8px 12px; position: relative; }
 .insp-culture-row + .insp-culture-row::before, .insp-culture-list > .insp-row::before { content: ''; position: absolute; inset: 0 0 auto 28px; height: 1px; background: var(--insp-separator); }
 .insp-culture-copy { flex: 1; min-width: 0; }
 .insp-culture-copy strong { display: block; font-weight: 600; }
@@ -129,3 +129,14 @@
   .board .mstrip { flex-wrap: wrap; gap: 10px; padding-block: 12px; }
   .board .ms-title { flex-basis: calc(100% - 40px); }
 }
+
+/* Rótulo acima do nome da rotação */
+.insp .insp-kicker { margin: 0 0 2px; color: var(--insp-secondary); font-size: var(--insp-caption); }
+
+/* Prioridades na sua região: cada linha é um botão (ícone, nome, barra, faixa — BarraPrioridade) que abre a explicação */
+.insp-param { width: 100%; min-height: 52px; padding: 9px 12px; text-align: left; position: relative; }
+.insp-param + .insp-param::before { content: ''; position: absolute; inset: 0 0 auto 50px; height: 1px; background: var(--insp-separator); }
+button.insp-param:hover { background: #ededf1; }
+button.insp-param:active { background: #e0e5e1; }
+.insp-param .insp-chevron { flex: none; margin-left: -2px; }
+.insp-param-detalhe { margin-bottom: 14px; }

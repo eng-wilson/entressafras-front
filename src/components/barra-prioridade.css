@@ -1,0 +1,27 @@
+/* Linha de prioridade (BarraPrioridade). Tamanhos por variáveis: o painel usa o padrão; o card da comparação,
+   a escala menor (.bp-compacto). */
+.bp-linha { --bp-icone: 28px; --bp-ic: 16px; --bp-nome: .875rem; --bp-barra: 6px; --bp-faixa: .8125rem; --bp-gap: 10px;
+  display: flex; align-items: center; gap: var(--bp-gap); }
+.bp-linha.bp-compacto { --bp-icone: 22px; --bp-ic: 13px; --bp-nome: 13px; --bp-barra: 5px; --bp-faixa: 12px; --bp-gap: 8px; }
+.bp-icone { display: grid; place-items: center; width: var(--bp-icone); height: var(--bp-icone); flex: none; border-radius: 8px; background: #e9e9ed; color: #636368; }
+.bp-linha.bp-compacto .bp-icone { border-radius: 6px; }
+.bp-icone .ic { width: var(--bp-ic); height: var(--bp-ic); }
+.bp-icone.good { background: #e3f4e8; color: #187538; }
+.bp-icone.warn { background: #ffebc6; color: #915500; }
+.bp-icone.risk { background: #fde2e4; color: #b42332; }
+.bp-copy { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+.bp-nome { font-size: var(--bp-nome); font-weight: 500; line-height: 1.3; overflow-wrap: anywhere; }
+/* Prioridade ligada no ranking da API: nome em azul */
+.bp-linha.on .bp-nome { color: #0a64c2; font-weight: 600; }
+.bp-barra { display: block; width: 100%; height: var(--bp-barra); border-radius: 3px; background: #e5e5ea; overflow: hidden; }
+.bp-barra i { display: block; height: 100%; border-radius: 3px; background: #8e8e93; }
+.bp-barra i.good { background: #28bd59; }
+.bp-barra i.warn { background: #c78100; }
+.bp-barra i.risk { background: #d70015; }
+/* Ilustrativo (economia de água): barra listrada */
+.bp-barra.ilustrativo i { background-image: repeating-linear-gradient(-45deg, rgba(255,255,255,.55) 0 3px, transparent 3px 6px); }
+.bp-faixa { flex: none; min-width: 44px; text-align: right; font-size: var(--bp-faixa); font-weight: 600; }
+.bp-faixa.good { color: #24733d; }
+.bp-faixa.warn { color: #805300; }
+.bp-faixa.risk { color: #b42332; }
+.bp-faixa.none { color: #636368; }

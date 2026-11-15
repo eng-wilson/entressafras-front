@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { safraLimitante } from '../logic/aptidao'
+import { aptidao, faixaDaNota, NOME_EIXO, safraLimitante, type Eixo } from '../logic/aptidao'
+import { BarraPrioridade, ILUSTRATIVO, leituraPrioridade } from './BarraPrioridade'
 import { porQueRanking } from '../logic/porQueRanking'
 import type { Resiliencia, ResSafra } from '../logic/resiliencia'
 import { classeAnos } from '../logic/status'
@@ -19,6 +20,17 @@ const SELO = {
   warn: { icon: 'i-alert', rotulo: 'Arriscado' },
   risk: { icon: 'i-xc', rotulo: 'Desfavorável' },
 } as const
+// Prioridades na região: as 4 do "O que importa"; a chave da API diz se a prioridade está ligada no ranking.
+const PARAMETROS: { k: Eixo; api: 'water_security' | 'soil_protection' | 'productivity' | null }[] = [
+  { k: 'risco', api: 'water_security' }, { k: 'agua', api: null }, { k: 'solo', api: 'soil_protection' }, { k: 'prod', api: 'productivity' },
+]
+/** O que cada prioridade significa (página de detalhe ao tocar nela). */
+const EXPLICACAO: Record<Eixo, string> = {
+  risco: 'Quanto a rotação resiste à falta de água no clima deste local. Vem do risco hídrico que a API calcula para as duas safras, nos anos históricos.',
+  agua: 'Quanto a rotação economiza água em comparação com as outras opções. Ainda é ilustrativo: a API não calcula este indicador.',
+  solo: 'Quanto a rotação protege o solo: dias com cobertura viva e troca de família botânica entre as culturas. É um índice de planejamento da API, não uma medida do solo.',
+  prod: 'Quanto da produtividade a rotação preserva diante da falta de água, pela cultura mais afetada. Calculado pela API para este local.',
+}
 function Icon({ name }: { name: string }) {
   return <svg className="ic" aria-hidden="true"><use href={`/canvas-icons.svg#${name}`} /></svg>
 }
@@ -41,7 +53,7 @@ function decendio(idx: number, curto = false) {
   return curto ? t('{ini}–{fim} {mes}', { ini, fim, mes }) : t('{ini} a {fim} {mes}', { ini, fim, mes })
 }
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
-const TITULOS = { dates: 'Datas e requisitos', soil: 'Saúde do solo', pests: 'Pragas', risk: 'Como interpretar o risco', sources: 'Origem e limites dos dados', method: 'Como ler estes momentos', moment: 'Momento de atenção' }
+const TITULOS = { param: 'Prioridade', dates: 'Datas e requisitos', soil: 'Saúde do solo', pests: 'Pragas', risk: 'Como interpretar o risco', sources: 'Origem e limites dos dados', method: 'Como ler estes momentos', moment: 'Momento de atenção' }
 type Page = 'overview' | keyof typeof TITULOS
 type Props = {
   atencao: Pick<AtencaoCicloProps, 'panorama' | 'estado' | 'idx'>
@@ -65,15 +77,15 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   const faltantes = rot?.safras.filter(s => !s.risco).map(s => t(s.nome)).join(', ')
   const titulo = incompleto ? t('Faltam dados de risco') : cls === 'good' ? t('Favorável no risco geral da API') : t('Atenção à água')
   const c1 = t(def.ct.c1), c2 = t(def.ct.c2)
-  const [route, setRoute] = useState<{ rotation: string; page: Page; moment?: MomentoAtencao }>({ rotation: def.id, page: 'overview' })
+  const [route, setRoute] = useState<{ rotation: string; page: Page; moment?: MomentoAtencao; param?: Eixo }>({ rotation: def.id, page: 'overview' })
   const page = route.rotation === def.id ? route.page : 'overview'
   const painel = useRef<HTMLElement>(null)
   const focusPending = useRef(false)
   const returnFocus = useRef('')
-  function abrir(next: Page, origin: string, moment?: MomentoAtencao) {
+  function abrir(next: Page, origin: string, moment?: MomentoAtencao, param?: Eixo) {
     returnFocus.current = origin
     focusPending.current = true
-    setRoute({ rotation: def.id, page: next, moment })
+    setRoute({ rotation: def.id, page: next, moment, param })
   }
   function voltar() {
     focusPending.current = true
@@ -90,6 +102,8 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   }, [page, def.id])
 
   const soloBom = def.ct.soil === 'Melhora' || def.ct.soil === 'Ótima'
+  // Notas 0–100 da rotação neste talhão (escalas da API; economia de água ainda é ilustrativa)
+  const notas = aptidao(rotIdx, rot, conj.rotacoes)
   const ordSafra = (n: number, cobertura: boolean | undefined) =>
     cobertura ? t('{ord} safra · cobertura', { ord: ordinal(n + 1) }) : t('{ord} safra', { ord: ordinal(n + 1) })
   return (
@@ -97,6 +111,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
       onKeyDown={e => { if (e.key === 'Escape' && page !== 'overview') { e.stopPropagation(); voltar() } }}>
       {page === 'overview' ? <>
         <header className="insp-header">
+          <p className="insp-kicker">{t('Rotação selecionada')}</p>
           <h2 tabIndex={-1}>{c1} <span className="insp-sequence" aria-label={t('seguida de')}>→</span> {minuscula(c2)}</h2>
           <span className="insp-sr" role="status" aria-atomic="true">{t('Rotação selecionada: {c1} seguida de {c2}. {titulo}.', { c1, c2, titulo })}</span>
         </header>
@@ -113,6 +128,25 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           {/* Por que nesta posição: média das prioridades ligadas nas escalas da API, contra a vizinha na lista */}
           {porQue && <p className="insp-rank-why">{porQue} <span>{t('Economia de água não entra na ordem: a API ainda não a calcula.')}</span></p>}
         </div>
+        {/* Como a rotação atende às 4 prioridades neste talhão: visual, quase sem texto */}
+        <section className="insp-section" aria-label={t('Prioridades na sua região')}>
+          <h3>{t('Prioridades na sua região')}</h3>
+          <div className="insp-group insp-params">
+            {PARAMETROS.map(({ k, api }) => {
+              const nota = notas[k]
+              const f = faixaDaNota(k, nota, rot)
+              return (
+                <button key={k} type="button" className={`insp-param bp-linha${api != null && conj.prioridades?.[api] === 1 ? ' on' : ''}`}
+                  data-inspector-open={`param-${k}`} aria-label={`${leituraPrioridade(k, nota, f)}. ${t('Ver o que significa')}`}
+                  title={ILUSTRATIVO[k] ? t('Ilustrativo: a API ainda não calcula economia de água') : undefined}
+                  onClick={() => abrir('param', `param-${k}`, undefined, k)}>
+                  <BarraPrioridade k={k} nota={nota} f={f} meter={false} />
+                  <svg className="ic insp-chevron" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg>
+                </button>
+              )
+            })}
+          </div>
+        </section>
         <section className="insp-section" aria-label={t('Safras da rotação')}>
           <h3>{t('Safras')}</h3>
           <div className="insp-group insp-culture-list">
@@ -127,19 +161,17 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
                   : t('Ver a {ord} safra ({nome}) no calendário. Plantio {plantio}; colheita {fim}.', vars)}
                 onClick={() => onNavegarPeriodo(d.de)}>
                 <span className={`insp-culture-dot ${estado}`} aria-hidden="true" />
-                <span className="insp-culture-copy"><small className="insp-culture-ord">{ordSafra(n, d.cobertura)}</small><strong>{nome}</strong><small>{t('Plantio {data}', { data: decendio(d.de, true) })}</small><small>{d.cobertura ? t('Fim do ciclo {data}', { data: decendio(d.ate, true) }) : t('Colheita {data}', { data: decendio(d.ate, true) })}</small><small>{sf?.risco ? (sf.risco.metodo === 'MOCK' ? t('Risco hídrico: {pct}% · provisório', { pct: sf.risco.pct }) : t('Risco hídrico: {pct}%', { pct: sf.risco.pct })) : t('Risco não informado')}</small></span>
+                {/* Compacta: safra, cultura e selo. Datas e risco ficam no aria-label e em "Datas e requisitos". */}
+                <span className="insp-culture-copy"><small className="insp-culture-ord">{ordSafra(n, d.cobertura)}</small><strong>{nome}</strong></span>
                 <Selo safra={sf} compact />
               </button>
             })}
-            <Row icon="i-calendar" label={t('Datas e requisitos')} origin="dates" onClick={() => abrir('dates', 'dates')} />
+            {fase && <Row icon="i-calendar" label={t('Ver fase no calendário')} onClick={() => onVerPeriodo(fase.de)} />}
+            {conj.rotacoes.length > 1 && <Row icon="i-layers" label={t('Comparar alternativas')} onClick={onComparar} />}
           </div>
         </section>
         <AtencaoCiclo {...atencao} anosApi={rot?.anos ?? null} onNavegar={onNavegarPeriodo}
           onAbrirMomento={m => abrir('moment', `momento-${m.safra}-${m.de}`, m)} onAbrirMetodo={() => abrir('method', 'attention-method')} />
-        {(fase || conj.rotacoes.length > 1) && <div className="insp-group" role="group" aria-label={t('Próximos passos')}>
-          {fase && <Row icon="i-calendar" label={t('Ver fase no calendário')} onClick={() => onVerPeriodo(fase.de)} />}
-          {conj.rotacoes.length > 1 && <Row icon="i-layers" label={t('Comparar alternativas')} onClick={onComparar} />}
-        </div>}
         <section className="insp-section" aria-label={t('Limitações e cuidados')}>
           <h3>{t('Limitações e cuidados')}</h3>
           <div className="insp-group">
@@ -150,6 +182,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
         <section className="insp-section" aria-label={t('Sobre os dados')}>
           <h3>{t('Sobre os dados')}</h3>
           <div className="insp-group">
+            <Row icon="i-calendar" label={t('Datas e requisitos')} origin="dates" onClick={() => abrir('dates', 'dates')} />
             <Row icon="i-shield" label={t('Como interpretar o risco')} origin="risk" onClick={() => abrir('risk', 'risk')} />
             <Row icon="i-info" label={t('Origem e limites dos dados')} origin="sources" onClick={() => abrir('sources', 'sources')} />
           </div>
@@ -158,7 +191,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
       </> : <>
         <header className="insp-detail-header">
           <button className="insp-back" type="button" onClick={voltar}><Icon name="i-left" />{t('Voltar')}</button>
-          <h2 tabIndex={-1}>{t(TITULOS[page])}</h2>
+          <h2 tabIndex={-1}>{page === 'param' && route.param ? t(NOME_EIXO[route.param]) : t(TITULOS[page])}</h2>
           <p className="insp-meta">{c1} → {minuscula(c2)}</p>
         </header>
         <div className="insp-detail-body">
@@ -167,6 +200,18 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             <dl className="insp-dates"><div><dt>{t('Plantio')}</dt><dd>{decendio(d.de)}</dd></div><div><dt>{d.cobertura ? t('Fim do ciclo') : t('Colheita')}</dt><dd>{decendio(d.ate)}</dd></div></dl>
             <button className="insp-text-button" type="button" onClick={() => onVerDados(d.ref)}>{t('Consultar requisitos de {nome}', { nome: t(d.nome) })}<Icon name="i-right" /></button>
           </section>)}
+          {page === 'param' && route.param && (() => {
+            const k = route.param
+            const api = PARAMETROS.find(p => p.k === k)!.api
+            const ligada = api != null && conj.prioridades?.[api] === 1
+            return <>
+              <div className="insp-group insp-param-detalhe"><div className={`insp-param bp-linha${ligada ? ' on' : ''}`}>
+                <BarraPrioridade k={k} nota={notas[k]} f={faixaDaNota(k, notas[k], rot)} />
+              </div></div>
+              <p>{t(EXPLICACAO[k])}</p>
+              <p className="insp-caption">{api == null ? t('Ainda não entra na ordem das rotações.') : ligada ? t('Entra na ordem das rotações: está ligada em "O que importa".') : t('Não entra na ordem agora: está desligada em "O que importa".')}</p>
+            </>
+          })()}
           {page === 'soil' && <>{def.protecaoSolo
             ? <><p className="insp-caption">{t('Proteção do solo planejada, da API · {nota} de 100 ({nivel})', { nota: Math.round(def.scores?.soil_protection ?? def.protecaoSolo.score), nivel: t(def.ct.soil).toLowerCase() })}</p><p>{t(def.ct.soilWhy)}.</p><p>{t('Índice de planejamento (cobertura viva e troca de família botânica), não medida da saúde do solo.')}</p></>
             : <><p className="insp-caption">{t('Avaliação ilustrativa · {nivel}', { nivel: t(def.ct.soil) })}</p><p>{t(def.ct.soilWhy)}.</p></>}<h3>{t('O que avaliar')}</h3><p>{t('Confira no calendário os intervalos entre culturas e discuta a cobertura do solo com seu agrônomo.')}</p><p className="insp-caption">{t('Sem avaliação específica do talhão; não explica a posição no ranking.')}</p></>}

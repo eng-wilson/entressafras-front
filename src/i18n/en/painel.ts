@@ -327,4 +327,19 @@ export const EN_PAINEL: Record<string, string> = {
   'Adicionar cultura': 'Add crop',
   'Trocar {nome}': 'Swap {nome}',
   'Mantém o plantio e usa o ciclo da nova cultura': 'Keeps the planting date and uses the new crop cycle',
+  // Inspector: topo e prioridades na região
+  'Rotação selecionada': 'Selected rotation',
+  'Prioridades na sua região': 'Priorities in your region',
+  '{nota} de 100, {faixa}': '{nota} out of 100, {faixa}',
+  'Ilustrativo: a API ainda não calcula economia de água': 'Illustrative: the API does not calculate water savings yet',
+  // Inspector: explicação de cada prioridade (EXPLICACAO, traduzida com t(valor))
+  'Prioridade': 'Priority',
+  'Ver o que significa': 'See what it means',
+  'Quanto a rotação resiste à falta de água no clima deste local. Vem do risco hídrico que a API calcula para as duas safras, nos anos históricos.': 'How well the rotation withstands water shortage in this location’s climate. It comes from the water risk the API calculates for both crops over the historical years.',
+  'Quanto a rotação economiza água em comparação com as outras opções. Ainda é ilustrativo: a API não calcula este indicador.': 'How much water the rotation saves compared with the other options. Still illustrative: the API does not calculate this indicator.',
+  'Quanto a rotação protege o solo: dias com cobertura viva e troca de família botânica entre as culturas. É um índice de planejamento da API, não uma medida do solo.': 'How well the rotation protects the soil: days with living cover and botanical family changes between crops. It is a planning index from the API, not a soil measurement.',
+  'Quanto da produtividade a rotação preserva diante da falta de água, pela cultura mais afetada. Calculado pela API para este local.': 'How much productivity the rotation preserves under water shortage, for the most affected crop. Calculated by the API for this location.',
+  'Ainda não entra na ordem das rotações.': 'It does not affect the rotation order yet.',
+  'Entra na ordem das rotações: está ligada em "O que importa".': 'It affects the rotation order: it is turned on in "What matters".',
+  'Não entra na ordem agora: está desligada em "O que importa".': 'It does not affect the order now: it is turned off in "What matters".',
 }

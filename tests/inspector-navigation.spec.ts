@@ -17,55 +17,51 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/')
 })
 
-test('faixa navega por teclado, clique e arraste mantendo foco e calendário sincronizados', async ({ page }, testInfo) => {
+test('prioridades na região: 4 linhas visuais; tocar numa abre a explicação e voltar devolve o foco', async ({ page }) => {
   const insp = page.getByRole('complementary', { name: 'Detalhe da rotação selecionada' })
-  const faixa = insp.getByRole('slider', { name: 'Navegar períodos de atenção' })
+  const params = insp.getByRole('region', { name: 'Prioridades na sua região' }).getByRole('button')
+  await expect(params).toHaveCount(4, { timeout: 30000 })
+  await expect(params.nth(0)).toHaveAccessibleName(/^Resiliência climática: \d+ de 100, (ótima|média|fraca)\. Ver o que significa$/)
+  await expect(params.nth(1)).toHaveAccessibleName(/^Economia de água: .* · ilustrativo\. Ver o que significa$/)
+  // Prioridades ligadas na API ficam destacadas (na fixture: resiliência, solo e produtividade; água não é da API)
+  await expect(insp.locator('.insp-param.on')).toHaveCount(3)
+
+  await params.nth(2).click()
+  await expect(insp.getByRole('heading', { name: 'Saúde do solo', exact: true, level: 2 })).toBeFocused()
+  await expect(insp).toContainText('cobertura viva e troca de família botânica')
+  await expect(insp).toContainText('Entra na ordem das rotações')
+  await page.keyboard.press('Escape')
+  await expect(params.nth(2)).toBeFocused()
+
+  await params.nth(1).click()
+  await expect(insp).toContainText('Ainda não entra na ordem das rotações.')
+  await insp.getByRole('button', { name: 'Voltar', exact: true }).click()
+  await expect(params.nth(1)).toBeFocused()
+})
+
+test('cards da comparação usam a mesma linha de prioridade, na escala do card', async ({ page }) => {
+  await page.getByRole('button', { name: 'Comparação' }).click()
+  const card = page.locator('.qm-card').first()
+  await expect(card.locator('.bp-linha.bp-compacto')).toHaveCount(4)
+  await expect(card.getByRole('meter').first()).toHaveAccessibleName(/^Resiliência climática: \d+ de 100/)
+})
+
+test('momentos de atenção: só a lista; cada momento leva o calendário ao período e abre o detalhe', async ({ page }, testInfo) => {
+  const insp = page.getByRole('complementary', { name: 'Detalhe da rotação selecionada' })
+  const lista = insp.getByRole('region', { name: 'Momentos de atenção da rotação' })
   const calendario = page.getByRole('slider', { name: 'Arraste para simular um período' })
-  await expect(faixa).toBeVisible({ timeout: 30000 })
-  await faixa.focus()
-  await page.keyboard.press('Home')
-  await expect(faixa).toHaveValue('0')
-  await expect(calendario).toHaveValue('0')
-  await expect(faixa).toBeFocused()
-  await expect(insp.getByRole('button', { name: 'Momento anterior', exact: true })).toBeDisabled()
-  await page.keyboard.press('ArrowRight')
-  await expect(faixa).toHaveValue('1')
-  await expect(calendario).toHaveValue('1')
-  await page.keyboard.press('End')
-  await expect(calendario).toHaveValue('35')
-  await expect(insp.getByRole('button', { name: 'Próximo momento', exact: true })).toBeDisabled()
-  await expect(faixa).toBeFocused()
-
-  const box = (await faixa.boundingBox())!
-  await faixa.click({ position: { x: box.width * .4, y: box.height / 2 } })
-  const clicado = Number(await faixa.inputValue())
-  expect(clicado).toBeGreaterThan(10)
-  expect(clicado).toBeLessThan(17)
-  await expect(calendario).toHaveValue(String(clicado))
-  await expect(faixa).toBeFocused()
-
-  await faixa.press('Home')
-  const area = (await faixa.boundingBox())!
-  await page.mouse.move(area.x + 7, area.y + area.height / 2)
-  await page.mouse.down()
-  await page.mouse.move(area.x + area.width - 8, area.y + area.height / 2, { steps: 10 })
-  await page.mouse.up()
-  expect(Number(await faixa.inputValue())).toBeGreaterThan(30)
-  await expect(calendario).toHaveValue(await faixa.inputValue())
-
-  await faixa.press('End')
-  const anterior = insp.getByRole('button', { name: 'Momento anterior', exact: true })
-  await expect(anterior).toBeEnabled()
-  await anterior.click()
-  expect(Number(await faixa.inputValue())).toBeLessThan(35)
-  await expect(calendario).toHaveValue(await faixa.inputValue())
-  await expect(anterior).toBeFocused()
+  await expect(lista.locator('.attention-moment').first()).toBeVisible({ timeout: 30000 })
+  await expect(insp.getByRole('slider', { name: 'Navegar períodos de atenção' })).toHaveCount(0)
+  await calendario.fill('0')
+  await lista.locator('.attention-moment').first().click()
+  await expect(insp.getByRole('heading', { name: 'Momento de atenção', exact: true })).toBeFocused()
+  expect(Number(await calendario.inputValue())).toBeGreaterThan(0)
   await insp.screenshot({ path: testInfo.outputPath('inspector-navigation.png') })
 })
 
 test('linhas abrem detalhes com voltar, Escape e restauração do foco', async ({ page }) => {
   const insp = page.getByRole('complementary', { name: 'Detalhe da rotação selecionada' })
-  const solo = insp.getByRole('button', { name: 'Saúde do solo' })
+  const solo = insp.locator('[data-inspector-open="soil"]')
   await solo.click()
   await expect(insp.getByRole('heading', { name: 'Saúde do solo', exact: true })).toBeFocused()
   await expect(insp).toContainText('O que avaliar')
@@ -96,19 +92,4 @@ test('bloco de culturas seleciona o calendário e mostra apenas a posição rece
   await calendario.fill('5')
   await expect(soja).toHaveAttribute('aria-pressed', 'true')
   await expect(milho).toHaveAttribute('aria-pressed', 'false')
-})
-
-test.describe('toque', () => {
-  test.use({ hasTouch: true, viewport: { width: 390, height: 844 } })
-  test('toque na faixa seleciona o período na tela compacta', async ({ page }, testInfo) => {
-    await page.getByRole('link', { name: 'Entender esta rotação e os próximos passos' }).click()
-    const faixa = page.getByRole('slider', { name: 'Navegar períodos de atenção' })
-    await expect(faixa).toBeVisible({ timeout: 30000 })
-    await faixa.scrollIntoViewIfNeeded()
-    const area = (await faixa.boundingBox())!
-    await faixa.tap({ position: { x: area.width * .75, y: area.height / 2 } })
-    expect(Number(await faixa.inputValue())).toBeGreaterThan(20)
-    await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveValue(await faixa.inputValue())
-    await page.getByRole('complementary', { name: 'Detalhe da rotação selecionada' }).screenshot({ path: testInfo.outputPath('inspector-touch.png') })
-  })
 })

@@ -27,10 +27,8 @@ test('rotação favorável na API com uma fase de atendimento baixo: momento, a�
   await expect(direita.getByRole('region', { name: 'Momentos de atenção da rotação' })).toBeVisible()
   await expect(page.getByRole('complementary', { name: 'Ajustes' }).locator('.attention-cycle')).toHaveCount(0)
   await expect(direita.locator('.insp-risk-chart, .insp-cycle-chart')).toHaveCount(0)
-  await expect(painel.locator('.attention-map')).toBeVisible()
   await expect(direita.getByRole('heading', { name: 'Favorável no risco geral da API' })).toBeVisible()
   await expect(direita).toContainText('Provisório')
-  await expect(painel).toContainText('mesmo com o ciclo favorável no risco geral')
   const momento = painel.locator('.attention-moment').filter({ has: page.locator('.ic.risk') }).first()
   await momento.click()
   await expect(direita.getByRole('heading', { name: 'Momento de atenção', exact: true })).toBeFocused()
@@ -45,7 +43,8 @@ test('rotação favorável na API com uma fase de atendimento baixo: momento, a�
   await expect(agua.locator('.wg-v')).toHaveText('0,40')
   await expect(agua.locator('.wg-f')).toContainText('média da API')
   await direita.getByRole('button', { name: 'Voltar', exact: true }).click()
-  await expect(page.locator('.attention-mark.current.risk')).toHaveCount(1)
+  // Voltando, o momento do período em que o calendário está fica destacado na lista
+  await expect(painel.locator('.attention-moment.selected')).toHaveCount(1)
   await page.screenshot({ path: testInfo.outputPath('atencao-ciclo.png') })
 
   // Trocar de rotação troca o panorama junto (mesma resposta da API, outra rotação)

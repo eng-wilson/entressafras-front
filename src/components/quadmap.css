@@ -59,6 +59,8 @@
 .qm-tipo { margin: 1px 0 0; padding: 0 12px 0 40px; color: var(--qm-secondary); font-size: 12px; }
 .qm-eixos { list-style: none; margin: 0; padding: 4px 0 6px; }
 .qm-eixos li { display: flex; align-items: center; gap: 6px; min-height: 26px; padding: 0 12px; }
+/* Linha de prioridade (BarraPrioridade, escala compacta) */
+.qm-eixos li.bp-linha { min-height: 40px; padding: 4px 12px; gap: 8px; }
 .qm-en { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qm-eixos li.on .qm-en { color: var(--qm-on); font-weight: 600; }
 /* Lucro estimado: sub-linha de Produtividade, recuada e menor */
