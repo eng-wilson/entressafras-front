@@ -9,6 +9,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { simulateSeason } from '../src/simulation/season.js';
+import { PARAMS } from '../src/simulation/parametros.js';
+// Preserva os hashes históricos: a etapa 10 é verificada em sim-etapa10.mjs.
+const params = { ...PARAMS, fenologia: { ...PARAMS.fenologia, modo: 'dias' },
+    superficie: { ...PARAMS.superficie, erosao: { ...PARAMS.superficie.erosao, ativa: false } } };
 import { CENARIOS } from '../src/domain/soil/scenarios.js';
 import { CLASSES_SOLO } from '../src/domain/soil/presets.js';
 import crop from '../src/domain/crops/milho.js';
@@ -52,7 +56,7 @@ const atual = {};
 const t0 = performance.now();
 for (const [idC, cenario] of Object.entries(CENARIOS)) {
     for (const [idS, classe] of Object.entries(CLASSES_SOLO)) {
-        atual[`${idC}/${idS}`] = hashSim(simulateSeason({ crop, classe, cenario, plants, width: WIDTH, depth: DEPTH }));
+        atual[`${idC}/${idS}`] = hashSim(simulateSeason({ crop, classe, cenario, plants, width: WIDTH, depth: DEPTH, params }));
     }
 }
 const ms = Math.round(performance.now() - t0);

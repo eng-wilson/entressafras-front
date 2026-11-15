@@ -86,7 +86,7 @@ export function drawRoots(atlas, { plants, reg, crop, sim, dia, width, depth, to
     // raiz : parte aérea, convertida para metros de solo pela escala vertical do bloco.
     const uPorM = totalH / profTotalM;
     const proporcao = proporcaoRaiz(crop);
-    const t = dia / crop.cicloDias;
+    const t = sim.termica?.progresso[dia] ?? dia / crop.cicloDias;
     const [h0, h1] = crop.janelas.altura;
     const emerg = smoothstep(crop.sprites.fases[0].t, crop.sprites.fases[0].t + 0.03, t);
     // Altura visível de verdade: do pé (âncora) até o primeiro pixel opaco do sprite desenhado, × escala do dia.

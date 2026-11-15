@@ -19,7 +19,8 @@
 import { PARAMS } from './parametros.js';
 import { criarEstado, inicializarEstado, limitesAgua } from './estado.js';
 import { climaDaSafra, forcanteDoDia } from './forcante.js';
-import { fenologia } from './fenologia.js';
+import { fenologia, progressoTermico } from './fenologia.js';
+import { erosao } from './solo/erosao.js';
 import { entradaAgua, transpiracao, redistribuirPoca } from './solo/agua.js';
 import { raiz } from './solo/raiz.js';
 import { gleizacao } from './solo/gleizacao.js';
@@ -37,6 +38,7 @@ export { perfilCelula } from './retrato.js';
 // é acrescentar uma linha aqui.
 const PROCESSOS = [
     entradaAgua,        // água entra, drena e evapora
+    erosao,            // enxurrada remove parte do horizonte A desprotegido
     raiz,               // até onde a raiz chega hoje
     transpiracao,       // a cultura tira água da zona de raiz
     gleizacao,
@@ -55,6 +57,7 @@ const PROCESSOS = [
 export function simulateSeason({ crop, classe, cenario, plants, width, depth, params = PARAMS, retratos = true, herdar = null, potencial }) {
     const dias = crop.cicloDias;
     const clima = climaDaSafra(cenario, dias);
+    const termica = progressoTermico(clima, dias, crop, params);
     const agua = limitesAgua(classe, params);
     const manejo = { adubN: cenario.adubacaoN === undefined ? params.manejo.adubacaoPadrao : cenario.adubacaoN };
 
@@ -62,13 +65,13 @@ export function simulateSeason({ crop, classe, cenario, plants, width, depth, pa
     inicializarEstado(E, { cenario, plants, width, depth, agua, par: params });
     if (herdar) herdar(E, { agua, par: params, crop, classe });
 
-    const out = { dias, clima, superficie: [], perfil: [], plantas: [], relevo: E.relevo, trafego: E.trafego, celP: E.celP, classe };
+    const out = { dias, clima, termica, superficie: [], perfil: [], plantas: [], relevo: E.relevo, trafego: E.trafego, celP: E.celP, classe };
     const serie = [];
     for (let dia = 0; dia <= dias; dia++) {
         const ctx = {
             dia, crop, classe, agua, manejo, par: params,
             clima: forcanteDoDia(clima, dia),
-            fen: fenologia(dia, dias, crop, params)
+            fen: fenologia(dia, dias, crop, params, termica)
         };
         for (const processo of PROCESSOS) processo(E, ctx);
         serie.push(serieDoDia(E, ctx));

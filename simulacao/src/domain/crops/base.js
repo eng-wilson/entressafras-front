@@ -4,6 +4,7 @@ export function criarCultura(o) {
     const cobertura = o.cobertura ?? [[0, 0], [.15, .12], [.45, .82], [.82, .86], [1, .45]];
     return {
         id: o.id, nome: o.nome, archetype: o.archetype, cicloDias: o.cicloDias,
+        termica: o.termica,
         plantio: o.plantio,
         morfologia: {
             alturaMax: o.alturaMax, folhas: o.folhasFinal, raiz: o.raiz ?? 'fasciculada',

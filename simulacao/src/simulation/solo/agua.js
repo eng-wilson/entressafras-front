@@ -26,6 +26,7 @@ export function entradaAgua(E, ctx) {
         const cap = classe.infiltracao * (1 - A.infilCrosta * crosta[c]) * (1 - A.infilCompactacao * comp[base]);
         const infil = Math.min(entrada, cap);
         const esc = entrada - infil;
+        E.enxurrada[c] = esc;
         const retido = esc * (A.retencaoBase + A.retencaoTrafego * trafego[c]);
         escLocal[c] += retido;
         escoamentoGlobal += esc - retido;

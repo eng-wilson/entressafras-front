@@ -1,12 +1,32 @@
 // Fenologia: em que ponto do ciclo a cultura está e o que isso implica no dia.
-// Hoje usa a fração de dias do ciclo (t = dia / dias). A troca por graus-dia acontece só aqui.
+// Na safra, usa soma térmica acumulada; aceita fração por dias no modo de comparação histórica.
 // Lê: crop.kc, crop.cobertura, crop.demanda, crop.morfologia.raizProfMax, crop.janelas.altura.
-import { curve, smoothstep } from '../utils/math.js';
+import { curve, smoothstep, clamp } from '../utils/math.js';
 
-export function fenologia(dia, dias, crop, par) {
+// Acumulação desde o plantio, sem usar a temperatura futura para normalizar o ciclo.
+// Os valores padrão são didáticos, não exigências térmicas de cultivares.
+export function progressoTermico(clima, dias, crop, par) {
+    const F = par.fenologia, cfg = crop.termica ?? {};
+    const base = cfg.baseC ?? crop.limites.tFrio;
+    const teto = cfg.tetoC ?? F.tetoC;
+    const referencia = cfg.referenciaC ?? F.referenciaC;
+    const alvo = cfg.grausDiaCiclo ?? (referencia - base) * dias;
+    if (![base, teto, alvo].every(Number.isFinite) || teto <= base || alvo <= 0) throw new Error('Parâmetros térmicos inválidos');
+    const progresso = new Float64Array(dias + 1), acumulado = new Float64Array(dias + 1);
+    for (let d = 1; d <= dias; d++) {
+        const tx = clima.tmax[d - 1], tn = clima.tmin[d - 1];
+        if (!Number.isFinite(tx) || !Number.isFinite(tn) || tx < tn) throw new Error(`Temperatura inválida no dia ${d - 1}`);
+        const gd = Math.max(0, Math.min(teto, (tx + tn) / 2) - base);
+        acumulado[d] = acumulado[d - 1] + gd;
+        progresso[d] = F.modo === 'dias' ? d / dias : clamp(acumulado[d] / alvo);
+    }
+    return { progresso, acumulado, baseC: base, tetoC: teto, alvo };
+}
+
+export function fenologia(dia, dias, crop, par, termica = null) {
     const F = par.fenologia;
-    const t = dia / dias;
-    const tPrev = Math.max(0, (dia - 1) / dias);
+    const t = termica ? termica.progresso[dia] : dia / dias;
+    const tPrev = termica ? termica.progresso[Math.max(0, dia - 1)] : Math.max(0, (dia - 1) / dias);
     const emergiu = t > F.emergencia;
     const [h0, h1] = crop.janelas.altura;
     return {

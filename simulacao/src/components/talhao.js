@@ -130,7 +130,7 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
         const { cena, sim, crop, classe, dia } = atual;
         const reg = sim.plantas[dia];
         atual.clima = climaVisual(sim, dia);
-        cena.lavoura.atualizar(dia / crop.cicloDias, reg, { ...MODO.planta, clima: atual.clima });
+        cena.lavoura.atualizar(sim.termica?.progresso[dia] ?? dia / crop.cicloDias, reg, { ...MODO.planta, clima: atual.clima });
         cena.diorama.atualizar({ sim, dia, classe, modo: MODO.solo, lavoura: cena.lavoura, reg });
         const estado = atual.clima.seca > 0.7 ? 'Seca intensa' : atual.clima.seca > 0.25 ? 'Estresse por seca ou calor' : atual.clima.chuva >= 30 ? 'Chuva intensa' : atual.clima.chuva >= 0.2 ? 'Chuva' : 'Sem chuva';
         canvas.setAttribute('aria-label', `Talhão simulado: ${estado}, ${atual.clima.chuva.toFixed(1)} mm de chuva no dia. Arraste para mover; mais e menos para zoom; zero para restaurar.`);
