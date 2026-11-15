@@ -83,3 +83,35 @@ export function apagarCultura(codigo: number) {
   const t = tabela(); delete t[codigo]; salvar(t)
 }
 export function limparMemoriaCulturas() { memoria.clear() }
+
+// ---------- Culturas simuláveis (GET /api/crops?simulable=true) ----------
+// Só as que têm dados FAO-56 para a simulação de rotação (22 de 2.568 em 15/11/2026). Muda pouco: 7 dias de cache.
+export const CHAVE_CACHE_SIMULAVEIS = 'entressafras.simulaveis.v1'
+let simulaveisMemoria: { em: number; itens: CropPage['items'] } | null = null
+
+export function lerSimulaveis(agora = Date.now()): CropPage['items'] | null {
+  const vigente = (e: unknown): e is { em: number; itens: CropPage['items'] } =>
+    objeto(e) && Number.isFinite(e.em) && Array.isArray(e.itens) && agora >= (e.em as number) && agora - (e.em as number) < TTL_CULTURAS
+  if (vigente(simulaveisMemoria)) return simulaveisMemoria.itens
+  try {
+    const e: unknown = JSON.parse(localStorage.getItem(CHAVE_CACHE_SIMULAVEIS) ?? 'null')
+    if (vigente(e)) { simulaveisMemoria = e; return e.itens }
+  } catch { /* sem cache */ }
+  return null
+}
+
+/** Culturas que a API consegue simular numa rotação, com cache. */
+export async function culturasSimulaveis(signal?: AbortSignal): Promise<CropPage['items']> {
+  const guardadas = lerSimulaveis()
+  if (guardadas) return guardadas
+  const v = await consultar(`/api/crops?${new URLSearchParams({ simulable: 'true', limit: '100' })}`, signal)
+  if (!objeto(v) || !Array.isArray(v.items) || !v.items.every(c => objeto(c) && Number.isInteger(c.eco_port_code)
+    && typeof c.scientific_name === 'string' && textos(c.common_names))) {
+    throw new Error('Resposta inválida do catálogo')
+  }
+  const itens = v.items as CropPage['items']
+  simulaveisMemoria = { em: Date.now(), itens }
+  try { localStorage.setItem(CHAVE_CACHE_SIMULAVEIS, JSON.stringify(simulaveisMemoria)) } catch { /* memória basta */ }
+  return itens
+}
+export function limparMemoriaSimulaveis() { simulaveisMemoria = null }

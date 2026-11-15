@@ -1,0 +1,650 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Nova rotação</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+  :root{
+    --bg:#FFFFFF; --side:#F5F5F7; --group:#FFFFFF; --sep:rgba(60,60,67,.14);
+    --label:#1D1D1F; --label2:#6E6E73; --label3:#6E6E73; --fill:#E9E9EE; --track:#F2F2F5;
+    --tint:#1E7A3C; --blue:#0A84FF;
+    --good:#34C759; --warn:#FF9F0A; --risk:#D70015; --none:#C7C7CC;
+    --sun:#E08600; --cloud:#8E8E93; --rain:#0A6CD6;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--label);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",system-ui,sans-serif;font-size:13px;line-height:1.38;-webkit-font-smoothing:antialiased}
+  button{font:inherit;color:inherit;cursor:pointer;background:none;border:0;padding:0}
+  .ic{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none}
+
+  html,body{height:100%}
+  .app{width:100%;min-width:1024px;height:100vh;min-height:640px;display:grid;grid-template-columns:248px minmax(0,1fr) 320px;grid-template-rows:52px 1fr;overflow:hidden}
+
+  .bar{grid-column:1 / -1;display:flex;align-items:center;gap:16px;padding:0 20px;border-bottom:1px solid var(--sep)}
+  .app-name{font-weight:600;font-size:14px}
+  .tbtn{margin-left:auto;height:30px;padding:0 12px;border-radius:8px;font-weight:500;color:var(--tint);display:flex;align-items:center;gap:6px}
+
+  /* sidebar */
+  .side{background:var(--side);border-right:1px solid var(--sep);padding:20px 14px;overflow:auto}
+  .sec{margin-bottom:26px}
+  .sec h3{margin:0 0 6px 10px;font-size:12px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em}
+  .list{background:var(--group);border-radius:10px;box-shadow:0 0 0 .5px rgba(0,0,0,.06)}
+  .item{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:40px;padding:0 12px;position:relative}
+  .item + .item::before{content:"";position:absolute;top:0;left:12px;right:0;height:1px;background:var(--sep)}
+  .item .v{color:var(--label2)}
+  .sw{width:36px;height:22px;border-radius:11px;background:#E1E1E6;position:relative;flex:none}
+  .sw::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.2)}
+  .sw[aria-checked="true"]{background:var(--good)}
+  .sw[aria-checked="true"]::after{left:16px}
+
+  /* main */
+  .main{padding:28px 32px;overflow:auto;min-width:0}
+  .head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
+  .head h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
+  .head p{margin:2px 0 0;color:var(--label2);font-size:13px}
+  .add{width:32px;height:32px;border-radius:50%;background:var(--track);color:var(--tint);display:grid;place-items:center}
+
+  /* board: header + rows share one timeline width and one set of guides */
+  .board{position:relative;border-radius:12px;box-shadow:0 0 0 1px var(--sep);padding:0 16px;margin-top:8px}
+  .guides{position:absolute;top:0;bottom:0;left:0;right:0;pointer-events:none;z-index:0;
+    background:linear-gradient(to right,rgba(60,60,67,.12) 1px,transparent 1px) 0 0 / calc(100% / 12) 100%}
+  .guides .past{display:none}
+  .guides::before{content:"";position:absolute;left:0;top:0;bottom:0;width:1px;background:#fff}
+  .guides .fcw{position:absolute;top:0;bottom:0;left:calc(2 / 12 * 100% + 1px);width:calc(3 / 12 * 100% - 1px);background:rgba(10,132,255,.07);border-radius:0}
+
+  /* calendar header */
+  .cal{position:relative;z-index:1;padding:16px 0 46px;border-bottom:1px solid var(--sep)}
+  .months{display:grid;grid-template-columns:repeat(12,1fr);position:relative;z-index:1}
+  .mo{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .mo .t{font-size:12px;font-weight:500;color:var(--label2)}
+  .mo.past .t{color:var(--label2)}
+  .mo.past .wx{opacity:.4}
+  .wx-wrap{width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
+  .wx{width:24px;height:24px;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+  .mo.hi .wx-wrap{background:rgba(10,132,255,.12);box-shadow:0 0 0 1.5px rgba(10,132,255,.5)}
+  .dec{display:grid;grid-template-columns:repeat(3,1fr);width:100%;font-size:11px;color:#737378;text-align:center;font-variant-numeric:tabular-nums}
+  .dec i{font-style:normal}
+  .mo + .mo .dec{box-shadow:inset 1px 0 0 rgba(60,60,67,.14)}
+  .dec{margin-top:4px}
+  .mo.past .dec{opacity:.6}
+  .fc-tag{z-index:1;position:absolute;top:6px;left:calc(2 / 12 * 100%);width:calc(3 / 12 * 100%);text-align:center;font-size:11px;font-weight:600;color:var(--blue)}
+
+  /* rows */
+  .row{position:relative;z-index:1;padding:12px 0 14px;border-bottom:1px solid var(--sep)}
+  .row:last-child{border-bottom:0}
+  .row.sel{background:rgba(52,199,89,.10);margin:0 -16px;padding-left:16px;padding-right:16px}
+  .rh{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;white-space:nowrap}
+  .rk{font-weight:600;color:var(--label2);font-variant-numeric:tabular-nums;width:14px}
+  .nm{font-weight:600;font-size:14px}
+  .then{font-weight:400;color:var(--label2)}
+  .sub{color:var(--label2);font-size:12px;overflow:hidden;text-overflow:ellipsis}
+  .tag{font-size:11px;font-weight:600;color:var(--label2);background:var(--fill);border-radius:5px;padding:1px 6px}
+  .st{margin-left:auto;display:flex;align-items:center;gap:6px;font-weight:500;padding-left:12px}
+  .tl{position:relative;height:24px}
+  .b{position:absolute;top:0;height:24px;left:calc(var(--s) / 12 * 100%);width:calc((var(--e) - var(--s)) / 12 * 100% - 2px);border-radius:6px;font-size:12px;font-weight:600;line-height:24px;padding:0 9px;white-space:nowrap;overflow:hidden}
+  .b.good{background:var(--good);color:#0B2E15}
+  .b.warn{background:var(--warn);color:#3A2400}
+  .b.risk{background:var(--risk);color:#fff}
+  .b.none{background:#fff;color:var(--label2);box-shadow:inset 0 0 0 1px var(--none)}
+  .b.bare{background:rgba(120,120,128,.10)}
+  .dot{width:8px;height:8px;border-radius:50%;flex:none;display:inline-block;align-self:center}
+  .dot.good{background:var(--good)}.dot.warn{background:var(--warn)}.dot.risk{background:var(--risk)}.dot.none{background:transparent;box-shadow:inset 0 0 0 1.5px var(--label3)}
+
+  /* inspector */
+  .insp{border-left:1px solid var(--sep);padding:28px 22px;display:flex;flex-direction:column;overflow:auto}
+  .eyebrow{font-size:12px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em}
+  .insp h2{margin:4px 0 6px;font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+  .verdict{display:inline-flex;align-items:center;gap:6px;font-weight:600}
+  .card{background:var(--side);border-radius:12px;padding:14px 16px;margin-top:14px}
+  .card .t{display:flex;align-items:center;gap:8px;font-weight:600}
+  .card .t .ic{color:var(--label2)}
+  .card .t .r{margin-left:auto;display:flex;align-items:center;gap:6px;font-weight:500;color:var(--label2)}
+  .big{font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:8px;font-variant-numeric:tabular-nums}
+  .big small{font-size:12px;font-weight:500;color:var(--label2);letter-spacing:0;margin-left:6px}
+  .g{position:relative;height:6px;border-radius:3px;background:#E1E1E6;margin:10px 0 8px}
+  .g i{position:absolute;top:0;bottom:0;border-radius:3px}
+  .g .tick{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--label)}
+  .g .knob{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.12),0 1px 3px rgba(0,0,0,.2)}
+  .fine{font-size:12px;color:var(--label2)}
+  .link{margin-top:14px;display:flex;align-items:center;justify-content:space-between;padding:10px 2px;border-top:1px solid var(--sep);color:var(--tint);font-weight:500;width:100%}
+  .why{margin-top:18px}
+  .why h3{margin:0 0 6px 4px;font-size:12px;font-weight:600;color:var(--label3);text-transform:uppercase;letter-spacing:.04em}
+  .why .list{background:var(--side);border-radius:12px;box-shadow:none}
+  .wi{display:flex;gap:10px;padding:11px 12px;position:relative}
+  .wi + .wi::before{content:"";position:absolute;top:0;left:50px;right:0;height:1px;background:var(--sep)}
+  .wic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;flex:none}
+  .wic .ic{width:15px;height:15px}
+  .wi b{display:block;font-size:13px}
+  .wi p{margin:1px 0 0;font-size:12px;color:var(--label2);line-height:1.35}
+  .mini{margin-top:14px;background:var(--side);border-radius:12px;padding:2px 12px}
+  .mr{display:flex;align-items:center;gap:8px;padding:9px 0}
+  .mr + .mr{border-top:1px solid var(--sep)}
+  .mr .ic{color:var(--label2);width:15px;height:15px}
+  .mr span:not(.dot){flex:1}
+  .mr b{font-variant-numeric:tabular-nums}
+  .mx{padding:0 0 10px 23px;margin-top:-4px}
+  .mx p{margin:0 0 4px;font-size:12px;color:var(--label2);line-height:1.35}
+  .mx .tr{display:flex;gap:5px;align-items:flex-start;font-size:12px;color:var(--label2)}
+  .mx .tr .ic{width:13px;height:13px;margin-top:2px}
+  .mx .tr b{font-weight:600;color:var(--label)}
+  .alert{margin-top:16px;background:#FFF4E5;border-radius:12px;padding:12px;display:flex;gap:10px}
+  .alert .wic{background:#FFE2B8;color:#9A5B00}
+  .alert b{display:block;font-size:13px}
+  .alert p{margin:2px 0 0;font-size:12px;color:#5C4A33;line-height:1.35}
+  .alert .cost{margin-top:6px;font-weight:600;color:#8A4B00}
+  /* metrics charts */
+  .metrics{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+  .mcard{background:var(--side);border-radius:12px;padding:12px 14px 10px}
+  .mh{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px;margin-bottom:8px}
+  .mh .ic{color:var(--label2);width:16px;height:16px}
+  .pill{font-size:12px;font-weight:600;border-radius:6px;padding:2px 8px}
+  .pill.good{background:#DDF3E3;color:#14672F}
+  .pill.warn{background:#FFEBCC;color:#7A4100}
+  .pill.risk{background:#FDE2E4;color:#A3000D}
+  .chart{display:block;width:100%;height:auto;overflow:visible}
+  .chart .ln{fill:none;stroke:#1D1D1F;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .chart .ax{font-size:12px;fill:#6E6E73}
+  .chart .thl{font-size:12px;font-weight:600;paint-order:stroke;stroke:#F5F5F7;stroke-width:4px}
+  .chart .val{font-size:14px;font-weight:700;fill:#1D1D1F;paint-order:stroke;stroke:#F5F5F7;stroke-width:4px}
+  .chart .zn{font-size:12px;font-weight:600}
+  .mv{margin-left:auto;font-size:16px;font-variant-numeric:tabular-nums}
+  .cap2{margin:2px 0 0;font-size:12px;color:var(--label2)}
+  .pest{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:#7A4100;background:#FFEBCC;border-radius:6px;padding:1px 7px 1px 5px}
+  .pest .ic{width:13px;height:13px}
+  /* gauge cards (opção B) */
+  .gb{background:#F2F2F7;border-radius:16px;padding:14px 16px 12px}
+  .gh{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .gl{display:flex;align-items:center;gap:6px;font-weight:600;font-size:14px;white-space:nowrap}
+  .gl .ic{color:#6E6E73}
+  .gs{display:flex;align-items:center;gap:4px;font-weight:600;font-size:13px}
+  .gs .ic{width:14px;height:14px;stroke-width:2.4}
+  .gv{font-family:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,sans-serif;font-size:30px;font-weight:700;letter-spacing:-.01em;margin:6px 0 8px;font-variant-numeric:tabular-nums}
+  .gv small{font-family:-apple-system,system-ui,sans-serif;font-size:13px;font-weight:500;color:#6E6E73;letter-spacing:0}
+  .ch{display:block;width:100%;height:auto;overflow:visible}
+  .ch .ax{font-size:12px;fill:#6E6E73}
+  .gc{margin:8px 0 0;font-size:12px;color:#6E6E73}
+  /* scrubber — iOS Slider */
+  .selnum{position:absolute;bottom:0;height:16px;line-height:16px;min-width:16px;padding:0 2px;transform:translateX(-50%);background:#fff;color:#007AFF;font-size:12px;font-weight:700;text-align:center;font-variant-numeric:tabular-nums;pointer-events:none;z-index:2}
+  .scrub{position:absolute;left:0;right:0;bottom:-34px;height:28px;z-index:2}
+  .track{position:absolute;top:12px;height:4px;left:calc(100% / 72);right:calc(100% / 72);border-radius:2px;background:rgba(120,120,128,.2);overflow:hidden}
+  .fill{position:absolute;left:0;top:0;bottom:0;background:#007AFF;border-radius:2px}
+  .knob{position:absolute;top:5px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:#fff;box-shadow:0 0.5px 3px rgba(0,0,0,.16),0 3px 8px rgba(0,0,0,.12),0 0 0 .5px rgba(0,0,0,.06);pointer-events:none}
+  .scrub input{-webkit-appearance:none;appearance:none;position:absolute;top:-20px;bottom:0;left:calc(100% / 72);width:calc(100% * 35 / 36);height:calc(100% + 20px);margin:0;opacity:0;cursor:pointer;background:transparent}
+  .scrub input::-webkit-slider-thumb{-webkit-appearance:none;width:2px;height:48px}
+  .scrub input::-moz-range-thumb{width:2px;height:48px;border:0}
+  .scrub:focus-within .knob{box-shadow:0 0 0 3px rgba(0,122,255,.5),0 3px 8px rgba(0,0,0,.12)}
+  .period{margin-top:18px;padding:12px 14px;border-radius:12px;background:#F2F2F7}
+  .ph{display:flex;align-items:center;justify-content:space-between}
+  .ph .eyebrow{margin:0}
+  .src{font-size:12px;font-weight:600;color:#3A3A3C;background:#E5E5EA;border-radius:6px;padding:1px 7px}
+  .pt{font-size:17px;font-weight:700;margin-top:4px}
+  .pp{font-size:13px;color:var(--label2);margin-top:1px}
+  .gs.good{color:#1B7F3A}.gs.warn{color:#A35200}.gs.risk{color:#C4000F}
+  .gb.empty{display:flex;gap:10px;align-items:flex-start;margin-top:12px}
+  .gb.empty .ic{color:#1B7F3A;margin-top:2px}
+  .gb.empty p{margin:0;font-size:13px;color:#3A3A3C;line-height:1.4}
+  /* nova rotação */
+  .row.draft{background:rgba(0,122,255,.06);margin:0 -16px;padding-left:16px;padding-right:16px;position:relative;z-index:50}
+  .row.saved{background:rgba(52,199,89,.08);margin:0 -16px;padding-left:16px;padding-right:16px}
+  .rankb{font-size:12px;font-weight:600;color:#0A5BC4;background:#E3EEFD;border-radius:6px;padding:1px 7px}
+  .acts{display:flex;gap:6px;margin-left:12px}
+  .tb{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px;border-radius:7px;background:#fff;box-shadow:0 0 0 1px rgba(60,60,67,.18);font-size:13px;font-weight:500;color:#1D1D1F}
+  .tb .ic{width:14px;height:14px}
+  .tb.pri{background:#007AFF;color:#fff;box-shadow:none;font-weight:600}
+  .tb:focus-visible,.ci-main:focus-visible,.pk-i:focus-visible{outline:3px solid rgba(0,122,255,.5);outline-offset:2px}
+  .cb{position:absolute;top:0;height:24px}
+  .cb .b{position:relative;left:0;width:calc(100% - 2px);cursor:grab;touch-action:none;user-select:none}
+  .cb.sel .b{box-shadow:0 0 0 2px #1D1D1F;cursor:grab}
+  .hd{position:absolute;top:-3px;bottom:-3px;width:12px;border-radius:4px;background:#1D1D1F;display:grid;place-items:center;cursor:ew-resize;touch-action:none;z-index:3}
+  .hd::before{content:"";position:absolute;top:-8px;bottom:-8px;left:-12px;right:-12px}
+  .hd.l{left:-6px}.hd.r{right:-4px}
+  .hd i{width:2px;height:10px;border-radius:1px;background:#fff}
+  .gap{position:absolute;top:0;height:24px;display:grid;place-items:center;font-size:12px;font-weight:600;color:#7A4100;white-space:nowrap;overflow:hidden;border-radius:6px;background:repeating-linear-gradient(135deg,rgba(255,149,0,.10) 0 6px,rgba(255,149,0,.18) 6px 12px)}
+  .tip{position:absolute;bottom:32px;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:600;color:#fff;background:#1D1D1F;border-radius:8px;padding:4px 8px;box-shadow:0 4px 12px rgba(0,0,0,.18);z-index:5;pointer-events:none}
+  .tip.limit{background:#A35200}
+  .picker{position:absolute;z-index:100;width:280px;background:#fff;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.18),0 0 0 .5px rgba(0,0,0,.08);padding:8px}
+  .picker.pk-add{right:16px;top:44px}
+  .picker.pk-rep{top:100px}
+  .row.draft.withmenu{padding-bottom:58px}
+  .callout{position:absolute;top:34px;transform:translateX(-50%);display:flex;align-items:center;background:#1D1D1F;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.22);z-index:6;white-space:nowrap}
+  .callout::before{content:"";position:absolute;top:-5px;left:50%;margin-left:-6px;border:6px solid transparent;border-top:0;border-bottom-color:#1D1D1F}
+  .callout button{display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;color:#fff;font-size:13px;font-weight:500;border-radius:10px}
+  .callout button .ic{width:14px;height:14px}
+  .callout button.danger{color:#FF6961}
+  .callout button:focus-visible{outline:3px solid rgba(0,122,255,.6);outline-offset:-3px}
+  .csep{width:1px;height:20px;background:rgba(255,255,255,.25)}
+  .pk-h{display:flex;flex-direction:column;padding:6px 8px 8px}
+  .pk-h b{font-size:14px}.pk-h span{font-size:12px;color:#6E6E73}
+  .pk-g{font-size:12px;font-weight:600;color:#6E6E73;text-transform:uppercase;letter-spacing:.04em;padding:8px 8px 4px}
+  .pk-i{display:flex;width:100%;align-items:center;justify-content:space-between;min-height:40px;padding:0 8px;border-radius:8px;font-size:14px;text-align:left}
+  .pk-i:hover{background:#F2F2F7}
+  .pk-i[disabled]{color:#6E6E73;cursor:not-allowed}
+  .pk-s{font-size:12px;color:#6E6E73}
+  .dec i.z{color:#14672F;font-weight:700;background:#DDF3E3;border-radius:4px}
+  .rankcard{margin-top:14px;display:flex;justify-content:space-between;align-items:center;background:#E3EEFD;border-radius:12px;padding:12px 14px;font-size:13px;color:#0A3D80}
+  .rankcard b{font-size:15px}
+  .ci{display:flex;align-items:center;position:relative}
+  .ci + .ci::before{content:"";position:absolute;top:0;left:34px;right:0;height:1px;background:var(--sep)}
+  .ci.sel{background:rgba(0,122,255,.08);border-radius:10px}
+  .ci-main{flex:1;display:flex;align-items:center;gap:10px;min-height:52px;padding:6px 12px;text-align:left}
+  .ci-t{flex:1;display:flex;flex-direction:column}
+  .ci-t b{font-size:14px}.ci-t span{font-size:12px;color:#6E6E73}
+  .ci-s{font-size:12px;font-weight:600}
+  .ci-s.good{color:#1B7F3A}.ci-s.warn{color:#A35200}.ci-s.risk{color:#C4000F}.ci-s.none{color:#6E6E73}
+  .ci-rm{font-size:13px;color:#C4000F;padding:0 12px;min-height:44px}
+  .hint{display:flex;align-items:center;gap:6px;margin:8px 4px 0;font-size:12px;color:#6E6E73}
+  .zsw{width:14px;height:10px;border-radius:3px;background:#DDF3E3;box-shadow:inset 0 0 0 1px #9FD8AE}
+  .wic.ok{background:#E3F5E8;color:#1E7A3C}.wic.bad{background:#FFF1DB;color:#9A5B00}
+  .dot.none{background:transparent;box-shadow:inset 0 0 0 1.5px #6E6E73}
+  .foot{margin-top:auto;padding-top:12px;font-size:12px;color:var(--label3);line-height:1.45}
+</style>
+</helmet>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-drop" viewBox="0 0 24 24"><path d="M12 3s6 6.5 6 11a6 6 0 0 1-12 0c0-4.5 6-11 6-11z"/></symbol>
+    <symbol id="i-temp" viewBox="0 0 24 24"><path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.2"/></symbol>
+    <!-- weather glyphs, SF Symbols style -->
+    <symbol id="w-sun" viewBox="0 0 24 24"><g stroke="var(--sun)"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/></g></symbol>
+    <symbol id="w-drizzle" viewBox="0 0 24 24"><path stroke="var(--cloud)" d="M7 15h10a3.5 3.5 0 0 0 .4-7A5 5 0 0 0 7.8 9.2 3 3 0 0 0 7 15z"/><g stroke="var(--rain)" stroke-width="2.2"><path d="M9 18.5v.5M13 18.5v.5M11 21v.5M15 21v.5"/></g></symbol>
+    <symbol id="w-rain" viewBox="0 0 24 24"><path stroke="var(--cloud)" d="M7 13h10a3.5 3.5 0 0 0 .4-7A5 5 0 0 0 7.8 7.2 3 3 0 0 0 7 13z"/><g stroke="var(--rain)" stroke-width="2"><path d="M8.5 16l-1.2 3.5M12.5 16l-1.2 3.5M16.5 16l-1.2 3.5M10.5 19.5l-.6 2"/></g></symbol>
+    <symbol id="w-mixed" viewBox="0 0 24 24"><g stroke="var(--sun)"><path d="M8 3v1.5M3.5 7.5H5M4.8 4.3l1 1"/><path d="M5.6 10.6A3.5 3.5 0 0 1 11 6.4"/></g><path stroke="var(--cloud)" d="M9 16h9a3 3 0 0 0 .3-6A4.4 4.4 0 0 0 9.8 11 2.6 2.6 0 0 0 9 16z"/><g stroke="var(--rain)" stroke-width="2"><path d="M11 19l-.8 2.5M15.5 19l-.8 2.5"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.3 8-8 9-4.7-1-8-4.5-8-9V6z"/></symbol>
+    <symbol id="i-leaf" viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 14-14 0 9-5 14-13 14"/><path d="M5 19c3-4 6-6 9-8"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4M12 17v.3"/></symbol>
+    <symbol id="i-up" viewBox="0 0 24 24"><path d="M4 17l6-6 4 4 6-6M15 9h5v5"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M4 7l6 6 4-4 6 6M15 15h5v-5"/></symbol>
+    <symbol id="i-flat" viewBox="0 0 24 24"><path d="M4 12h16M15 7l5 5-5 5"/></symbol>
+    <symbol id="i-bug" viewBox="0 0 24 24"><rect x="8" y="7" width="8" height="13" rx="4"/><path d="M12 7V4M9.5 4.5L11 7M14.5 4.5L13 7M8 11H4M8 15H4.5M16 11h4M16 15h3.5M12 11v9"/></symbol>
+    <filter id="sh" x="-50%" y="-50%" width="200%" height="200%"><feDropShadow dx="0" dy="1" stdDeviation="1.2" flood-opacity=".25"/></filter>
+    <symbol id="i-xc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-swap" viewBox="0 0 24 24"><path d="M7 7h12l-3-3M17 17H5l3 3"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-okc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.8 2.8L16.5 9.5"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <header class="bar">
+    <div class="app-name">Field Shift</div>
+    <button class="tbtn" type="button"><svg class="ic"><use href="#i-info"/></svg>Como funciona</button>
+  </header>
+
+  <aside class="side" aria-label="Ajustes">
+    <div class="sec">
+      <h3>Talhão</h3>
+      <div class="list">
+        <div class="item"><span>T-07</span><span class="v">42 ha</span></div>
+        <div class="item"><span>Solo</span><span class="v">Argiloso</span></div>
+        <div class="item"><span>Safra anterior</span><span class="v">Soja, milho</span></div>
+        <div class="item"><span>Umidade hoje</span><span class="v">Úmido</span></div>
+        <div class="item"><span>Local</span><span class="v">Sorriso, MT</span></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3>O que importa</h3>
+      <div class="list">
+        <div class="item"><span>Maior lucro</span><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Maior lucro"></button></div>
+        <div class="item"><span>Menor risco</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Menor risco"></button></div>
+        <div class="item"><span>Cuidar do solo</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Cuidar do solo"></button></div>
+        <div class="item"><span>Facilidade</span><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Facilidade"></button></div>
+      </div>
+    </div>
+    <div class="sec">
+      <h3>Limitações</h3>
+      <div class="list">
+        <div class="item"><span>Só 1 plantadeira</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Só 1 plantadeira"></button></div>
+        <div class="item"><span>Evitar solo exposto</span><button class="sw" type="button" role="switch" aria-checked="true" aria-label="Evitar solo exposto"></button></div>
+        <div class="item"><span>Insumos já comprados</span><button class="sw" type="button" role="switch" aria-checked="false" aria-label="Insumos já comprados"></button></div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="head">
+      <div>
+        <h1>Rotações</h1>
+        <p>Safra 2026/27 · ordenadas para o clima previsto</p>
+      </div>
+      <button class="add" type="button" aria-label="Criar minha rotação" onClick="{{openDraft}}"><svg class="ic"><use href="#i-plus"/></svg></button>
+    </div>
+
+    <div class="board">
+      <div class="cal">
+        <div class="months">
+          <sc-for list="{{months}}" as="m" hint-placeholder-count="12">
+            <div class="{{m.cls}}" title="{{m.title}}"><span class="t">{{m.t}}</span><span class="wx-wrap"><svg class="wx" role="img" aria-label="{{m.aria}}"><use href="{{m.icon}}"/></svg></span><span class="dec" aria-hidden="true"><sc-for list="{{m.decs}}" as="d" hint-placeholder-count="3"><i class="{{d.cls}}">{{d.n}}</i></sc-for></span></div>
+          </sc-for>
+        </div>
+      </div>
+
+      <sc-if value="{{draftOpen}}" hint-placeholder-val="{{true}}">
+      <div class="row draft {{draftCls}}">
+        <div class="rh">
+          <span class="rk">+</span>
+          <span class="nm"><sc-for list="{{titleParts}}" as="p" hint-placeholder-count="2"><sc-if value="{{p.then}}" hint-placeholder-val="{{false}}"><span class="then">&nbsp;depois&nbsp;</span></sc-if>{{p.text}}</sc-for></span>
+          <span class="rankb">{{rankText}}</span>
+          <sc-if value="{{pest}}" hint-placeholder-val="{{false}}"><span class="pest"><svg class="ic"><use href="#i-bug"/></svg>Mais pragas</span></sc-if>
+          <span class="st"><span class="dot {{status.cls}}"></span>{{status.label}}</span>
+          <span class="acts">
+            <button class="tb" type="button" onClick="{{togglePicker}}" aria-expanded="{{pickerOpen}}"><svg class="ic"><use href="#i-plus"/></svg>Cultura</button>
+            <button class="tb" type="button" onClick="{{cancel}}">Cancelar</button>
+            <button class="tb pri" type="button" onClick="{{save}}">Salvar</button>
+          </span>
+        </div>
+        <div class="tl dtl">
+          <sc-for list="{{gaps}}" as="g" hint-placeholder-count="1">
+            <span class="gap" style="left: {{g.left}}; width: {{g.width}}">{{g.text}}</span>
+          </sc-for>
+          <sc-for list="{{crops}}" as="c" hint-placeholder-count="2">
+            <div class="cb {{c.selCls}}" style="left: {{c.left}}; width: {{c.width}}">
+              <div class="b {{c.status}}" onPointerDown="{{c.downMove}}" onPointerMove="{{onMove}}" onPointerUp="{{onUp}}" onPointerCancel="{{onUp}}">{{c.name}}</div>
+              <sc-if value="{{c.selected}}" hint-placeholder-val="{{false}}">
+                <span class="hd l" onPointerDown="{{c.downStart}}" onPointerMove="{{onMove}}" onPointerUp="{{onUp}}" onPointerCancel="{{onUp}}" aria-hidden="true"><i></i></span>
+                <span class="hd r" onPointerDown="{{c.downEnd}}" onPointerMove="{{onMove}}" onPointerUp="{{onUp}}" onPointerCancel="{{onUp}}" aria-hidden="true"><i></i></span>
+              </sc-if>
+            </div>
+          </sc-for>
+          <sc-if value="{{menuShow}}" hint-placeholder-val="{{false}}">
+            <span class="callout" style="left: {{menuLeft}}"><button type="button" onClick="{{openReplace}}" aria-haspopup="dialog"><svg class="ic"><use href="#i-swap"/></svg>Trocar</button><span class="csep" aria-hidden="true"></span><button type="button" class="danger" onClick="{{removeSel}}"><svg class="ic"><use href="#i-trash"/></svg>Remover</button></span>
+          </sc-if>
+          <sc-if value="{{tipShow}}" hint-placeholder-val="{{false}}">
+            <span class="tip {{tipCls}}" style="left: {{tipLeft}}">{{tipText}}</span>
+          </sc-if>
+        </div>
+        <sc-if value="{{pickerOpen}}" hint-placeholder-val="{{false}}">
+          <div class="picker {{pickerCls}}" style="left: {{pickerLeft}}" role="dialog" aria-label="{{pickerTitle}}">
+            <div class="pk-h"><b>{{pickerTitle}}</b><span>{{pickerHint}}</span></div>
+            <sc-for list="{{catalog}}" as="grp" hint-placeholder-count="2">
+              <div class="pk-g">{{grp.name}}</div>
+              <sc-for list="{{grp.items}}" as="it" hint-placeholder-count="3">
+                <button class="pk-i" type="button" onClick="{{it.add}}" disabled="{{it.disabled}}"><span>{{it.name}}</span><span class="pk-s">{{it.note}}</span></button>
+              </sc-for>
+            </sc-for>
+          </div>
+        </sc-if>
+      </div>
+      </sc-if>
+      <sc-if value="{{savedShow}}" hint-placeholder-val="{{false}}">
+      <div class="row saved">
+        <div class="rh"><span class="rk">{{rankN}}</span><span class="nm"><sc-for list="{{titleParts}}" as="p" hint-placeholder-count="2"><sc-if value="{{p.then}}" hint-placeholder-val="{{false}}"><span class="then">&nbsp;depois&nbsp;</span></sc-if>{{p.text}}</sc-for></span><span class="tag">Nova</span><span class="st"><span class="dot {{status.cls}}"></span>{{status.label}}</span></div>
+        <div class="tl"><sc-for list="{{crops}}" as="c" hint-placeholder-count="2"><div class="cb" style="left: {{c.left}}; width: {{c.width}}"><div class="b {{c.status}}">{{c.name}}</div></div></sc-for></div>
+      </div>
+      </sc-if>
+
+      <div class="row">
+        <div class="rh"><span class="rk">1</span><span class="nm">Soja <span class="then">depois</span> crotalária + milheto</span><span class="sub">Planta no auge da chuva e cobre o solo até a seca</span><span class="st"><span class="dot good"></span>Bom</span></div>
+        <div class="tl">
+          <div class="b good" style="--s:1.7;--e:5.3">Soja</div>
+          <div class="b good" style="--s:5.3;--e:9.4">Crotalária + milheto</div>
+          <div class="b bare" style="--s:9.4;--e:12"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="rh"><span class="rk">2</span><span class="nm">Soja <span class="then">depois</span> sorgo</span><span class="sub">Sorgo aguenta melhor o fim das chuvas que o milho</span><span class="st"><span class="dot good"></span>Bom</span></div>
+        <div class="tl">
+          <div class="b good" style="--s:1.7;--e:5.3">Soja</div>
+          <div class="b good" style="--s:5.4;--e:9.4">Sorgo</div>
+          <div class="b bare" style="--s:9.4;--e:12"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="rh"><span class="rk">3</span><span class="nm">Soja precoce <span class="then">depois</span> milho + braquiária</span><span class="sub">Milho floresce quando a chuva acaba</span><span class="st"><span class="dot warn"></span>Atenção</span></div>
+        <div class="tl">
+          <div class="b good" style="--s:1;--e:4.4">Soja precoce</div>
+          <div class="b warn" style="--s:4.4;--e:9">Milho + braquiária</div>
+          <div class="b bare" style="--s:9;--e:12"></div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="rh"><span class="rk">4</span><span class="nm">Soja <span class="then">depois</span> milho safrinha</span><span class="tag">Atual</span><span class="pest"><svg class="ic"><use href="#i-bug"/></svg>Mais pragas</span><span class="sub">Chuva falha no enchimento da soja</span><span class="st"><span class="dot risk"></span>Risco</span></div>
+        <div class="tl">
+          <div class="b risk" style="--s:1.7;--e:5.3">Soja</div>
+          <div class="b good" style="--s:5.6;--e:9.6">Milho safrinha</div>
+          <div class="b bare" style="--s:9.6;--e:12"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <aside class="insp" aria-label="Detalhe da nova rotação">
+    <div class="eyebrow">Nova rotação · rascunho</div>
+    <h2><sc-for list="{{titleParts}}" as="p" hint-placeholder-count="2"><sc-if value="{{p.then}}" hint-placeholder-val="{{false}}"><span class="then">&nbsp;depois&nbsp;</span></sc-if>{{p.text}}</sc-for></h2>
+    <span class="verdict"><span class="dot {{status.cls}}"></span>{{weakText}}</span>
+
+    <div class="rankcard"><span>Posição no ranking</span><b>{{rankLong}}</b></div>
+
+    <div class="why">
+      <h3>Culturas</h3>
+      <div class="list">
+        <sc-for list="{{crops}}" as="c" hint-placeholder-count="2">
+          <div class="ci {{c.selCls}}">
+            <button class="ci-main" type="button" onClick="{{c.select}}"><span class="dot {{c.status}}"></span><span class="ci-t"><b>{{c.name}}</b><span>{{c.dates}}</span></span><span class="ci-s {{c.status}}">{{c.statusLabel}}</span></button>
+          </div>
+        </sc-for>
+      </div>
+      <p class="hint"><span class="zsw"></span><span>Verde no calendário: melhor época de plantio de {{selName}} (ZARC)</span></p>
+    </div>
+
+    <div class="why">
+      <h3>Suas limitações</h3>
+      <div class="list">
+        <sc-for list="{{checks}}" as="k" hint-placeholder-count="3">
+          <div class="wi"><span class="wic {{k.cls}}"><svg class="ic"><use href="{{k.icon}}"/></svg></span><div><b>{{k.title}}</b><p>{{k.text}}</p></div></div>
+        </sc-for>
+      </div>
+    </div>
+
+    <p class="foot">Arraste as pontas da barra para mudar plantio e colheita, ou o meio para mover a cultura. As culturas não se sobrepõem. Janelas e status são ilustrativos (mock).</p>
+  </aside>
+
+</div>
+</x-dc>
+
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      draftOpen: true, saved: false, pickerOpen: false, pickerMode: 'add', sel: 1, tip: null,
+      crops: [ { key: 'soja', s: 5, e: 17 }, { key: 'sorgo', s: 17, e: 28 } ]
+    };
+    this.drag = null;
+  }
+  cat() {
+    return {
+      soja:    { name: 'Soja', min: 10, max: 14, def: 12, good: [4, 8], warn: [3, 9], group: 'Grãos' },
+      milho:   { name: 'Milho safrinha', min: 10, max: 14, def: 12, good: [13, 16], warn: [12, 17], group: 'Grãos' },
+      sorgo:   { name: 'Sorgo', min: 9, max: 12, def: 11, good: [14, 17], warn: [13, 18], group: 'Grãos' },
+      caupi:   { name: 'Feijão-caupi', min: 7, max: 9, def: 8, group: 'Grãos' },
+      crot:    { name: 'Crotalária + milheto', min: 9, max: 13, def: 11, good: [14, 18], warn: [13, 19], group: 'Cobertura' },
+      milheto: { name: 'Milheto', min: 7, max: 10, def: 9, good: [15, 19], warn: [14, 20], group: 'Cobertura' },
+      braq:    { name: 'Braquiária', min: 9, max: 14, def: 12, group: 'Cobertura' }
+    };
+  }
+  status(c) {
+    const k = this.cat()[c.key];
+    if (!k.good) return 'none';
+    if (c.s >= k.good[0] && c.s <= k.good[1]) return 'good';
+    if (c.s >= k.warn[0] && c.s <= k.warn[1]) return 'warn';
+    return 'risk';
+  }
+  idxAt(x) { const r = this.drag.rect; return Math.round((x - r.left) / r.width * 36); }
+  begin(e, i, mode) {
+    e.stopPropagation();
+    const track = e.currentTarget.closest('.dtl');
+    if (!track) return;
+    const c = this.state.crops[i];
+    this.drag = { i: i, mode: mode, rect: track.getBoundingClientRect(), x0: e.clientX, s0: c.s, e0: c.e };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch (err) {}
+    this.setState({ sel: i, pickerOpen: false, tip: mode });
+    this.moved = false;
+  }
+  move(e) {
+    const d = this.drag; if (!d) return;
+    const cs = this.state.crops.slice(); const c = Object.assign({}, cs[d.i]);
+    const k = this.cat()[c.key];
+    const lo = d.i > 0 ? cs[d.i - 1].e : 0;
+    const hi = d.i < cs.length - 1 ? cs[d.i + 1].s : 36;
+    let limit = null;
+    if (d.mode === 'start') {
+      const want = this.idxAt(e.clientX);
+      const minS = Math.max(lo, d.e0 - k.max), maxS = d.e0 - k.min;
+      c.s = Math.min(Math.max(want, minS), maxS);
+      if (want < lo && c.s === lo && d.i > 0) limit = 'prev';
+    } else if (d.mode === 'end') {
+      const want = this.idxAt(e.clientX);
+      const minE = d.s0 + k.min, maxE = Math.min(hi, d.s0 + k.max);
+      c.e = Math.min(Math.max(want, minE), maxE);
+      if (want > hi && c.e === hi && d.i < cs.length - 1) limit = 'next';
+    } else {
+      const len = d.e0 - d.s0;
+      const delta = Math.round((e.clientX - d.x0) / d.rect.width * 36);
+      let ns = Math.min(Math.max(d.s0 + delta, lo), hi - len);
+      if (d.s0 + delta < lo && d.i > 0) limit = 'prev';
+      if (d.s0 + delta > hi - len && d.i < cs.length - 1) limit = 'next';
+      c.s = ns; c.e = ns + len;
+    }
+    cs[d.i] = c;
+    this.moved = true;
+    this.setState({ crops: cs, limit: limit });
+  }
+  end() { this.drag = null; this.setState({ tip: null, limit: null }); }
+  decLabel(i) {
+    const M = ['set','out','nov','dez','jan','fev','mar','abr','mai','jun','jul','ago'];
+    const L = [30,31,30,31,31,28,31,30,31,30,31,31];
+    const m = Math.floor(i / 3), d = i % 3;
+    return (d === 0 ? '1–10' : d === 1 ? '11–20' : '21–' + L[m]) + ' ' + M[m];
+  }
+  renderVals() {
+    const C = this.cat();
+    const S = { good: 'Bom', warn: 'Atenção', risk: 'Risco', none: 'Sem dados' };
+    const RANK = { good: 1, warn: 2, risk: 3, none: 4 };
+    const st = this.state; const cs = st.crops;
+    const sel = Math.min(st.sel, cs.length - 1);
+    const pct = (v) => (v / 36 * 100).toFixed(3) + '%';
+    const crops = cs.map((c, i) => {
+      const k = C[c.key]; const s = this.status(c);
+      return {
+        name: k.name, status: s, statusLabel: S[s],
+        left: pct(c.s), width: pct(c.e - c.s),
+        selected: i === sel && cs.length > 0, selCls: i === sel ? 'sel' : '',
+        dates: 'Plantio ' + this.decLabel(c.s) + ' · colheita ' + this.decLabel(c.e - 1),
+        downMove: (e) => this.begin(e, i, 'move'),
+        downStart: (e) => this.begin(e, i, 'start'),
+        downEnd: (e) => this.begin(e, i, 'end'),
+        select: () => this.setState({ sel: i }),
+        remove: () => { const n = cs.filter((x, j) => j !== i); this.setState({ crops: n, sel: Math.max(0, i - 1) }); }
+      };
+    });
+    const gaps = [];
+    for (let i = 0; i < cs.length - 1; i++) {
+      const g = cs[i + 1].s - cs[i].e;
+      if (g > 0) gaps.push({ left: pct(cs[i].e), width: pct(g), text: g >= 2 ? (g * 10) + ' dias sem cobertura' : (g * 10) + 'd' });
+    }
+    const evals = cs.map((c) => this.status(c));
+    const known = evals.filter((x) => x !== 'none');
+    let worst = known.length ? known.reduce((a, b) => RANK[a] >= RANK[b] ? a : b) : 'none';
+    if (!cs.length) worst = 'none';
+    const existing = ['good', 'good', 'warn', 'risk'];
+    const rankN = existing.filter((x) => RANK[x] <= RANK[worst]).length + 1;
+    const wi = evals.findIndex((x) => x === worst);
+    const wname = wi >= 0 ? C[cs[wi].key].name : '';
+    const weakText = !cs.length ? 'Adicione uma cultura' : worst === 'good' ? 'Todas as culturas na melhor época de plantio' : worst === 'warn' ? wname + ' no limite da época de plantio' : worst === 'risk' ? wname + ' fora da época de plantio' : 'Sem dados de clima para ' + wname;
+    const titleParts = cs.map((c, i) => ({ text: i === 0 ? C[c.key].name : C[c.key].name.toLowerCase(), then: i > 0 }));
+    if (!cs.length) titleParts.push({ text: 'Nova rotação', then: false });
+    const keys = cs.map((c) => c.key);
+    const pest = keys.includes('soja') && keys.includes('milho');
+    const gapDays = gaps.length ? cs.slice(0, -1).reduce((t, c, i) => t + Math.max(0, cs[i + 1].s - c.e) * 10, 0) : 0;
+    const checks = [
+      { title: 'Só 1 plantadeira', text: 'Cada plantio cai num período diferente.', icon: '#i-check', cls: 'ok' },
+      gapDays > 0 ? { title: 'Evitar solo exposto', text: gapDays + ' dias sem cobertura entre as culturas.', icon: '#i-alert', cls: 'bad' } : { title: 'Evitar solo exposto', text: 'Uma cultura entra logo depois da outra.', icon: '#i-check', cls: 'ok' },
+      pest ? { title: 'Safra anterior', text: 'Repete soja e milho: mais pragas e mais defensivos.', icon: '#i-bug', cls: 'bad' } : { title: 'Safra anterior', text: 'Troca as culturas do ano passado.', icon: '#i-check', cls: 'ok' }
+    ];
+    const lastE = cs.length ? cs[cs.length - 1].e : 4;
+    const mode = st.pickerMode;
+    const cur = cs[sel];
+    const roomEnd = cur ? (sel < cs.length - 1 ? cs[sel + 1].s : 36) : 36;
+    const groups = {};
+    Object.keys(C).forEach((key) => {
+      const k = C[key];
+      let item;
+      if (mode === 'replace' && cur) {
+        const isCur = key === cur.key;
+        const fits = cur.s + k.min <= roomEnd;
+        item = {
+          name: k.name, disabled: isCur || !fits,
+          note: isCur ? 'Atual' : !fits ? 'Não cabe aqui' : (k.good ? '' : 'Sem dados'),
+          add: () => {
+            if (isCur || !fits) return;
+            const len = Math.min(Math.max(cur.e - cur.s, k.min), k.max, roomEnd - cur.s);
+            const n = cs.slice(); n[sel] = { key: key, s: cur.s, e: cur.s + len };
+            this.setState({ crops: n, pickerOpen: false });
+          }
+        };
+      } else {
+        const fits = lastE + k.min <= 36;
+        item = {
+          name: k.name, disabled: !fits,
+          note: !fits ? 'Não cabe na safra' : (k.good ? '' : 'Sem dados'),
+          add: () => {
+            if (!fits) return;
+            const s0 = lastE, e0 = Math.min(36, lastE + k.def);
+            this.setState({ crops: cs.concat([{ key: key, s: s0, e: e0 }]), sel: cs.length, pickerOpen: false });
+          }
+        };
+      }
+      (groups[k.group] = groups[k.group] || []).push(item);
+    });
+    const catalog = Object.keys(groups).map((g) => ({ name: g, items: groups[g] }));
+    const sc = cs[sel]; const sk = sc ? C[sc.key] : null;
+    const zone = (i) => sk && sk.good && i >= sk.good[0] && i <= sk.good[1] ? 'z' : '';
+    const MON = [['Set','w-sun','Seco'],['Out','w-drizzle','Pouca chuva'],['Nov','w-mixed','Chuva com intervalos'],['Dez','w-mixed','Chuva com intervalos'],['Jan','w-mixed','Chuva com intervalos'],['Fev','w-rain','Chuvoso'],['Mar','w-drizzle','Pouca chuva'],['Abr','w-drizzle','Pouca chuva'],['Mai','w-sun','Seco'],['Jun','w-sun','Seco'],['Jul','w-sun','Seco'],['Ago','w-sun','Seco']];
+    const months = MON.map((m, i) => ({ t: m[0], icon: '#' + m[1], aria: m[2], title: m[0] + ': ' + m[2].toLowerCase(), cls: i < 2 ? 'mo past' : 'mo', decs: [0,1,2].map((d) => ({ n: String(d + 1), cls: zone(i * 3 + d) })) }));
+    let tipShow = false, tipText = '', tipLeft = '0%', tipCls = '';
+    if (st.tip && sc) {
+      tipShow = true;
+      if (st.limit) { tipCls = 'limit'; tipText = st.limit === 'prev' ? 'Limite: colheita de ' + C[cs[sel - 1].key].name.toLowerCase() : 'Limite: plantio de ' + C[cs[sel + 1].key].name.toLowerCase(); }
+      else if (st.tip === 'end') tipText = 'Colheita: ' + this.decLabel(sc.e - 1);
+      else tipText = 'Plantio: ' + this.decLabel(sc.s);
+      tipLeft = st.tip === 'end' ? pct(sc.e) : st.tip === 'start' ? pct(sc.s) : pct((sc.s + sc.e) / 2);
+    }
+    return {
+      months: months, crops: crops, gaps: gaps, titleParts: titleParts, catalog: catalog, checks: checks,
+      status: { cls: worst, label: S[worst] }, weakText: weakText, pest: pest,
+      rankN: String(rankN), rankText: 'Ficaria em ' + rankN + 'º', rankLong: rankN + 'º de 5',
+      selName: sk ? sk.name.toLowerCase() : 'cada cultura',
+      draftOpen: st.draftOpen && !st.saved, savedShow: st.saved, pickerOpen: st.pickerOpen,
+      pickerTitle: mode === 'replace' && cur ? 'Trocar ' + C[cur.key].name.toLowerCase() : 'Adicionar cultura',
+      pickerCls: mode === 'replace' ? 'pk-rep' : 'pk-add',
+      pickerLeft: mode === 'replace' && cur ? Math.min(cur.s / 36 * 100, 62).toFixed(2) + '%' : 'auto',
+      menuShow: !!cur && !st.tip && !st.pickerOpen && st.draftOpen && !st.saved,
+      menuLeft: cur ? pct((cur.s + cur.e) / 2) : '0%',
+      draftCls: cur ? 'withmenu' : '',
+      openReplace: () => this.setState({ pickerMode: 'replace', pickerOpen: true }),
+      removeSel: () => { const n = cs.filter((x, j) => j !== sel); this.setState({ crops: n, sel: Math.max(0, sel - 1) }); },
+      pickerHint: mode === 'replace' ? 'Mantém o plantio e ajusta ao ciclo da nova cultura' : lastE < 36 ? 'Entra depois de ' + (cs.length ? C[cs[cs.length - 1].key].name.toLowerCase() : 'outubro') : 'A safra está cheia',
+      tipShow: tipShow, tipText: tipText, tipLeft: tipLeft, tipCls: tipCls,
+      onMove: (e) => this.move(e), onUp: () => this.end(),
+      togglePicker: () => this.setState({ pickerOpen: !(st.pickerOpen && st.pickerMode === 'add'), pickerMode: 'add' }),
+      cancel: () => this.setState({ draftOpen: false, pickerOpen: false }),
+      save: () => this.setState({ saved: true, pickerOpen: false }),
+      openDraft: () => this.setState({ draftOpen: true, saved: false })
+    };
+  }
+}
+</script>
+</body>
+</html>

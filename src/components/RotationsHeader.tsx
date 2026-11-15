@@ -1,7 +1,13 @@
 import { useConjunto } from '../state/conjunto'
-type Props = { mode: 'cal' | 'cmp'; onMode: (m: 'cal' | 'cmp') => void }
+type Props = {
+  mode: 'cal' | 'cmp'; onMode: (m: 'cal' | 'cmp') => void
+  /** Abre o rascunho "Nova rotação" (ou foca o que já está aberto). */
+  onAdd: () => void
+  /** Motivo para não criar outra (ex.: já há 3 salvas); null = habilitado. */
+  addBloqueio?: string | null
+}
 
-export function RotationsHeader({ mode, onMode }: Props) {
+export function RotationsHeader({ mode, onMode, onAdd, addBloqueio = null }: Props) {
   const conj = useConjunto()
   return (
     <div className="mstrip">
@@ -9,8 +15,8 @@ export function RotationsHeader({ mode, onMode }: Props) {
         <h2 className="h2r">Rotações</h2>
         <p>Safra {conj.ano}/{String(conj.ano + 1).slice(2)} · na ordem recomendada pela API</p>
       </div>
-      {/* + button — no action per spec */}
-      <button className="add" type="button" aria-label="Adicionar rotação" disabled>
+      <button className="add" type="button" aria-label="Criar minha rotação" title={addBloqueio ?? 'Criar minha rotação'}
+        disabled={!!addBloqueio} onClick={onAdd}>
         <svg className="ic" aria-hidden="true">
           <use href="/canvas-icons.svg#i-plus" />
         </svg>

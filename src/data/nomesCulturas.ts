@@ -1,0 +1,26 @@
+// Nomes em português das culturas simuláveis da API (GET /api/crops?simulable=true), que vêm em inglês.
+// Só rótulo de tela: nenhum dado agronômico. Sem nome aqui, a tela usa o nome popular da API.
+export const NOMES_PT: Record<number, string> = {
+  2199: 'Amendoim',
+  48742: 'Beterraba açucareira',
+  554: 'Repolho',
+  576: 'Feijão-guandu',
+  618: 'Pimentão',
+  815: 'Melão',
+  1150: 'Soja',
+  1160: 'Algodão',
+  1191: 'Girassol',
+  1232: 'Cevada',
+  1379: 'Tomate',
+  1428: 'Alfafa',
+  1534: 'Tabaco',
+  8418: 'Milheto',
+  1668: 'Feijão',
+  1884: 'Cana-de-açúcar',
+  1971: 'Batata',
+  48747: 'Sorgo',
+  2114: 'Trigo',
+  2153: 'Feijão-caupi',
+  2175: 'Milho',
+  238663: 'Milho (ssp. mays)',
+}

@@ -13,7 +13,9 @@ Base: `VITE_API_URL`, com fallback para `https://entressafras-backend-production
 | `GET /api/clima/decendios?lat&lon` | 36 decêndios climatológicos, fonte e safras | Indicadores de chuva e temperatura e resumo mensal |
 | `GET /api/clima/diario?lat&lon&inicio&fim` | Série histórica diária | Adiado; sem serviço, hook, cache ou chamadas no frontend |
 | `GET /api/crops` e `/api/crops/{eco_port_code}` | Catálogo e requisitos das culturas, com `water_requirements` (FAO-56) | Enriquecimento das culturas (fase 3) e Kc da resiliência (fase 5) |
-| `POST /api/rotations/recommendations` | Até 4 rotações de 2 culturas, datas de plantio e colheita, risco hídrico por cultura | Rotações exibidas na tela (fase 5) |
+| `POST /api/rotations/recommendations` | Até 4 rotações de 2 culturas, datas de plantio e colheita, risco hídrico por cultura; `custom_rotations` (até 3) ranqueadas junto | Rotações exibidas na tela (fase 5) e as salvas pelo agricultor (fase 6) |
+| `POST /api/rotations/simulate` | Rotação de 2 culturas do agricultor: risco, rank, checks, notas e a faixa por decêndio (`sweep`) | Rascunho "Nova rotação" (fase 6) |
+| `GET /api/crops?simulable=true` | As 22 culturas com dados FAO-56 para simular | Menu de culturas do rascunho (fase 6) |
 
 O contrato diário contém `gwettop` e `gwetroot` históricos, mas não fornece uma leitura atual garantida de umidade. Na consulta de referência para o T-07 em 14/11/2026, a série termina em **31/08/2026**. Esses campos não serão usados para alimentar a lateral ou o indicador de solo nesta etapa. Não há integração de previsão futura neste escopo.
 
@@ -109,6 +111,12 @@ Implementada em 14/11/2026. As 4 rotações fixas do protótipo (`SAFRAS`/`CT`) 
 | Rotação atual do agricultor | Só aparece se a API recomendar a mesma sequência | Incluir a rotação atual do histórico na resposta, para comparação |
 
 Paridade visual: os goldens de `tests/ui-parity.spec.ts` retratam as 4 rotações antigas e falham com as da API. Não foram atualizados.
+
+## Fase 6: Nova rotação simulada pela API
+
+O botão `+` ("Criar minha rotação") abre um rascunho com 2 culturas, simulado em `POST /api/rotations/simulate` enquanto o agricultor arrasta as datas ou troca as culturas. Status, ranking, janela de plantio, checks e notas vêm só da API (regra acima). Salvar guarda a rotação no navegador e a reenvia em `custom_rotations`, para a API ranquear junto com as recomendadas.
+
+Lacunas, decisões e follow-ups: `fieldshift-nova-rotacao/LACUNAS-SIMULATE.md`.
 
 ## Cobertura dos dados pelo backend
 

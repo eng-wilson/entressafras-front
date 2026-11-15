@@ -3,7 +3,8 @@
 import type { BarDef, ConjuntoRotacoes, CTRow, RotacaoDef, SafraDef } from '../data/mock'
 import { LEN } from '../data/mock'
 import { PERFIS, type PerfilCultura } from '../data/perfis'
-import type { Historico, RotationCrop, RotationRecommendations } from '../types'
+import { NOMES_PT } from '../data/nomesCulturas'
+import type { Historico, Rotation, RotationCrop, RotationRecommendations } from '../types'
 
 const data = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
@@ -44,7 +45,7 @@ function safra(c: RotationCrop, n: 0 | 1, ano: number): SafraDef {
   const kc = kcDe(c)
   const nomeApi = maiuscula(c.crop.common_names[0] ?? c.crop.scientific_name)
   return {
-    nome: perfil ? (n === 1 && perfil.nome2 ? perfil.nome2 : perfil.nome) : nomeApi,
+    nome: perfil ? (n === 1 && perfil.nome2 ? perfil.nome2 : perfil.nome) : NOMES_PT[c.crop.eco_port_code] ?? nomeApi,
     ref: perfil?.id ?? `eco:${c.crop.eco_port_code}`,
     zarc: perfil ? (n === 1 && perfil.zarc2 !== undefined ? perfil.zarc2 : perfil.zarc) : null,
     de: decendioDaData(c.planting_date, ano),
@@ -93,15 +94,24 @@ function linha(a: SafraDef, b: SafraDef, pa: PerfilCultura | undefined, pb: Perf
   }
 }
 
+/** Rotação salva no navegador que foi em custom_rotations (mesma ordem do pedido). */
+export type SalvaMeta = { id: string; em: number }
+
 /**
- * Converte a resposta da API, na ordem do rank dela (é a ordem da tela).
+ * Converte a resposta da API, na ordem do rank dela (é a ordem da tela). As rotações do agricultor
+ * (custom_rotations) entram pela posição que a API deu. O rank delas é a posição que ocupariam entre as
+ * recomendadas (1 = melhor que todas), então ficam antes da recomendada de mesmo rank; entre elas, a salva mais
+ * antiga primeiro (L14).
  */
-export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico | null): ConjuntoRotacoes {
+export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico | null, salvas: SalvaMeta[] = []): ConjuntoRotacoes {
   const ano = r.agricultural_year
   const avisos = [...r.warnings]
   const atual = ultimaRotacao(historico)
   const rotacoes: RotacaoDef[] = []
-  for (const rot of [...r.rotations].sort((a, b) => a.rank - b.rank)) {
+  const custom = (r.custom_rotations ?? []).flatMap((c, i) => (salvas[i] ? [{ rot: c as Rotation, salva: salvas[i] as SalvaMeta | undefined }] : []))
+  const todas = [...r.rotations.map(rot => ({ rot, salva: undefined as SalvaMeta | undefined })), ...custom]
+    .sort((a, b) => a.rot.rank - b.rot.rank || Number(!!b.salva) - Number(!!a.salva) || (a.salva?.em ?? 0) - (b.salva?.em ?? 0))
+  for (const { rot, salva } of todas) {
     const [ca, cb] = rot.crops
     const a = safra(ca, 0, ano), b = safra(cb, 1, ano)
     const pa = PERFIS[ca.crop.eco_port_code], pb = PERFIS[cb.crop.eco_port_code]
@@ -114,9 +124,10 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
     const fim = barras[1].e
     if (fim < 12) barras.push({ s: fim, e: 12, label: '' })
     rotacoes.push({
-      id: rot.id, safras: [a, b], ct,
+      id: salva ? `salva-${salva.id}` : rot.id, safras: [a, b], ct,
       agua: pb?.score.agua ?? 0, solo: pb?.score.solo ?? 0,
       barras, maisPragas: pb?.pragas.nivel === 'Maior risco',
+      ...(salva ? { salva } : {}),
     })
   }
   return { origem: 'api', ano, rotacoes, avisos }
