@@ -1,36 +1,53 @@
-.attention-cycle { --attention-secondary: #616166; font-size: var(--insp-body, .875rem); line-height: 1.5; overflow-wrap: anywhere; }
-.attention-cycle p { margin: 0 4px 8px; }
-.attention-cycle .attention-note { color: var(--attention-secondary); font-size: var(--insp-caption, .8125rem); margin: 0 0 12px; }
-.attention-map { display: grid; grid-template-columns: repeat(36, minmax(0, 1fr)); gap: 2px; align-items: end; height: 22px; margin: 12px 4px 4px; }
-.attention-mark { height: 6px; border-radius: 1px; background: #c9c9d0; }
+.attention-cycle { font-size: var(--insp-body); line-height: 1.45; min-width: 0; }
+.attention-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.attention-heading h3 { margin: 0 0 0 4px; color: var(--insp-secondary); font-size: .75rem; font-weight: 600; letter-spacing: .055em; text-transform: uppercase; }
+.attention-info-button { display: grid; place-items: center; width: 44px; height: 44px; flex: none; color: var(--insp-secondary); border-radius: 6px; }
+.attention-info-button:hover { color: var(--insp-accent); background: #e9eff8; }
+.attention-cycle .attention-note { margin: 0; color: var(--insp-secondary); font-size: var(--insp-caption); }
+.attention-scrubber { position: relative; height: 52px; margin-top: 8px; }
+.attention-map { position: absolute; inset: 4px 8px auto; display: flex; justify-content: space-between; align-items: end; height: 20px; pointer-events: none; }
+.attention-mark { flex: 0 1 4px; height: 5px; border-radius: 1px; background: #c6c6cd; }
 .attention-mark.good { background: #287c44; }
 .attention-mark.warn { height: 12px; background: #946000; }
-.attention-mark.risk { height: 18px; background: #b42332; }
+.attention-mark.risk { height: 20px; background: #b42332; }
 .attention-mark.none { height: 3px; }
-.attention-mark.current { outline: 2px solid #1d1d1f; outline-offset: 1px; }
-.attention-months { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 4px; color: var(--attention-secondary); font-size: .6875rem; }
-.attention-legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 4px 12px; color: var(--attention-secondary); font-size: .75rem; }
-.attention-legend span { display: flex; align-items: center; gap: 4px; }
+.attention-mark.current { outline: 1px solid var(--insp-focus); outline-offset: 2px; }
+.attention-range { position: absolute; inset: 0; width: 100%; height: 52px; margin: 0; appearance: none; -webkit-appearance: none; background: transparent; cursor: ew-resize; touch-action: pan-y; }
+.attention-range::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--insp-accent) var(--attention-fill), #d0d0d6 var(--attention-fill)); }
+.attention-range::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 24px; margin-top: -10.5px; border-radius: 5px; background: #fff; border: 1px solid #9b9ba2; box-shadow: 0 1px 3px rgba(0,0,0,.16); }
+.attention-range::-moz-range-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--insp-accent) var(--attention-fill), #d0d0d6 var(--attention-fill)); }
+.attention-range::-moz-range-thumb { width: 14px; height: 24px; border-radius: 5px; background: #fff; border: 1px solid #9b9ba2; box-shadow: 0 1px 3px rgba(0,0,0,.16); }
+.attention-months { display: grid; grid-template-columns: repeat(4, 1fr); margin: -8px 8px 0; color: var(--insp-secondary); font-size: .75rem; }
+.attention-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 10px; font-size: var(--insp-caption); color: var(--insp-secondary); }
+.attention-legend span { display: inline-flex; align-items: center; gap: 5px; }
 .attention-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: #946000; }
 .attention-legend i.risk { height: 10px; background: #b42332; }
-.attention-list { box-shadow: none; }
-.attention-moment + .attention-moment, .attention-others { border-top: 1px solid var(--sep); }
-.attention-moment > summary { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px; cursor: pointer; list-style: none; }
-.attention-moment > summary::-webkit-details-marker { display: none; }
-.attention-moment > summary::after { content: ''; width: 5px; height: 5px; border-top: 1.5px solid #616166; border-right: 1.5px solid #616166; transform: rotate(45deg); margin-left: auto; flex: none; }
-.attention-moment[open] > summary::after { transform: rotate(135deg); }
-.attention-moment summary > span { min-width: 0; }
-.attention-moment summary strong { font-size: .75rem; font-weight: 600; }
-.attention-moment summary small { display: block; color: var(--attention-secondary); font-size: .75rem; }
+.attention-selection { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 8px; padding: 12px 0; margin-top: 4px; border-top: 1px solid var(--insp-separator); }
+.attention-selection > div:first-child { flex: 1; min-width: 130px; }
+.attention-cycle .attention-date { font-size: var(--insp-caption); font-weight: 500; }
+.attention-cycle .attention-current-state { margin-top: 3px; font-size: var(--insp-caption); color: var(--insp-secondary); }
+.attention-current-state.risk { color: #b42332; }
+.attention-current-state.warn { color: #805300; }
+.attention-stepper { display: inline-flex; flex: none; }
+.attention-stepper button { display: grid; place-items: center; width: 38px; min-height: 44px; color: var(--insp-accent); border-radius: 6px; }
+.attention-stepper button .ic { width: 14px; height: 14px; }
+.attention-stepper button:hover:enabled { background: #e4edf9; }
+.attention-stepper button:active:enabled { background: #d9e7f8; }
+.attention-stepper button:disabled { opacity: .3; cursor: default; }
+.attention-moment { display: flex; width: 100%; min-height: 48px; gap: 10px; align-items: center; text-align: left; padding: 11px 12px; position: relative; }
+.attention-moment > span { flex: 1; min-width: 0; }
+.attention-moment strong { font-size: var(--insp-body); font-weight: 500; }
+.attention-moment small { display: block; color: var(--insp-secondary); font-size: var(--insp-caption); margin-top: 2px; }
+.attention-moment + .attention-moment::before { content: ''; position: absolute; inset: 0 0 auto 38px; height: 1px; background: var(--insp-separator); }
+.attention-moment.selected { background: #e4ecf8; }
+.attention-moment:hover { background: #ededf1; }
+.attention-moment:active { background: #dbe7f8; }
 .attention-moment .ic.risk { color: #b42332; }
-.attention-moment .ic.warn { color: #875000; }
-.attention-body { padding: 0 10px 10px; }
-.attention-cycle .attention-body p { margin: 0 0 10px; }
-.attention-link { display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 8px 4px; text-align: left; color: var(--tint); font-weight: 500; }
-.attention-others > summary { padding: 12px; cursor: pointer; color: var(--attention-secondary); }
-.attention-method { margin: 6px 4px 0; font-size: .75rem; color: var(--attention-secondary); }
-.attention-method > summary { cursor: pointer; padding: 10px 0; }
-.attention-cycle .attention-method p { margin: 0 0 10px; }
-.attention-method a { color: var(--tint); text-underline-offset: 3px; }
-.attention-cycle :is(button, summary, a):focus-visible { outline: 2px solid #0a64d6; outline-offset: 2px; border-radius: 4px; }
-.attention-cycle summary:hover, .attention-link:hover { background: #e8eee9; border-radius: 8px; }
+.attention-moment .ic.warn { color: #805300; }
+.attention-others { border-top: 1px solid var(--insp-separator); }
+.attention-others > summary { display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 10px 12px; font-size: var(--insp-caption); color: var(--insp-secondary); cursor: pointer; list-style: none; }
+.attention-others > summary::-webkit-details-marker { display: none; }
+.attention-others > summary .ic { width: 10px; height: 10px; }
+.attention-others[open] > summary .ic { transform: rotate(90deg); }
+.attention-others > summary:hover { background: #ededf1; }
+@media (max-width: 640px) { .attention-stepper button { width: 44px; } .attention-range::-webkit-slider-thumb { width: 22px; border-radius: 50%; } .attention-range::-moz-range-thumb { width: 22px; border-radius: 50%; } }

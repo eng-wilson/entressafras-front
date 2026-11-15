@@ -10,7 +10,7 @@ test('catálogo mostra requisitos, cultivares gerais e ausência de referência 
   await comClimaFixo(page)
   await page.goto('/')
   await expect(page.locator('.pl').filter({ hasText: 'Temperatura' }).locator('.pl-s')).toHaveText('Bom')
-  await page.locator('.insp summary').filter({ hasText: 'Datas e requisitos' }).click()
+  await page.locator('.insp').getByRole('button', { name: 'Datas e requisitos' }).click()
   const abrir = page.getByRole('button', { name: 'Consultar requisitos de Soja', exact: true })
   await abrir.click()
   const janela = page.getByRole('dialog', { name: 'Dados das culturas' })
@@ -34,7 +34,7 @@ test('milho usa limite térmico do catálogo em vez de ficar sempre Bom', async 
     ...CLIMA_T07, decendios: CLIMA_T07.decendios.map(d => ({ ...d, tmin_media: 22, tmax_media: 35 })),
   } }))
   await page.goto('/')
-  const slider = page.getByRole('slider')
+  const slider = page.getByRole('slider', { name: 'Arraste para simular um período' })
   await slider.fill('18')
   await expect(page.locator('.pl').filter({ hasText: 'Temperatura' }).locator('.pl-s')).toHaveText('Calor · Atenção')
 })

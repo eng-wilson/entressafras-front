@@ -14,7 +14,7 @@ test('chuva acompanha cada decêndio do mesmo mês e preserva dado ausente', asy
   }))
   await page.goto('/')
   const indicador = page.locator('.vg')
-  const slider = page.getByRole('slider')
+  const slider = page.getByRole('slider', { name: 'Arraste para simular um período' })
   await expect(indicador).toHaveAttribute('aria-label', 'Chuva do decêndio: 60 milímetros, Chuva boa')
   await expect(slider).toHaveAttribute('aria-valuetext', /60 milímetros no decêndio/)
   await slider.focus()

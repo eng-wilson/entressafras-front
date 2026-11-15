@@ -4,7 +4,7 @@ Proposta de UX baseada na captura e no código de `Inspector.tsx`, `aptidao.ts`,
 
 ## Implementação e linguagem visual
 
-- Princípios das Human Interface Guidelines e padrões do SwiftUI adaptados ao React: fonte do sistema, estilos tipográficos em `rem`, cores semânticas, listas agrupadas, separadores discretos e controles de divulgação progressiva (`details`/`summary`). O verde existente continua como cor das ações.
+- Princípios das Human Interface Guidelines e padrões do SwiftUI adaptados ao React: fonte do sistema, estilos tipográficos em `rem`, cores semânticas, listas agrupadas, separadores discretos e navegação para detalhes. A referência visual enviada pelo usuário orienta o fundo branco, os grupos cinza, a seleção azul e os símbolos em fundos suaves. O azul identifica ações e seleção na barra; verde, âmbar e vermelho continuam representando estados.
 - Principal atenção e efeito da fase aparecem antes das datas; o percentual do ciclo fica separado da fase crítica. Aviso de risco provisório junto da conclusão, sem presumir personalização ao talhão.
 - “Ver fase no calendário” troca para o calendário, posiciona e foca o cursor na fase. “Comparar alternativas” inclui a rotação selecionada e outra opção recebida da API, sem afirmar que ela é melhor.
 - Requisitos são consultados por cultura, independentemente da posição do cursor na simulação. Solo/pragas e metodologia usam seções expansíveis; exemplos locais permanecem identificados como ilustrativos.
@@ -17,9 +17,11 @@ Os problemas e a sequência abaixo registram a motivação original; recomendaç
 
 ### Simplificação visual
 
+A referência de componentes enviada pelo usuário foi aplicada ao resumo: posição do ranking em um bloco azul, culturas em linhas compactas com datas e status à direita, cultura do período selecionada em azul, e limitações/cuidados com ícones em fundos semânticos. A seleção da cultura navega para seu plantio e acompanha alterações no calendário. A posição mostra somente a ordem entre as opções recebidas; não inventa total de candidatas, aprovação em filtros ou dados de cobertura que a API não entregou.
+
 A primeira versão usava barras de risco e uma linha do ciclo por cultura. Esses gráficos foram substituídos pelo painel **Atenção no ciclo**, na barra direita, conforme a correção de posicionamento solicitada pelo usuário. Ele apresenta os momentos de restrição do cenário local, a resposta por fase e as verificações possíveis. A barra esquerda conserva somente os dados e ajustes do talhão.
 
-Cada momento pode ser aberto no calendário e na cena. Os próximos passos usam linhas de ação com símbolos e rótulos, seguindo o padrão de listas do SwiftUI. Datas/requisitos e detalhes ficam em controles expansíveis. O contexto geral da API e o aviso de dado provisório permanecem visíveis, sem duplicação de cabeçalhos ou ações de comparação. Detalhes da análise local: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md).
+Cada momento pode ser aberto no calendário e na cena. A faixa agora é navegável com slider, leitura da data e navegação entre os momentos de atenção. As linhas de momentos, datas/requisitos, solo, pragas e fontes abrem telas de detalhe dentro do painel, com “Voltar”, Escape e foco restaurado, seguindo a navegação de listas do SwiftUI. O contexto geral da API e o aviso de dado provisório permanecem visíveis, sem duplicação de cabeçalhos ou ações de comparação. Detalhes da análise local: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md).
 
 ## Problemas prioritários
 

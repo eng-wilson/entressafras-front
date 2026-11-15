@@ -8,7 +8,7 @@ test('falha, slider ativo e nova tentativa', async ({ page }) => {
  await page.goto('/')
  await expect(page.getByRole('alert')).toBeVisible()
  await expect(page.locator('.vg')).toContainText('Sem dado')
- const slider = page.getByRole('slider')
+ const slider = page.getByRole('slider', { name: 'Arraste para simular um período' })
  await slider.focus(); await page.keyboard.press('End')
  await expect(slider).toHaveValue('35')
  falha = false

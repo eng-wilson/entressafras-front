@@ -120,6 +120,10 @@ export default function App() {
     setState(s => ({ ...s, idx, mode: 'cal' }))
     requestAnimationFrame(() => document.querySelector<HTMLInputElement>('#rotation-board input[type="range"]')?.focus())
   }
+  function navegarPeriodo(idx: number) {
+    // O scrubber da lateral mantém o foco durante arraste e uso das setas.
+    setState(s => ({ ...s, idx, mode: 'cal' }))
+  }
   // O slider e o calendário seguem o decêndio na hora; a cena recebe o valor adiado (prioridade baixa, interrompível):
   // segurando a seta, os decêndios intermediários não chegam a ser desenhados.
   const idxCena = useDeferredValue(state.idx)
@@ -130,7 +134,7 @@ export default function App() {
   // O panorama (atendimento por fase da API) é estável; o cursor do Inspector acompanha o calendário.
   // A cena continua recebendo o decêndio adiado, sem bloquear essa atualização.
   const inspector = useMemo(
-    () => <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={setVerCulturas} onVerPeriodo={verPeriodo} onComparar={compararAlternativas}
+    () => <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={setVerCulturas} onVerPeriodo={verPeriodo} onNavegarPeriodo={navegarPeriodo} onComparar={compararAlternativas}
       atencao={{ panorama, estado: 'pronto', idx: state.idx }} />,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [state.rot, state.idx, diags, clima.dados, res, conj, panorama],

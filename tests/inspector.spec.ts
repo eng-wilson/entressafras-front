@@ -33,23 +33,23 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
 
   // O cursor está longe da fase. A ação deve voltar ao calendário e à fase
   // do milho, mesmo quando acionada a partir da comparação.
-  await page.getByRole('slider').fill('0')
+  await page.getByRole('slider', { name: 'Arraste para simular um período' }).fill('0')
   await insp.getByRole('button', { name: 'Ver fase no calendário' }).click()
   await expect(tabela).toHaveCount(0)
-  await expect(page.getByRole('slider')).toBeFocused()
+  await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toBeFocused()
   await expect(page.locator('.dec i.zc.zcur')).toHaveCount(1)
   await expect(page.locator('.fpill')).toContainText('Milho')
   await expect(insp.getByRole('heading', { level: 2 })).toHaveText('Soja → milho safrinha')
 
-  await insp.locator('summary').filter({ hasText: 'Como interpretar o risco' }).click()
+  await insp.getByRole('button', { name: 'Como interpretar o risco' }).click()
   await expect(insp).toContainText('30% das 10 safras da referência com perda acima de 20%')
   await expect(insp).toContainText('não é uma probabilidade de seca nessas datas')
 })
 
 test('catálogo abre a cultura pedida mesmo com cursor na outra safra', async ({ page }) => {
   await page.goto('/')
-  await page.getByRole('slider').fill('5') // soja
-  await painel(page).locator('summary').filter({ hasText: 'Datas e requisitos' }).click()
+  await page.getByRole('slider', { name: 'Arraste para simular um período' }).fill('5') // soja
+  await painel(page).getByRole('button', { name: 'Datas e requisitos' }).click()
   const abrir = painel(page).getByRole('button', { name: 'Consultar requisitos de Milho safrinha' })
   await abrir.click()
   const dialogo = page.getByRole('dialog', { name: 'Dados das culturas' })
@@ -66,7 +66,7 @@ test('uma safra sem risco não produz conclusão favorável', async ({ page }) =
   const insp = painel(page)
   await expect(insp.getByRole('heading', { name: 'Faltam dados de risco' })).toBeVisible()
   await expect(insp).toContainText('O risco de Milho safrinha não foi informado')
-  await insp.locator('summary').filter({ hasText: 'Datas e requisitos' }).click()
+  await insp.getByRole('button', { name: 'Datas e requisitos' }).click()
   await expect(insp.locator('.insp-status.none')).toHaveText('Sem dado')
   await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
 })
@@ -97,7 +97,7 @@ test('risco calculado sem fase e sem clima mantém os limites explícitos', asyn
   await expect(insp.getByRole('region', { name: 'Momentos de atenção da rotação' })).toContainText('atendimento da API')
   await expect(insp.locator('.insp-provisional')).toHaveCount(0)
   await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
-  await insp.locator('summary').filter({ hasText: 'Origem e limites dos dados' }).click()
+  await insp.getByRole('button', { name: 'Origem e limites dos dados' }).click()
   await expect(insp).toContainText('Clima indisponível')
   await expect(insp).toContainText('Os dados de risco recebidos são exibidos sem estimativa adicional')
 })

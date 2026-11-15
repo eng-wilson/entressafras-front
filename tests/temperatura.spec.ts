@@ -30,7 +30,7 @@ test('temperaturas minima e maxima ficam visiveis ao mudar o periodo', async ({ 
   await expect(indicador.locator('.wg-v')).toHaveText('21° a 29°')
   await rotulosSemCorte(indicador)
 
-  await page.getByRole('slider').focus()
+  await page.getByRole('slider', { name: 'Arraste para simular um período' }).focus()
   await page.keyboard.press('Home')
   await expect(indicador.locator('.wg-v')).toHaveText('19° a 35°')
   await rotulosSemCorte(indicador)

@@ -17,7 +17,7 @@ test('marca os períodos críticos nas barras e explica cada um', async ({ page 
 })
 
 test('selecionar uma rotação leva a simulação ao período que mais pesa no selo dela', async ({ page }) => {
-  const slider = page.getByRole('slider')
+  const slider = page.getByRole('slider', { name: 'Arraste para simular um período' })
   const antes = await slider.inputValue()
   const milho = page.getByRole('button', { name: /^Soja depois milho safrinha\./ })
   await milho.click()

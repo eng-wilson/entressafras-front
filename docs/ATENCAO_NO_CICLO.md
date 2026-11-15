@@ -2,6 +2,14 @@
 
 Revisão de 15/11/2026. O painel direito mostra as fases com atendimento baixo à demanda de água, mesmo quando o risco geral da API é favorável. Ele substitui os antigos gráficos de risco por cultura e de ciclo das culturas e não aparece na barra esquerda. O panorama não altera a ordem nem o risco e não explica o ranking, que a API não justifica.
 
+## Navegação e padrão de interface
+
+A faixa é um slider nativo de 0–35, com marcações de estado, leitura da data selecionada e botões de momento anterior/próximo. Clique, arraste, toque, setas do teclado e Home/End atualizam o calendário e a cena. O controle mantém o foco; a navegação explícita para o calendário continua focando o cursor principal. Alterações feitas no calendário também atualizam a faixa da direita. Os extremos não dão a volta e os botões sem destino ficam desabilitados.
+
+As linhas de momentos abrem seus detalhes dentro do Inspector, com “Voltar”, Escape e restauração de foco. Datas, solo, pragas, interpretação do risco e fontes usam a mesma navegação, em vez de misturar acordeões e linhas que apenas parecem navegar. Trocar de rotação retorna à visão geral e descarta o detalhe da rotação anterior. A opção “Outros momentos” continua sendo um controle de divulgação progressiva, identificado por um chevron à esquerda.
+
+O estilo adapta ao React os padrões [Sliders](https://developer.apple.com/design/human-interface-guidelines/sliders) e [Lists and tables](https://developer.apple.com/design/human-interface-guidelines/lists-and-tables) da Apple: fonte do sistema, escala tipográfica comum, separadores internos, feedback de seleção, controles com área de interação adequada e cores semânticas. Não utiliza componentes nativos do SwiftUI.
+
 ## Origem dos números: só a API
 
 O widget "Água para a cultura" e o panorama "Atenção no ciclo" leem a mesma fonte: o atendimento à demanda por fase que a API entrega (`risk.mean_isna`, ΣETr/ΣETc por estágio FAO-56, média das safras históricas do balanço diário da API). É a razão ETa/ETc; não é umidade do solo.

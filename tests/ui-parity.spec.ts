@@ -34,7 +34,7 @@ const STATES: TestState[] = [
     id: 'slider-start',
     setup: async (page) => {
       await waitReady(page);
-      await page.locator('input[type="range"]').focus();
+      await page.locator('.cal input[type="range"]').focus();
       await page.keyboard.press('Home');
       await page.waitForTimeout(100);
     },
@@ -43,7 +43,7 @@ const STATES: TestState[] = [
     id: 'slider-end',
     setup: async (page) => {
       await waitReady(page);
-      await page.locator('input[type="range"]').focus();
+      await page.locator('.cal input[type="range"]').focus();
       await page.keyboard.press('End');
       await page.waitForTimeout(100);
     },
