@@ -1,7 +1,7 @@
 import type { EstadoClima, EstadoCultura, Talhao } from '../types'
 import { periodoLabel } from '../logic/periodo'
 import { climaDoPeriodo } from '../logic/clima'
-import { useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import type { Stage } from '../data/mock'
 import { estagioEm } from '../logic/estagios'
 import { tempGauge } from '../logic/tempGauge'
@@ -34,7 +34,8 @@ type Props = {
   cmp: { sel: number[]; pr: Priority; res: Resiliencia | null } | null
 }
 
-export function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp }: Props) {
+// memo: com o decêndio adiado (App.tsx), o React pode pular os renders intermediários desta árvore.
+export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp }: Props) {
   const periodLabel = periodoLabel(idx)
   const periodo = climaDoPeriodo(clima.dados?.decendios ?? null, idx)
   const cargando = clima.status === 'carregando'
@@ -74,12 +75,14 @@ export function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp 
           <span className="trio-t">{periodLabel}</span>
         </div>
       )}
-      <div className="trio-g">
-        {cmp ? <QuadMap sel={cmp.sel} pr={cmp.pr} res={cmp.res} /> : (
-        // A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela
-        <section className="field cena" aria-label="Seu talhão">
+      {/* Palco de altura fixa: a cena fica montada (pausada) na Comparação e o mapa entra por cima, no mesmo
+          espaço. Nada abaixo muda de lugar e a volta não recria a simulação. */}
+      <div className={`trio-g palco${cmp ? ' com-cmp' : ''}`}>
+        {/* A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela */}
+        <section className="field cena" aria-label="Seu talhão" aria-hidden={cmp ? true : undefined} inert={!!cmp}>
           <IsoField
             sim={sim}
+            pausado={!!cmp}
             cropName={cur.cultura}
             alerta={alerta}
             stageKey={cur.k}
@@ -100,8 +103,8 @@ export function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp 
             </div>
           </div>
         </section>
-        )}
+        {cmp && <div className="palco-cmp"><QuadMap sel={cmp.sel} pr={cmp.pr} res={cmp.res} /></div>}
       </div>
     </section>
   )
-}
+})

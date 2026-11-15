@@ -1,6 +1,6 @@
 import { useClimaDecendios } from './hooks/useClimaDecendios'
 import { AvisoClima } from './components/AvisoClima'
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import type { AppState, DadosTalhao, EstadoTalhoes, Historico, Talhao } from './types'
 import { Sidebar, type AcaoTalhao } from './components/Sidebar'
 import { SoloModal } from './components/SoloModal'
@@ -86,6 +86,13 @@ export default function App() {
   // Selecionar uma rotação já leva a simulação ao período que mais pesa no selo dela; `idx` explícito = clique numa marca.
   const selecionar = (rot: number, idx?: number) =>
     setState(s => ({ ...s, rot, idx: idx ?? periodoDecisivo(diags?.[rot] ?? null) ?? s.idx }))
+  // O slider e o calendário seguem o decêndio na hora; a cena recebe o valor adiado (prioridade baixa, interrompível):
+  // segurando a seta, os decêndios intermediários não chegam a ser desenhados.
+  const idxCena = useDeferredValue(state.idx)
+  const cmpCena = useMemo(
+    () => (state.mode === 'cmp' ? { sel: cmpSel, pr: state.pr, res } : null),
+    [state.mode, cmpSel, state.pr, res],
+  )
   useEffect(() => { salvar(campos) }, [campos])
 
   // Nome da cidade do talhão: uma consulta quando o contorno é novo ou mudou.
@@ -179,7 +186,7 @@ export default function App() {
         {recomendadas.status === 'carregando' && <p className="aviso" role="status">Buscando as rotações recomendadas para o talhão…</p>}
         {conj && conj.rotacoes.length === 0 && <p className="aviso" role="status">Nenhuma rotação recomendada para este talhão.</p>}
         {pronto && <>
-        <Simulation idx={state.idx} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={state.mode === 'cmp' ? { sel: cmpSel, pr: state.pr, res } : null} />
+        <Simulation idx={idxCena} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={cmpCena} />
         <Rotations
           idx={state.idx} mode={state.mode} sel={cmpSel} onToggleSel={toggleCmp} res={res}
           rot={state.rot} onRot={selecionar} diags={diags}

@@ -33,7 +33,7 @@
   .sw[aria-checked="true"]::after{left:16px}
 
   /* main */
-  .main{padding:28px 32px;overflow:auto;min-width:0}
+  .main{padding:10px 32px;overflow:auto;min-width:0}
   .head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px}
   .head h1{margin:0;font-size:26px;font-weight:700;letter-spacing:-.02em}
   .head p{margin:2px 0 0;color:var(--label2);font-size:13px}
@@ -658,7 +658,7 @@
    temperatura à direita, em cartões verticais. */
 .trio-g .field.cena { position: relative; padding: 0; margin: 4px 0 0; border-radius: 16px; overflow: hidden; }
 .trio-g .cena .isow { padding-top: 0; max-width: none; margin: 0; }
-.cena .iso-sim { margin: 0; border-radius: 16px; }
+.cena .iso-sim { margin: 0; border-radius: 16px; height: var(--cena-altura, 500px); }
 .cena .isow .fpill { top: 12px; z-index: 3; }
 /* O céu vem do canvas (render/clima.js, pelo clima do dia simulado); este fundo só aparece antes do 1º quadro. */
 .cena .iso-sim { background: linear-gradient(180deg, #EDF5F8, #E9EFEA); }
@@ -703,4 +703,18 @@
 @media (max-width: 760px) {
   .cena-esq, .cena-dir { position: static; width: auto; flex-direction: row; flex-wrap: wrap; padding: 8px 0 0; }
   .cena-card { flex: 1 1 170px; }
+  .cena { --cena-altura: 380px; }
+}
+
+/* Palco da simulação e da comparação (Simulation.tsx): mesma altura nos dois modos. A comparação entra por
+   cima da cena com um fade curto; a cena fica escondida e pausada, sem desmontar. */
+.trio-g.palco { position: relative; min-height: var(--cena-altura, 500px); }
+.palco .cena { transition: opacity .18s ease, visibility 0s linear 0s; }
+.palco.com-cmp .cena { opacity: 0; visibility: hidden; transition: opacity .18s ease, visibility 0s linear .18s; }
+.palco-cmp { position: absolute; inset: 0; overflow: auto; border-radius: 16px; background: var(--group, #fff); animation: palco-entra .18s ease; }
+.palco-cmp > .qmap { margin: 0; min-height: 100%; }
+@keyframes palco-entra { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .palco .cena, .palco.com-cmp .cena { transition: none; }
+  .palco-cmp { animation: none; }
 }
