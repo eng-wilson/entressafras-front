@@ -1,95 +1,79 @@
 import { useMemo } from 'react'
-import { FREQ } from '../data/mock'
 import { rankRotations } from '../logic/rank'
-import { rotationStatus } from '../logic/status'
-import type { Priority } from '../types'
+import { classeAnos, rotationStatus } from '../logic/status'
+import type { Resiliencia } from '../logic/resiliencia'
+import { textoCritico, type Diagnostico, type PeriodoCritico } from '../logic/diagnostico'
+import { useConjunto } from '../state/conjunto'
 
-type BarDef = { cls: 'good' | 'warn' | 'risk' | 'bare' | null; s: number; e: number; label: string }
-type RotDef = {
-  id: 'r1' | 'r2' | 'r3' | 'r4'
-  name: string
-  after: string
-  atual?: boolean
-  hasPest?: boolean
-  bars: BarDef[]
+// Barra com rótulo = safra (na ordem de safras da rotação) e ganha a cor da própria resiliência; sem rótulo = pousio.
+const minuscula = (t: string) => t.charAt(0).toLowerCase() + t.slice(1)
+
+type Props = {
+  res: Resiliencia | null
+  /** Rotação selecionada (posição no conjunto de rotações). */
+  sel: number
+  /** Seleciona a rotação; com `idx`, leva a simulação a esse decêndio (senão, ao período decisivo). */
+  onSel: (rot: number, idx?: number) => void
+  diags: Diagnostico[] | null
+  /** Decêndio simulado: cursor na linha selecionada. */
+  idx: number
 }
 
-// null bar class → inherits the rotation's status class
-const ROTATIONS: RotDef[] = [
-  {
-    id: 'r1', name: 'Soja', after: 'crotalária + milheto',
-    bars: [
-      { cls: 'good', s: 1.7, e: 5.3, label: 'Soja' },
-      { cls: null, s: 5.3, e: 9.4, label: 'Crotalária + milheto' },
-      { cls: 'bare', s: 9.4, e: 12, label: '' },
-    ],
-  },
-  {
-    id: 'r2', name: 'Soja', after: 'sorgo',
-    bars: [
-      { cls: 'good', s: 1.7, e: 5.3, label: 'Soja' },
-      { cls: null, s: 5.4, e: 9.4, label: 'Sorgo' },
-      { cls: 'bare', s: 9.4, e: 12, label: '' },
-    ],
-  },
-  {
-    id: 'r3', name: 'Soja precoce', after: 'milho + braquiária',
-    bars: [
-      { cls: 'good', s: 1, e: 4.4, label: 'Soja precoce' },
-      { cls: null, s: 4.4, e: 9, label: 'Milho + braquiária' },
-      { cls: 'bare', s: 9, e: 12, label: '' },
-    ],
-  },
-  {
-    id: 'r4', name: 'Soja', after: 'milho safrinha', atual: true, hasPest: true,
-    bars: [
-      { cls: null, s: 1.7, e: 5.3, label: 'Soja' },
-      { cls: 'good', s: 5.6, e: 9.6, label: 'Milho safrinha' },
-      { cls: 'bare', s: 9.6, e: 12, label: '' },
-    ],
-  },
-]
+/** Trecho da barra (em % da largura dela) ocupado pelo período crítico, pela janela real da safra em decêndios. */
+function trecho(p: PeriodoCritico, de: number, ate: number) {
+  const n = ate - de + 1
+  return { left: `${((p.de - de) / n * 100).toFixed(2)}%`, width: `${((p.ate - p.de + 1) / n * 100).toFixed(2)}%` }
+}
 
-export function CalendarRows({ pr }: { pr: Priority }) {
-  const rpos = useMemo(() => rankRotations(pr), [pr])
-  const statuses = useMemo(() => ({
-    r1: rotationStatus(FREQ.r1),
-    r2: rotationStatus(FREQ.r2),
-    r3: rotationStatus(FREQ.r3),
-    r4: rotationStatus(FREQ.r4),
-  }), [])
+export function CalendarRows({ res, sel, onSel, diags, idx }: Props) {
+  const { rotacoes: ROTATIONS } = useConjunto()
+  const rpos = useMemo(() => rankRotations(ROTATIONS), [ROTATIONS])
+  const statuses = useMemo(
+    () => ROTATIONS.map((_, ri) => {
+      const rot = res?.rotacoes[ri]
+      return rot ? rotationStatus(rot.safras.map(s => [s.risco?.pct ?? null, s.nome.toLowerCase()]), diags?.[ri].decisivo ?? null) : null
+    }),
+    [res, diags, ROTATIONS],
+  )
 
   // Sort rows in DOM order by rank position (not CSS order)
   const sorted = useMemo(
-    () => [...ROTATIONS].sort((a, b) => {
-      const ia = ROTATIONS.indexOf(a)
-      const ib = ROTATIONS.indexOf(b)
-      return rpos[ia] - rpos[ib]
-    }),
-    [rpos]
+    () => [...ROTATIONS].sort((a, b) => rpos[ROTATIONS.indexOf(a)] - rpos[ROTATIONS.indexOf(b)]),
+    [rpos, ROTATIONS]
   )
 
   return (
+    <>
     <div className="rlist" role="list" aria-label="Rotações de cultura">
       {sorted.map(rot => {
         const ri = ROTATIONS.indexOf(rot)
-        const st = statuses[rot.id]
+        const st = statuses[ri]
+        const safras = res?.rotacoes[ri].safras
         const rank = rpos[ri] + 1
-        const isLast = rpos[ri] === 3
+        const isLast = rpos[ri] === ROTATIONS.length - 1
+        const criticos = diags?.[ri].criticos ?? []
+        const nome = rot.ct.c1, depois = minuscula(rot.ct.c2)
 
         return (
           <div
             key={rot.id}
-            className={`row${rot.atual ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
+            className={`row rsel${ri === sel ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
             role="listitem"
+            onClick={() => onSel(ri)}
           >
             <div className="rh">
               <span className="rk">{rank}</span>
-              <span className="nm">
-                {rot.name} <span className="then">depois</span> {rot.after}
-              </span>
-              {rot.atual && <span className="tag">Atual</span>}
-              {rot.hasPest && (
+              <button
+                type="button"
+                className="nm nm-b"
+                aria-pressed={ri === sel}
+                aria-label={`${nome} depois ${depois}${diags?.[ri].decisivo ? `. Selecionar e ver o período que mais pesa: ${diags[ri].decisivo!.rotulo}` : '. Selecionar'}`}
+                onClick={e => { e.stopPropagation(); onSel(ri) }}
+              >
+                {nome} <span className="then">depois</span> {depois}
+              </button>
+              {rot.ct.atual && <span className="tag">Atual</span>}
+              {rot.maisPragas && (
                 <span className="pest">
                   <svg className="ic" aria-hidden="true">
                     <use href="/canvas-icons.svg#i-bug" />
@@ -98,41 +82,71 @@ export function CalendarRows({ pr }: { pr: Priority }) {
                 </span>
               )}
               {/* StatusBadge: CSS tooltip via .ct-tip .ct-tip2 inside .stw */}
+              {st && (
               <span
                 className={`st stw ${st.cls}`}
                 tabIndex={0}
                 role="status"
                 aria-label={st.aria}
               >
+                {'icon' in st && (
                 <svg className="ic" aria-hidden="true">
                   <use href={`/canvas-icons.svg#${st.icon.replace('#', '')}`} />
                 </svg>
+                )}
                 {st.label}
                 <span className="ct-tip ct-tip2 tip-r" role="tooltip">
                   <b>{st.title}</b>
                   <span>{st.text}</span>
                 </span>
               </span>
+              )}
             </div>
 
             {/* Timeline bars: position is percentage of 12-month timeline */}
             <div className="tl">
-              {rot.bars.map((bar, bi) => {
-                const cls = bar.cls ?? st.cls
+              {rot.barras.map((bar, bi) => {
+                const sf = safras?.[bi]
+                const cls = sf?.anos != null ? classeAnos(sf.anos) : 'none'
                 const left = `${(bar.s / 12 * 100).toFixed(2)}%`
                 const width = `calc(${((bar.e - bar.s) / 12 * 100).toFixed(2)}% - 2px)`
+                const def = rot.safras[bi]
+                const crit = bar.label && def ? criticos.filter(p => p.safra === bi) : []
                 return bar.label ? (
                   <div key={bi} className={`b ${cls}`} style={{ left, width }}>
-                    {bar.label}
+                    {/* Período crítico: hachura sobre a fase que reprovou, na cor do nível dela; clicar leva a simulação até lá */}
+                    {crit.map(p => (
+                      <button
+                        key={p.fase}
+                        type="button"
+                        className={`crit ${p.cls}${p === diags?.[ri].decisivo ? ' top' : ''}`}
+                        style={trecho(p, def.de, def.ate)}
+                        title={`${textoCritico(p)} Clique para ver na simulação.`}
+                        aria-label={`Período crítico. ${textoCritico(p)} Ver na simulação.`}
+                        onClick={e => { e.stopPropagation(); onSel(ri, p.de) }}
+                      />
+                    ))}
+                    <span className="bl">{bar.label}</span>
                   </div>
                 ) : (
                   <div key={bi} className="b bare" style={{ left, width }} />
                 )
               })}
+              {/* Cursor do decêndio simulado, só na rotação selecionada (mesma escala das barras: 36 decêndios) */}
+              {ri === sel && (
+                <span className="tl-cur" aria-hidden="true" style={{ left: `${(idx / 36 * 100).toFixed(3)}%` }} />
+              )}
             </div>
           </div>
         )
       })}
     </div>
+      {diags?.some(d => d.criticos.length) && (
+        <p className="crit-lg">
+          <span className="crit-sw" aria-hidden="true" />
+          Período crítico: fase com o maior déficit de água, segundo a API. Clique para ver na simulação.
+        </p>
+      )}
+    </>
   )
 }

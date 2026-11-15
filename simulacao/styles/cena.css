@@ -1,0 +1,45 @@
+/* Cena e controles port?teis. Usado pelo app e pelo componente isolado. */
+.fgrid { display: grid; grid-template-columns: minmax(0, 1fr); isolation: isolate; gap: 0; margin-top: 8px; }
+.fgrid > .isow { grid-area: 1 / 1; min-width: 0; position: relative; z-index: 0; }
+.fcol { display: flex; flex-direction: column; justify-content: space-around; gap: 24px; min-width: 0; }
+#col-esq { grid-area: 1 / 1; justify-self: end; align-self: start; z-index: 1; width: 100px; margin: 16px 12px 76px 0; padding: 14px 8px; border-radius: 16px; background: color-mix(in srgb, var(--group) 68%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.fcol .vg { align-self: center; }
+.isow { position: relative; overflow: hidden; min-height: 0; }
+.talhao-zoom { position: absolute; bottom: 12px; right: 12px; display: flex; align-items: center; background: color-mix(in srgb, var(--group) 68%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); border-radius: 10px; overflow: hidden; }
+.talhao-zoom button { min-width: 44px; min-height: 44px; padding: 0 10px; font-size: 22px; }
+.talhao-zoom [data-zoom="reset"] { min-width: 64px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.talhao-zoom button:disabled { opacity: .3; cursor: default; }
+.talhao-zoom button:focus-visible, #talhao:focus-visible { outline: 2px solid var(--tint); outline-offset: -3px; }
+#talhao { display: block; width: 100%; height: 430px; cursor: grab; touch-action: none; user-select: none; }
+#talhao.arrastando { cursor: grabbing; }
+.vg { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.vg-l { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 500; color: var(--label2); white-space: nowrap; }
+.vg-l .ic { width: 13px; height: 13px; }
+.vg-v { font-family: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif; font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.vg-v small { font-family: -apple-system, system-ui, sans-serif; font-size: 12px; font-weight: 500; color: var(--label2); }
+.vg-w { position: relative; height: 88px; width: 8px; margin-top: 8px; }
+.vg-tr { position: absolute; left: 0; top: 0; bottom: 0; width: 8px; border-radius: 4px; background: rgba(120, 120, 128, .18); }
+.vg-tr i { position: absolute; left: 0; right: 0; border-radius: 4px; }
+.vg-rain { bottom: 0; background: linear-gradient(0deg, #9CC3EC, #0A64D6); }
+.vg-tr-temp { background: linear-gradient(to top, var(--temp-frio), var(--temp-ameno) 35%, color-mix(in srgb, var(--good), var(--group) 65%) 48%, color-mix(in srgb, var(--temp-quente), var(--group) 65%) 65%, color-mix(in srgb, var(--warn), var(--group) 65%) 80%, var(--temp-calor)); }
+.vg-temp { top: 0; bottom: 0; background: linear-gradient(to top, var(--temp-frio), var(--temp-ameno) 35%, var(--good) 45%, var(--good) 50%, var(--temp-quente) 65%, var(--warn) 80%, var(--temp-calor)); }
+.vg-tr b { position: absolute; left: -3px; right: -3px; height: 2px; margin-bottom: -1px; background: #fff; opacity: .9; }
+.vg-sc { position: absolute; left: 16px; top: 0; bottom: 0; width: 0; overflow: visible; pointer-events: none; }
+.vg-sc span { position: absolute; left: 0; transform: translateY(50%); font-size: 12px; color: var(--label2); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ms-h { font-size: 12px; font-weight: 600; border-radius: 6px; padding: 2px 7px; white-space: nowrap; }
+.ms-h.dry { background: #F3E6D3; color: #6B4A1F; }
+.ms-h.low { background: #E8F1FB; color: #2F5A86; }
+.ms-h.good { background: #D3E6FA; color: #0A4FA8; }
+.ms-h.wet { background: #0A64D6; color: #fff; }
+.ms-h.neu { background: var(--fill); color: #3A3A3C; }
+@media (min-width: 1101px) and (max-width: 1450px){#talhao { height: 380px; }
+}
+@media (max-width: 760px){.fcol .vg { align-self: center; }
+#col-esq { width: 76px; margin: 10px 6px 72px 0; padding: 12px 4px; gap: 16px; }
+#talhao { height: 300px; }
+}
+.fgrid > .isow { min-height: 520px; }
+#talhao { position: absolute; inset: 0; height: 100%; }
+@media (max-width: 760px){.fgrid > .isow { min-height: 460px; }
+}
+.vg-w { height: 96px; }

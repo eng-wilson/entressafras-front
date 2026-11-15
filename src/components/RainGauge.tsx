@@ -1,42 +1,31 @@
-import { THIS_RAIN } from '../data/mock'
+import { classeChuvaDecendio, ROTULO_CHUVA, alturaChuvaDecendio, MARCAS_CHUVA_DECENDIO } from '../logic/chuva'
+import { inteiro } from '../logic/formato'
 
-const rainClass = (mm: number) =>
-  mm < 60 ? 'dry' : mm < 150 ? 'low' : mm <= 300 ? 'good' : 'wet'
-const rainLabel: Record<string, string> = {
-  dry: 'Seco', low: 'Pouca chuva', good: 'Chuva boa', wet: 'Muita chuva',
-}
-
-export function RainGauge({ idx }: { idx: number }) {
-  const m = Math.floor(idx / 3)
-  const mm = THIS_RAIN[m]
-  const rk = rainClass(mm)
-  const rH = (Math.min(mm, 400) / 400 * 100).toFixed(1) + '%'
-
+// Widget de chuva do decêndio (padrão dos widgets da cena: legenda, valor, status, medidor linear).
+// A escala do medidor vai de 0 a 150 mm, com as marcas de 20, 50 e 100 mm.
+export function RainGauge({ chuvaDecendio: mm, carregando = false }: { chuvaDecendio: number | null; carregando?: boolean }) {
+  const rk = mm == null ? 'nd' : classeChuvaDecendio(mm)
+  const label = mm == null ? 'Sem dado' : ROTULO_CHUVA[classeChuvaDecendio(mm)]
+  const preenchido = alturaChuvaDecendio(carregando ? 0 : mm ?? 0)
   return (
     <div
-      className="vg"
+      className="vg wg"
       role="img"
-      aria-label={`Chuva do mês: ${mm} milímetros, ${rainLabel[rk]}`}
+      aria-label={`Chuva do decêndio: ${carregando ? 'carregando' : mm == null ? 'sem dado' : `${inteiro(mm)} milímetros, ${label}`}`}
     >
-      <span className="vg-l">
-        <svg className="ic" aria-hidden="true" width="13" height="13">
-          <use href="/canvas-icons.svg#i-drop" />
-        </svg>
-        Chuva do mês
+      <span className="wg-h">
+        <svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-drop" /></svg>
+        Chuva do decêndio
       </span>
-      <span className="vg-v">{mm}<small> mm</small></span>
-      <span className={`ms-h ${rk}`}>{rainLabel[rk]}</span>
-      <div className="vg-w">
-        <div className="vg-tr" aria-hidden="true">
-          <i className="vg-rain" style={{ height: rH }} />
-          <b style={{ bottom: '15%' }} />
-          <b style={{ bottom: '37.5%' }} />
-          <b style={{ bottom: '75%' }} />
+      <span className="wg-v">{carregando ? <span className="sk sk-num" /> : <>{mm == null ? '–' : inteiro(mm)}<small> mm</small></>}</span>
+      {carregando ? <span className="sk sk-chip" /> : <span className={`wg-s chuva-${rk}`}>{label}</span>}
+      <div className="wg-g" aria-hidden="true">
+        <div className="wg-tr">
+          <i className="wg-chuva" style={{ width: preenchido }} />
+          {MARCAS_CHUVA_DECENDIO.map(m => <b key={m} style={{ left: alturaChuvaDecendio(m) }} />)}
         </div>
-        <div className="vg-sc" aria-hidden="true">
-          <span style={{ bottom: '75%' }}>300</span>
-          <span style={{ bottom: '37.5%' }}>150</span>
-          <span style={{ bottom: '15%' }}>60</span>
+        <div className="wg-sc">
+          {MARCAS_CHUVA_DECENDIO.map(m => <span key={m} style={{ left: alturaChuvaDecendio(m) }}>{m}</span>)}
         </div>
       </div>
     </div>

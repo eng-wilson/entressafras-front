@@ -1,10 +1,13 @@
 import { useMemo } from 'react'
 import type { CSSProperties } from 'react'
-import { CT } from '../data/mock'
+import { useConjunto } from '../state/conjunto'
 import { rankRotations } from '../logic/rank'
-import type { Priority, StatusLevel } from '../types'
+import { COR_ROT, detalheSafra, nomeRot, resultadoSafra } from '../logic/aptidao'
+import type { Resiliencia, ResSafra } from '../logic/resiliencia'
+import { classeAnos } from '../logic/status'
+import type { StatusLevel } from '../types'
 
-type Props = { pr: Priority }
+type Props = { sel: number[]; onToggleSel: (i: number) => void; res: Resiliencia | null }
 
 type Hint = {
   cls: StatusLevel | 'mk-off'
@@ -18,17 +21,19 @@ const ICON_OK = '#i-okc'
 const ICON_ALERT = '#i-alert'
 const ICON_X = '#i-xc'
 
-// Histórico de chuva suficiente (n de 10 anos) -> ícone de status
-function hist(n: number | null): Hint {
-  if (n == null) return { cls: 'mk-off', icon: ICON_OK, title: '', text: '', aria: '' }
-  const [cls, icon, title] =
-    n >= 7
-      ? (['good', ICON_OK, 'Histórico favorável'] as const)
-      : n >= 4
-        ? (['warn', ICON_ALERT, 'Histórico arriscado'] as const)
-        : (['risk', ICON_X, 'Histórico desfavorável'] as const)
-  const text = `Foi suficiente em ${n} dos últimos 10 anos`
-  return { cls, icon, title, text, aria: `${title}: ${text.toLowerCase()}` }
+// Chuva suficiente (n de 10 anos, estimado do clima do talhão) -> ícone de status
+function hist(s: ResSafra | undefined): Hint {
+  if (!s) return { cls: 'mk-off', icon: ICON_OK, title: '', text: '', aria: '' }
+  if (s.anos == null) return { cls: 'mk-off', icon: ICON_OK, title: '', text: '', aria: '' }
+  const cls = classeAnos(s.anos)
+  const [icon, title] =
+    cls === 'good'
+      ? [ICON_OK, 'Histórico favorável']
+      : cls === 'warn'
+        ? [ICON_ALERT, 'Histórico arriscado']
+        : [ICON_X, 'Histórico desfavorável']
+  const text = detalheSafra(s)
+  return { cls, icon, title, text, aria: `${title}: ${resultadoSafra(s)}` }
 }
 
 function pestHint(pest: string, why: string): Hint {
@@ -58,16 +63,21 @@ function HintIcon({ h }: { h: Hint }) {
   )
 }
 
+/** Produção fora de sc/ha (ex.: algodão em @/ha) ganha a unidade ao lado do número. */
+const unidade = (u: string | undefined, y: string) =>
+  u && u !== 'sc/ha' && /^\d/.test(y) ? <span className="ct-u"> {u.replace('/ha', '')}</span> : null
+
 // Wrappers de semântica ARIA que não participam do layout da grid
 const CONTENTS: CSSProperties = { display: 'contents' }
 
-export function CompareTable({ pr }: Props) {
-  const rpos = useMemo(() => rankRotations(pr), [pr])
+export function CompareTable({ sel, onToggleSel, res }: Props) {
+  const { rotacoes } = useConjunto()
+  const rpos = useMemo(() => rankRotations(rotacoes), [rotacoes])
 
   // Renderiza já na ordem do ranking: foco e leitor de tela seguem a ordem visual
   const sorted = useMemo(
-    () => CT.map((r, i) => ({ r, i })).sort((a, b) => rpos[a.i] - rpos[b.i]),
-    [rpos],
+    () => rotacoes.map((d, i) => ({ r: d.ct, d, i })).sort((a, b) => rpos[a.i] - rpos[b.i]),
+    [rpos, rotacoes],
   )
 
   return (
@@ -82,7 +92,7 @@ export function CompareTable({ pr }: Props) {
           </div>
         </div>
 
-        {sorted.map(({ r, i }) => {
+        {sorted.map(({ r, d, i }) => {
           const ra = 2 + rpos[i] * 2
           const rb = ra + 1
           const cur = r.atual ? ' ct-cur' : ''
@@ -101,11 +111,20 @@ export function CompareTable({ pr }: Props) {
               {/* Rotação: 2 sub-linhas */}
               <div role="cell" style={CONTENTS}>
                 <div className={`ct-c ct-rot ct-top${cur}`} style={rowA}>
+                  <label className={`ct-ck${sel.includes(i) ? ' on' : ''}`} style={{ color: COR_ROT[i] }}>
+                    <input
+                      type="checkbox"
+                      checked={sel.includes(i)}
+                      onChange={() => onToggleSel(i)}
+                      aria-label={`Mostrar ${nomeRot(d)} no mapa`}
+                    />
+                  </label>
                   <span className="rk">{rpos[i] + 1}</span>
                   <span className="ct-cn">{r.c1}</span>
                   {r.atual && <span className="ct-tag">Atual</span>}
                 </div>
                 <div className={`ct-c ct-rot ct-2${cur}`} style={rowB}>
+                  <span className="ct-ck-ghost" aria-hidden="true" />
                   <span className="rk ct-ghost" aria-hidden="true" />
                   <span className="ct-cn">
                     <span className="ct-dep">depois</span>
@@ -118,11 +137,11 @@ export function CompareTable({ pr }: Props) {
               <div role="cell" style={CONTENTS}>
                 <div className={`ct-c ct-top ct-num ct-wv${w1nd}`} style={rowA}>
                   <span className="ct-wn">{r.w1}</span>
-                  <HintIcon h={hist(r.f1)} />
+                  <HintIcon h={hist(res?.rotacoes[i].safras[0])} />
                 </div>
                 <div className={`ct-c ct-2 ct-num ct-wv${w2nd}`} style={rowB}>
                   <span className="ct-wn">{r.w2}</span>
-                  <HintIcon h={hist(r.f2)} />
+                  <HintIcon h={hist(res?.rotacoes[i].safras[1])} />
                 </div>
               </div>
 
@@ -138,17 +157,17 @@ export function CompareTable({ pr }: Props) {
 
               {/* Produção (sc/ha) */}
               <div role="cell" style={CONTENTS}>
-                <div className={`ct-c ct-top ct-num${y1nd}`} style={rowA}>{r.y1}</div>
-                <div className={`ct-c ct-2 ct-num${y2nd}`} style={rowB}>{r.y2}</div>
+                <div className={`ct-c ct-top ct-num${y1nd}`} style={rowA}>{r.y1}{unidade(r.u1, r.y1)}</div>
+                <div className={`ct-c ct-2 ct-num${y2nd}`} style={rowB}>{r.y2}{unidade(r.u2, r.y2)}</div>
               </div>
             </div>
           )
         })}
       </div>
       <p className="cfoot">
-        Umidade necessária: água que a cultura consome no ciclo; o ícone mostra se a chuva foi
-        suficiente nos últimos 10 anos (passe o mouse). Produção: sacas de 60 kg por hectare,
-        valores ilustrativos.
+        Umidade necessária: água que a cultura consome no ciclo; o ícone mostra em quantos de
+        10 anos a chuva da sua região bastou para aquela safra (passe o mouse). Produção: sacas de 60 kg por hectare
+        (algodão em arrobas), valores ilustrativos. A chuva anual do catálogo de culturas é uma referência separada do consumo por ciclo.
       </p>
     </>
   )

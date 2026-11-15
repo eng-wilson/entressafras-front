@@ -2,6 +2,7 @@ import type { Priority, Talhao } from '../types'
 import { fmtCoord, fmtHaCurto } from '../logic/geo'
 import { rotuloSolo } from '../logic/solo'
 import { registroMaisRecente, resumoSafra } from '../logic/historico'
+import { NOME_EIXO } from '../logic/aptidao'
 
 type Props = {
   pr: Priority
@@ -23,11 +24,12 @@ function infoDo(t: Talhao): Info[] {
   ]
 }
 
+// Mesmos nomes dos quadrantes do mapa de comparação (logic/aptidao)
 const PRIORITIES = [
-  { k: 'risco' as const, label: 'Menor risco',   icon: 'i-shield' },
-  { k: 'agua'  as const, label: 'Economizar água',icon: 'i-drop'  },
-  { k: 'solo'  as const, label: 'Cuidar do solo', icon: 'i-leaf'  },
-  { k: 'prod'  as const, label: 'Maior produção', icon: 'n-seed'  },
+  { k: 'risco' as const, label: NOME_EIXO.risco, icon: 'i-shield' },
+  { k: 'agua'  as const, label: NOME_EIXO.agua,  icon: 'i-drop'   },
+  { k: 'solo'  as const, label: NOME_EIXO.solo,  icon: 'i-leaf'   },
+  { k: 'prod'  as const, label: NOME_EIXO.prod,  icon: 'n-seed'   },
 ]
 
 export function Sidebar({ pr, onToggle, talhao, onEditar }: Props) {
@@ -59,7 +61,7 @@ export function Sidebar({ pr, onToggle, talhao, onEditar }: Props) {
 
       <div className="sec">
         <h3>O que importa</h3>
-        <p className="prh">A ordem das rotações segue o que você marcar.</p>
+        <p className="prh">Destaca no mapa de aptidão o que você marcar. A ordem das rotações vem da recomendação da API.</p>
         <div className="list">
           {PRIORITIES.map(({ k, label, icon }) => (
             <div key={k} className="item">

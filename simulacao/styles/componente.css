@@ -1,0 +1,22 @@
+@import './cena.css';
+@import './impacto-talhao.css';
+:host {
+    --bg: #FFFFFF; --side: #F5F5F7; --group: #FFFFFF; --sep: rgba(60, 60, 67, .14);
+    --label: #1D1D1F; --label2: #6E6E73; --fill: #E9E9EE; --track: #F2F2F5; --sheet: #F2F2F7;
+    --tint: #1E7A3C; --blue: #0A84FF; --ios: #007AFF;
+    --good: #34C759; --warn: #FF9F0A; --risk: #D70015; --none: #C7C7CC;
+    --sun: #E08600; --cloud: #8E8E93; --rain: #0A6CD6;
+    --good-bg: #DDF3E3; --good-ink: #14672F; --warn-bg: #FFEBCC; --warn-ink: #7A4100;
+    --risk-bg: #FDE2E4; --risk-ink: #A3000D; --info-bg: #E3EEFD; --info-ink: #0A4FA8;
+    --temp-frio: #AFC8EE; --temp-ameno: #ACE5D5; --temp-quente: #FFCC00; --temp-calor: #FF8085;
+}
+:host { display: block; min-width: 0; font: 13px/1.38 system-ui, sans-serif; color: var(--label); }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
+button:focus-visible { outline: 2px solid var(--tint); outline-offset: 2px; }
+.ic { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.fgrid { margin: 0; min-height: var(--simulacao-altura, 520px); }
+.fgrid > .isow { min-height: var(--simulacao-altura, 520px); }
+.painel-impacto, #col-esq { pointer-events: none; }
+.painel-impacto > *, #col-esq > * { pointer-events: auto; }
