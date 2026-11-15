@@ -11,6 +11,7 @@ import { CULTURAS } from '../domain/crops/catalogo.js';
 import { createCamera } from '../render/iso/camera.js';
 import { createDiorama } from '../render/iso/diorama.js';
 import { createLavoura } from '../render/field/lavoura.js';
+import { carregarDanos } from '../render/sprites/painted-damage.js';
 import { climaVisual, desenharCeu, desenharChuva, desenharRotuloClima, interpolarClima } from '../render/clima.js';
 
 const WIDTH = 4.2, DEPTH = 4.2, TOTAL_H = 0.9, PROF_VISIVEL_M = 0.3;
@@ -38,6 +39,7 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
             const diorama = createDiorama({ width: WIDTH, depth: DEPTH, totalH: TOTAL_H, profTotalM: PROF_VISIVEL_M, crop, resolucao });
             const cena = { lavoura, diorama };
             cenas.set(crop.id, cena);
+            carregarDanos().then(ok => { if (ok && !destruido) { lavoura.compositor.limpar(); sujo = true; } });
             if (crop.sprites.arte) lavoura.sprites.carregarArte().then(n => { if (n) { lavoura.compositor.limpar(); sujo = true; } });
         }
         return cenas.get(crop.id);
@@ -130,7 +132,7 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
         const { cena, sim, crop, classe, dia } = atual;
         const reg = sim.plantas[dia];
         atual.clima = climaVisual(sim, dia);
-        cena.lavoura.atualizar(sim.termica?.progresso[dia] ?? dia / crop.cicloDias, reg, { ...MODO.planta, clima: atual.clima });
+        cena.lavoura.atualizar(sim.termica?.progresso[dia] ?? dia / crop.cicloDias, reg, { ...MODO.planta, clima: atual.clima, pragas: sim.pragasVisuais });
         cena.diorama.atualizar({ sim, dia, classe, modo: MODO.solo, lavoura: cena.lavoura, reg });
         const estado = atual.clima.seca > 0.7 ? 'Seca intensa' : atual.clima.seca > 0.25 ? 'Estresse por seca ou calor' : atual.clima.chuva >= 30 ? 'Chuva intensa' : atual.clima.chuva >= 0.2 ? 'Chuva' : 'Sem chuva';
         canvas.setAttribute('aria-label', `Talhão simulado: ${estado}, ${atual.clima.chuva.toFixed(1)} mm de chuva no dia. Arraste para mover; mais e menos para zoom; zero para restaurar.`);
