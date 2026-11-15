@@ -18,8 +18,13 @@ import { rotuloCritico } from '../logic/status'
 import { useConjunto } from '../state/conjunto'
 import { normaisDoClima, quadroDoDecendio, rotacaoSim } from '../logic/talhaoSim'
 import { respostasDoLaudo } from '../logic/solo'
+import type { QuadroAgua } from '../logic/atencaoCiclo'
+import type { ResultadoRotacao } from '../sim/api'
 
 type Props = {
+  quadrosAgua?: QuadroAgua[]
+  onResultado?: (r: ResultadoRotacao) => void
+  onErroSimulacao?: () => void
   idx: number
   /** Rotação selecionada (posição no conjunto de rotações). */
   rot: number
@@ -35,7 +40,7 @@ type Props = {
 }
 
 // memo: com o decêndio adiado (App.tsx), o React pode pular os renders intermediários desta árvore.
-export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp }: Props) {
+export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp, quadrosAgua, onResultado, onErroSimulacao }: Props) {
   const periodLabel = periodoLabel(idx)
   const periodo = climaDoPeriodo(clima.dados?.decendios ?? null, idx)
   const cargando = clima.status === 'carregando'
@@ -43,7 +48,8 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
   const crit = criticoEm(diag, idx)
   const alerta = crit && { cls: crit.cls, rotulo: rotuloCritico(crit), texto: legendaCritico(crit) }
   const covered = cur.k === 'straw'
-  const soil = useMemo(() => soilGauge(idx, cur.crop, covered), [idx, cur.crop, covered])
+  const atendimento = quadrosAgua?.find(q => q.idx === idx)?.atendimento ?? null
+  const soil = useMemo(() => soilGauge(atendimento, !!cur.crop), [atendimento, cur.crop])
   const temp = useMemo(() => tempGauge(cur.crop, cur.k, covered, {
     tmin: periodo.tmin, tmax: periodo.tmax,
     tminExtremo: clima.dados?.decendios[idx]?.tmin_extremo_medio ?? null,
@@ -81,6 +87,8 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
         {/* A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela */}
         <section className="field cena" aria-label="Seu talhão" aria-hidden={cmp ? true : undefined} inert={!!cmp}>
           <IsoField
+            onResultado={onResultado}
+            onErroSimulacao={onErroSimulacao}
             sim={sim}
             pausado={!!cmp}
             cropName={cur.cultura}

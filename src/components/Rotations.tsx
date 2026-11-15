@@ -26,7 +26,7 @@ type Props = {
 // O .rlist / .ctab são irmãos de .cal, NÃO filhos.
 export function Rotations({ idx, mode, onIdx, onMode, decendios, sel, onToggleSel, res, rot, onRot, diags }: Props) {
   return (
-    <div className="board">
+    <div id="rotation-board" className="board" tabIndex={-1} aria-label="Calendário e comparação das rotações">
       <RotationsHeader mode={mode} onMode={onMode} />
       <div className="cal">
         <MonthStrip idx={idx} onIdx={onIdx} decendios={decendios} diag={mode === 'cal' ? diags?.[rot] ?? null : null} />

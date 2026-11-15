@@ -16,6 +16,7 @@ export type StatusResult = {
 }
 
 export type SoilResult = {
+  semDado?: boolean
   cls: StatusLevel; label: string; icon: string
   val: string; cx: number; aria: string
   imp: string; fix: string; hasCrop: boolean

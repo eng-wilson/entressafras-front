@@ -35,7 +35,19 @@ export type SafraSimulada = {
   companheira: string | null
   plantio: string
   cicloDias: number
+  /** Série do mesmo cenário sintético usado pelo desenho, não observações de campo. */
+  serie?: DiaSimulado[]
   resumo: { produtividade: number; [k: string]: unknown }
+}
+
+export type DiaSimulado = {
+  dia: number
+  faseNome: string
+  eta: number
+  etc: number
+  umidade: number
+  /** Ordem dos canais do motor: déficit hídrico é o primeiro. */
+  sens: ArrayLike<number>
 }
 
 export type OpcoesMostrar = {

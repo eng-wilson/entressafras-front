@@ -1,6 +1,6 @@
 import { useClimaDecendios } from './hooks/useClimaDecendios'
 import { AvisoClima } from './components/AvisoClima'
-import { useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 import type { AppState, DadosTalhao, EstadoTalhoes, Historico, Talhao } from './types'
 import { Sidebar, type AcaoTalhao } from './components/Sidebar'
 import { SoloModal } from './components/SoloModal'
@@ -22,6 +22,8 @@ import { CatalogoCulturas } from './components/CatalogoCulturas'
 import { resiliencia } from './logic/resiliencia'
 import { diagnostico, periodoDecisivo } from './logic/diagnostico'
 import { estagioEm, estagios } from './logic/estagios'
+import { atencaoCiclo } from './logic/atencaoCiclo'
+import type { ResultadoRotacao } from './sim/api'
 
 const DEFAULT: AppState = {
   idx: 10,
@@ -43,7 +45,7 @@ export default function App() {
   const [state, setState] = useState<AppState>(DEFAULT)
   const [campos, setCampos] = useState<EstadoTalhoes>(carregar)
   const [edicao, setEdicao] = useState<Exclude<ModoOnboarding, 'novo'> | null>(null)
-  const [verCulturas, setVerCulturas] = useState(false)
+  const [verCulturas, setVerCulturas] = useState<string | null>(null)
   // Folha aberta sobre a tela principal (solo ou histórico), sem voltar ao onboarding.
   const [folha, setFolha] = useState<'solo' | 'historico' | null>(null)
   // Rotações marcadas no modo Comparação (posições no conjunto): começa com a atual (ou a 1ª) e mais uma
@@ -98,15 +100,45 @@ export default function App() {
     [clima.dados, textura, conj],
   )
   const diags = useMemo(() => res?.rotacoes.map(diagnostico) ?? null, [res])
+  // O resultado pertence às entradas atuais, nunca ao talhão/rotação anterior.
+  // É a mesma corrida já calculada pelo worker para desenhar a cena.
+  const contextoSim = useMemo(() => ({ conj, rot: state.rot, talhao, clima: clima.dados }), [conj, state.rot, talhao, clima.dados])
+  const [corrida, setCorrida] = useState<{ contexto: object; resultado: ResultadoRotacao | null } | null>(null)
+  const receberResultado = useCallback((resultado: ResultadoRotacao) => {
+    setCorrida(c => c?.contexto === contextoSim && c.resultado === resultado ? c : { contexto: contextoSim, resultado })
+  }, [contextoSim])
+  const erroSimulacao = useCallback(() => setCorrida({ contexto: contextoSim, resultado: null }), [contextoSim])
+  const resultadoAtual = corrida?.contexto === contextoSim ? corrida.resultado : null
+  const panorama = useMemo(() => resultadoAtual && conj && rotOk ? atencaoCiclo(resultadoAtual, conj.rotacoes[state.rot].safras) : null, [resultadoAtual, conj, rotOk, state.rot])
+  const estadoPanorama = clima.status === 'erro' ? 'sem-clima' : corrida?.contexto === contextoSim ? corrida.resultado ? 'pronto' : 'erro' : 'carregando'
   // Selecionar uma rotação já leva a simulação ao período que mais pesa no selo dela; `idx` explícito = clique numa marca.
   const selecionar = (rot: number, idx?: number) =>
     setState(s => ({ ...s, rot, idx: idx ?? periodoDecisivo(diags?.[rot] ?? null) ?? s.idx }))
+  // Compara a seleção com outra opção recebida, sem inferir uma opção melhor.
+  function compararAlternativas() {
+    if (!conj) return
+    const outra = conj.rotacoes.findIndex((_, i) => i !== state.rot)
+    setCmpSel(outra >= 0 ? [state.rot, outra].sort((a, b) => a - b) : [state.rot])
+    setMode('cmp')
+    requestAnimationFrame(() => document.getElementById('rotation-board')?.focus())
+  }
+  function verPeriodo(idx: number) {
+    setState(s => ({ ...s, idx, mode: 'cal' }))
+    requestAnimationFrame(() => document.querySelector<HTMLInputElement>('#rotation-board input[type="range"]')?.focus())
+  }
   // O slider e o calendário seguem o decêndio na hora; a cena recebe o valor adiado (prioridade baixa, interrompível):
   // segurando a seta, os decêndios intermediários não chegam a ser desenhados.
   const idxCena = useDeferredValue(state.idx)
   const cmpCena = useMemo(
     () => (state.mode === 'cmp' ? { sel: cmpSel, pr: state.pr, res } : null),
     [state.mode, cmpSel, state.pr, res],
+  )
+  // O Inspector não depende do decêndio: memoizado, não re-renderiza a cada passo do calendário.
+  // verPeriodo só usa setState funcional; compararAlternativas lê conj e state.rot, que estão nas dependências.
+  const inspector = useMemo(
+    () => <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={setVerCulturas} onVerPeriodo={verPeriodo} onComparar={compararAlternativas} />,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [state.rot, diags, clima.dados, res, conj],
   )
   useEffect(() => { salvar(campos) }, [campos])
 
@@ -188,8 +220,10 @@ export default function App() {
           Como funciona
         </button>
       </header>
-      <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')} />
-      <main className="main">
+      <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')}
+        atencao={pronto ? { panorama: clima.status === 'ok' ? panorama : null, estado: estadoPanorama, idx: state.idx, nome: conj.rotacoes[state.rot].safras.map(s => s.nome).join(' → '), anosApi: res?.rotacoes[state.rot]?.anos ?? null, provisorio: conj.rotacoes[state.rot].safras.some(s => s.risco?.method === 'MOCK'), onVerPeriodo: verPeriodo, onComparar: compararAlternativas } : undefined} />
+      <main className="main" id="rotation-workspace" tabIndex={-1}>
+        {pronto && <a className="inspector-jump" href="#rotation-inspector">Entender esta rotação e os próximos passos<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></a>}
         {clima.status === 'erro' && <AvisoClima onRecarregar={clima.recarregar} />}
         {cultura.status === 'erro' && <div className="aviso" role="alert">Os requisitos da cultura não carregaram. <button className="link" type="button" onClick={cultura.recarregar}>Tentar de novo</button></div>}
         {recomendadas.status === 'erro' && (
@@ -205,7 +239,8 @@ export default function App() {
         )}
         {conj && conj.rotacoes.length === 0 && <p className="aviso" role="status">Nenhuma rotação recomendada para este talhão.</p>}
         {pronto && <>
-        <Simulation idx={idxCena} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={cmpCena} />
+        <Simulation idx={idxCena} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={cmpCena}
+          quadrosAgua={clima.status === 'ok' ? panorama?.quadros : undefined} onResultado={receberResultado} onErroSimulacao={erroSimulacao} />
         <Rotations
           idx={state.idx} mode={state.mode} sel={cmpSel} onToggleSel={toggleCmp} res={res}
           rot={state.rot} onRot={selecionar} diags={diags}
@@ -213,7 +248,7 @@ export default function App() {
         />
         </>}
       </main>
-      {pronto && <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={() => setVerCulturas(true)} />}
+      {pronto && inspector}
       {folha === 'solo' && (
         <SoloModal talhao={talhao} onCancelar={() => setFolha(null)}
           onSalvar={d => { atualizar(d); setFolha(null) }}
@@ -223,7 +258,7 @@ export default function App() {
         <HistoricoModal talhao={talhao} onCancelar={() => setFolha(null)}
           onSalvar={h => { salvarHistorico(h); setFolha(null) }} />
       )}
-      {verCulturas && <CatalogoCulturas inicial={culturaAtual ?? 'soja'} onFechar={() => setVerCulturas(false)} />}
+      {verCulturas && <CatalogoCulturas inicial={verCulturas} onFechar={() => setVerCulturas(null)} />}
     </div>
     </ConjuntoContext.Provider>
   )

@@ -1,0 +1,37 @@
+.attention-cycle { --attention-secondary: #616166; font-size: .8125rem; line-height: 1.45; overflow-wrap: anywhere; }
+.attention-cycle p { margin: 0 4px 8px; }
+.attention-name { font-weight: 600; overflow-wrap: anywhere; }
+.attention-overall, .attention-note { color: var(--attention-secondary); font-size: .75rem; }
+.attention-map { display: grid; grid-template-columns: repeat(36, minmax(0, 1fr)); gap: 2px; align-items: end; height: 22px; margin: 12px 4px 4px; }
+.attention-mark { height: 6px; border-radius: 1px; background: #c9c9d0; }
+.attention-mark.good { background: #287c44; }
+.attention-mark.warn { height: 12px; background: #946000; }
+.attention-mark.risk { height: 18px; background: #b42332; }
+.attention-mark.none { height: 3px; }
+.attention-mark.current { outline: 2px solid #1d1d1f; outline-offset: 1px; }
+.attention-months { display: grid; grid-template-columns: repeat(4, 1fr); margin: 0 4px; color: var(--attention-secondary); font-size: .6875rem; }
+.attention-legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 8px 4px 12px; color: var(--attention-secondary); font-size: .75rem; }
+.attention-legend span { display: flex; align-items: center; gap: 4px; }
+.attention-legend i { display: inline-block; width: 6px; height: 6px; border-radius: 1px; background: #946000; }
+.attention-legend i.risk { height: 10px; background: #b42332; }
+.attention-list { box-shadow: none; }
+.attention-moment + .attention-moment, .attention-others { border-top: 1px solid var(--sep); }
+.attention-moment > summary { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 10px; cursor: pointer; list-style: none; }
+.attention-moment > summary::-webkit-details-marker { display: none; }
+.attention-moment > summary::after { content: ''; width: 5px; height: 5px; border-top: 1.5px solid #616166; border-right: 1.5px solid #616166; transform: rotate(45deg); margin-left: auto; flex: none; }
+.attention-moment[open] > summary::after { transform: rotate(135deg); }
+.attention-moment summary > span { min-width: 0; }
+.attention-moment summary strong { font-size: .75rem; font-weight: 600; }
+.attention-moment summary small { display: block; color: var(--attention-secondary); font-size: .75rem; }
+.attention-moment .ic.risk { color: #b42332; }
+.attention-moment .ic.warn { color: #875000; }
+.attention-body { padding: 0 10px 10px; }
+.attention-body p { margin: 0 0 10px; }
+.attention-link { display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 8px 4px; text-align: left; color: var(--tint); font-weight: 500; }
+.attention-others > summary { padding: 12px; cursor: pointer; color: var(--attention-secondary); }
+.attention-method { margin: 6px 4px 0; font-size: .75rem; color: var(--attention-secondary); }
+.attention-method > summary { cursor: pointer; padding: 10px 0; }
+.attention-method p { margin: 0 0 10px; }
+.attention-method a { color: var(--tint); text-underline-offset: 3px; }
+.attention-cycle :is(button, summary, a):focus-visible { outline: 2px solid #0a64d6; outline-offset: 2px; border-radius: 4px; }
+.attention-cycle summary:hover, .attention-link:hover { background: #e8eee9; border-radius: 8px; }

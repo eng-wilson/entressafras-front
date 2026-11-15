@@ -22,7 +22,7 @@ test('selecionar uma rotação leva a simulação ao período que mais pesa no s
   const milho = page.getByRole('button', { name: /^Soja depois milho safrinha\./ })
   await milho.click()
   await expect(milho).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.locator('.insp h2')).toHaveText('Soja depois milho safrinha')
+  await expect(page.locator('.insp h2')).toHaveText('Soja → milho safrinha')
   const depois = await slider.inputValue()
   expect(depois).not.toBe(antes)
   // O talhão mostra a cultura da rotação selecionada naquele decêndio
