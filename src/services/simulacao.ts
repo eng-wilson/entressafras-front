@@ -16,17 +16,20 @@ function scoresValidos(s: unknown) {
     && numOuNulo(s.overall)
 }
 
-function sweepValido(s: unknown) {
+function sweepValido(s: unknown, n: number) {
   if (s === null) return true
   if (!objeto(s) || (s.moved_crop !== 'first' && s.moved_crop !== 'second') || !Array.isArray(s.points)) return false
   if (!numOuNulo(s.best_decendio_idx) || !numOuNulo(s.worst_decendio_idx)) return false
   return s.points.every(p => objeto(p) && Number.isInteger(p.decendio_idx) && scoresValidos(p.scores)
-    && Array.isArray(p.crops) && p.crops.length === 2
+    && Array.isArray(p.crops) && p.crops.length === n
     && p.crops.every(c => objeto(c) && Number.isInteger(c.code) && data(c.planting_date) && data(c.harvest_date)
       && numOuNulo(c.risk_percentage) && typeof c.in_calendar === 'boolean' && typeof c.temperature_ok === 'boolean'))
 }
 
-/** Formato mínimo que o rascunho precisa: 2 culturas com datas em ordem, rank, checks e as faixas do sweep. */
+/**
+ * Formato mínimo que o rascunho precisa: 1 ou 2 culturas com datas em ordem, rank, checks e as faixas do sweep. Com 1
+ * cultura (seguida de pousio) não há sweep da 2ª.
+ */
 export function simulacaoValida(x: unknown): x is RotationSimulationResponse {
   if (!objeto(x) || !Number.isInteger(x.agricultural_year) || !Array.isArray(x.warnings)) return false
   const r = x.rotation
@@ -34,11 +37,13 @@ export function simulacaoValida(x: unknown): x is RotationSimulationResponse {
   if (typeof r.would_be_recommended !== 'boolean' || !Array.isArray(r.checks) || !r.checks.every(c => typeof c === 'string')) return false
   if (!scoresValidos(r.scores) || !objeto(r.soil_protection) || !finito(r.soil_protection.living_cover_days)
     || !finito(r.soil_protection.season_days)) return false
-  if (!Array.isArray(r.crops) || r.crops.length !== 2) return false
+  if (!Array.isArray(r.crops) || r.crops.length < 1 || r.crops.length > 2) return false
   const cropsOk = r.crops.every(c => objeto(c) && culturaValida(c.crop) && data(c.planting_date) && data(c.harvest_date)
     && c.planting_date < c.harvest_date && objeto(c.calendar) && Number.isInteger(c.calendar.cycle_days))
   if (!cropsOk) return false
-  return sweepValido(x.first_planting_sweep ?? null) && sweepValido(x.second_planting_sweep ?? null)
+  const n = r.crops.length
+  if (n === 1 && (x.second_planting_sweep ?? null) !== null) return false
+  return sweepValido(x.first_planting_sweep ?? null, n) && sweepValido(x.second_planting_sweep ?? null, n)
 }
 
 /** Mensagem de um 422: o backend manda `detail` como texto (rotação impossível) ou a lista do pydantic. */

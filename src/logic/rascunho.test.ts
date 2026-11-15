@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { SIMULACAO_FIXTURE } from '../data/simulacaoFixture'
 import {
   adicionar, catalogoRascunho, aplicarResposta, arrastar, chaveFaixa, cheio, datasDe, cicloDias, classeDoRisco, corrigir422, datasCultura,
-  diasSemCobertura, faixaDecendio, fimDecendio, inicioDecendio, faixaDoSweep, mensagemErro, nomeCultura, pedidoCulturas,
+  diasDePousio, diasSemCobertura, faixaDecendio, fimDecendio, inicioDecendio, faixaDoSweep, mensagemErro, nomeCultura, pedidoCulturas,
   piorClasse, pontoDoSweep, RASCUNHO_VAZIO, remover, seloRanking, textoLimite, tituloRascunho, traduzirCheck, trocar,
   type Rascunho,
 } from './rascunho'
@@ -82,10 +82,12 @@ describe('arrastar', () => {
 })
 
 describe('ações e pedido', () => {
-  it('adiciona até 2 culturas, sem datas para a API resolver', () => {
+  it('adiciona até 2 culturas, sem datas para a API resolver; 1 cultura já simula (seguida de pousio)', () => {
+    expect(pedidoCulturas(RASCUNHO_VAZIO, ANO)).toBeNull()
     const um = adicionar(RASCUNHO_VAZIO, 1150)
     expect(um.culturas[0]).toMatchObject({ s: 4, plantioLivre: true, colheitaLivre: true })
-    expect(pedidoCulturas(um, ANO)).toBeNull()
+    expect(cheio(um)).toBe(false)
+    expect(pedidoCulturas(um, ANO)).toEqual([{ code: 1150 }])
     const dois = adicionar(um, 8418)
     expect(dois.sel).toBe(1)
     expect(cheio(dois)).toBe(true)
@@ -118,6 +120,16 @@ describe('ações e pedido', () => {
   })
 })
 
+describe('pousio depois da última cultura', () => {
+  it('conta os dias entre a colheita da última cultura e 31/ago', () => {
+    // Sorgo colhido em 10/06/2028: 11/06 a 31/08 = 82 dias.
+    expect(diasDePousio(base, ANO)).toBe(82)
+    // Só a soja, colhida em 20/02/2028: 21/02 a 31/08/2028 (bissexto) = 193 dias.
+    expect(diasDePousio(remover(base, 1), ANO)).toBe(193)
+    expect(diasDePousio(RASCUNHO_VAZIO, ANO)).toBe(0)
+  })
+})
+
 describe('resposta da API', () => {
   it('traz as datas resolvidas e o ciclo de referência das culturas sem data', () => {
     const r = adicionar(adicionar(RASCUNHO_VAZIO, 1150), 48747)
@@ -131,8 +143,8 @@ describe('resposta da API', () => {
   it('colheita depois de 31/ago vai para o fim da safra (L15)', () => {
     const r = adicionar(adicionar(RASCUNHO_VAZIO, 1150), 8418)
     const resp = structuredClone(SIMULACAO_FIXTURE)
-    resp.rotation.crops[1].crop.eco_port_code = 8418
-    resp.rotation.crops[1].harvest_date = '2028-09-20'
+    resp.rotation.crops[1]!.crop.eco_port_code = 8418
+    resp.rotation.crops[1]!.harvest_date = '2028-09-20'
     const novo = aplicarResposta(r, pedidoCulturas(r, ANO)!, resp)
     expect(novo.culturas[1]).toMatchObject({ e: 36, ajustado: true })
   })
@@ -200,17 +212,17 @@ describe('faixa de decêndios no calendário (mesma régua da barra)', () => {
   it('1ª cultura: a 2ª fica parada; vale o risco da própria 1ª', () => {
     const f = faixaDoSweep(SIMULACAO_FIXTURE, 0)!
     for (const p of SIMULACAO_FIXTURE.first_planting_sweep!.points) {
-      expect(p.crops[1].planting_date).toBe('2028-02-21')
+      expect(p.crops[1]!.planting_date).toBe('2028-02-21')
       expect(f.pontos[p.decendio_idx].cls).toBe(p.crops[0].temperature_ok ? classeDoRisco(p.crops[0].risk_percentage) : 'risk')
     }
     // 2ª cultura com 100% de risco em todos os pontos (girassol tarde): a faixa da 1ª não fica vermelha por ela.
     const r = structuredClone(SIMULACAO_FIXTURE)
-    r.first_planting_sweep!.points.forEach(p => { p.crops[1].risk_percentage = 100 })
+    r.first_planting_sweep!.points.forEach(p => { p.crops[1]!.risk_percentage = 100 })
     expect(faixaDoSweep(r, 0)!.pontos[5].cls).toBe('good')
   })
   it('temperatura fora dos limites reprova; sem sweep, sem faixa', () => {
     const r = structuredClone(SIMULACAO_FIXTURE)
-    r.second_planting_sweep!.points[0].crops[1].temperature_ok = false
+    r.second_planting_sweep!.points[0].crops[1]!.temperature_ok = false
     expect(faixaDoSweep(r, 1)!.pontos[r.second_planting_sweep!.points[0].decendio_idx].cls).toBe('risk')
     expect(faixaDoSweep(null, 0)).toBeNull()
   })
@@ -230,7 +242,7 @@ describe('faixa de decêndios no calendário (mesma régua da barra)', () => {
   it('invariante: o decêndio tem a cor que a barra teria plantando ali', () => {
     const f = faixaDoSweep(SIMULACAO_FIXTURE, 1)!
     for (const p of SIMULACAO_FIXTURE.second_planting_sweep!.points) {
-      expect(f.pontos[p.decendio_idx].cls).toBe(classeDoRisco(p.crops[1].risk_percentage))
+      expect(f.pontos[p.decendio_idx].cls).toBe(classeDoRisco(p.crops[1]!.risk_percentage))
     }
   })
 })

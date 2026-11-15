@@ -37,7 +37,8 @@ export function DraftRow({ editor, catalogo, onSalvar, bloqueioSalvar }: Props) 
   const sel = r.sel != null && r.culturas[r.sel] ? r.sel : null
   const cultSel = sel != null ? r.culturas[sel] : null
   const nomeTitulo = tituloRascunho(nomes)
-  const incompleto = r.culturas.length < MAX_CULTURAS
+  // Uma cultura já simula (seguida de pousio); só o rascunho vazio fica incompleto.
+  const incompleto = r.culturas.length === 0
   const podeSalvar = sim.status === 'ok' && !bloqueioSalvar
   const maisPragas = r.culturas.length === 2 && PERFIS[r.culturas[1].code]?.pragas.nivel === 'Maior risco'
   const nomePorCodigo = (code: number) => nomes[r.culturas.findIndex(c => c.code === code)] ?? t('A cultura {code}', { code })
@@ -121,7 +122,7 @@ export function DraftRow({ editor, catalogo, onSalvar, bloqueioSalvar }: Props) 
               </button>
               <button type="button" className="tb" onClick={() => (editor.editado ? setConfirmar(true) : editor.fechar())}>{t('Cancelar')}</button>
               <button type="button" className="tb pri" disabled={!podeSalvar} onClick={onSalvar}
-                title={bloqueioSalvar ?? (incompleto ? t('Adicione a 2ª cultura para simular') : sim.status !== 'ok' ? t('Aguarde a simulação') : undefined)}>
+                title={bloqueioSalvar ?? (incompleto ? t('Adicione uma cultura') : sim.status !== 'ok' ? t('Aguarde a simulação') : undefined)}>
                 {t('Salvar')}
               </button>
             </>

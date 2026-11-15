@@ -3,7 +3,7 @@
 // (logic/rascunho.ts, arrastar): soltar num decêndio gera o mesmo pedido do ponto do sweep.
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import {
-  arrastar, dataCurta, datasDe, diasEntre, faixaDecendio, N_DEC, textoLimite,
+  arrastar, dataCurta, datasDe, diasDePousio, diasEntre, faixaDecendio, N_DEC, textoLimite,
   type Classe, type Gesto, type Rascunho,
 } from '../../logic/rascunho'
 import { t } from '../../i18n'
@@ -143,6 +143,17 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
           </div>
         )
       })}
+      {cs.length === 1 && cs[0].e < N_DEC && (() => {
+        // Rotação de 1 cultura: a API simula o resto da safra (até 31/ago) em pousio.
+        const dias = diasDePousio(rascunho, ano)
+        const largura = N_DEC - cs[0].e
+        return (
+          <div className="gap pousio" role="note" style={{ left: pct(cs[0].e), width: `calc(${pct(largura)} - 2px)` }}
+            title={t('{n} dias de solo sem cultura depois de {nome}, até 31 ago.', { n: dias, nome: minuscula(nomes[0] ?? '') })}>
+            {largura >= 4 ? t('Pousio · {n} dias', { n: dias }) : t('Pousio')}
+          </div>
+        )
+      })()}
       {dica && <span className={`tip${dica.limite ? ' limit' : ''}`} style={{ left: pct(dica.x) }} role="status">{dica.texto}</span>}
     </div>
   )

@@ -48,6 +48,7 @@
 .hd i{width:2px;height:10px;border-radius:1px;background:#fff}
 .cb:not(.sel) .hd:not(:focus-visible){opacity:0;pointer-events:none}
 .gap{position:absolute;top:0;height:24px;display:grid;place-items:center;font-size:12px;font-weight:600;color:#7A4100;white-space:nowrap;overflow:hidden;border-radius:6px;background:repeating-linear-gradient(135deg,rgba(255,149,0,.10) 0 6px,rgba(255,149,0,.18) 6px 12px)}
+.gap.pousio{color:var(--label2);background:repeating-linear-gradient(135deg,rgba(142,142,147,.10) 0 6px,rgba(142,142,147,.20) 6px 12px)}
 .tip{position:absolute;bottom:32px;transform:translateX(-50%);white-space:nowrap;font-size:12px;font-weight:600;color:#fff;background:var(--ink);border-radius:8px;padding:4px 8px;box-shadow:0 4px 12px rgba(0,0,0,.18);z-index:5;pointer-events:none}
 .tip.limit{background:var(--limit-bg)}
 .vazio-tl{display:flex;align-items:center;gap:8px;height:24px;font-size:13px;color:var(--label2)}

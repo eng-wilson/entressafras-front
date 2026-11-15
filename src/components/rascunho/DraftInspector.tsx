@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import './rascunho.css'
 import type { EditorRascunho } from '../../hooks/useRascunho'
 import {
-  datasCultura, diasSemCobertura, MAX_CULTURAS, posicaoRanking, ROTULO_CLASSE, tituloRascunho, traduzirCheck, type Aviso,
+  datasCultura, diasDePousio, diasSemCobertura, posicaoRanking, ROTULO_CLASSE, tituloRascunho, traduzirCheck, type Aviso,
 } from '../../logic/rascunho'
 import { lerSimulacao } from './leitura'
 import { ordinal, pctFmt, t } from '../../i18n'
@@ -23,13 +23,12 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
 
   let veredito: string
   if (r.culturas.length === 0) veredito = t('Adicione uma cultura')
-  else if (r.culturas.length < MAX_CULTURAS) veredito = t('Adicione a 2ª cultura para simular')
   else if (sim.status === 'erro') veredito = t('A simulação não rodou com estas datas')
   else if (leitura.pior.i < 0) veredito = t('Simulando…')
   else {
     const n = nomes[leitura.pior.i]
     veredito = {
-      good: t('As duas culturas com clima favorável nestas datas'),
+      good: r.culturas.length === 1 ? t('Clima favorável nestas datas') : t('As duas culturas com clima favorável nestas datas'),
       warn: t('{nome}: clima arriscado nestas datas', { nome: n }),
       risk: t('{nome}: clima desfavorável nestas datas', { nome: n }),
       none: t('Sem dado de risco para {nome}', { nome: minuscula(n) }),
@@ -37,11 +36,15 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
   }
 
   const limitacoes: (Aviso & { ok: boolean })[] = []
-  if (r.culturas.length === MAX_CULTURAS) {
+  if (r.culturas.length > 1) {
     const dias = diasSemCobertura(r, ano)
     limitacoes.push(dias > 0
       ? { ok: false, titulo: t('Solo exposto'), texto: t('{n} dias sem cobertura entre as culturas.', { n: dias }) }
       : { ok: true, titulo: t('Solo exposto'), texto: t('Uma cultura entra logo depois da outra.') })
+  } else if (r.culturas.length === 1) {
+    // Rotação de 1 cultura: a API simula o resto da safra em pousio, o que derruba a proteção do solo.
+    const dias = diasDePousio(r, ano)
+    if (dias > 0) limitacoes.push({ ok: false, titulo: t('Pousio'), texto: t('{n} dias de solo sem cultura depois de {nome}, até 31 ago.', { n: dias, nome: minuscula(nomes[0]) }) })
   }
   if (rot) {
     const nomesApi = rot.crops.map(c => c.crop.common_names[0] ?? c.crop.scientific_name)
@@ -82,7 +85,8 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
 
       {leitura.ranking && (
         <div className="rankcard" style={leitura.velho ? { opacity: .6 } : undefined}>
-          <span>{t('Posição no ranking')}<small>{leitura.ranking.recomendada ? t('Entre as 4 recomendadas') : t('Fora das 4 recomendadas')}</small></span>
+          <span>{t('Posição no ranking')}<small>{leitura.ranking.recomendada ? t('Entre as 4 recomendadas') : t('Fora das 4 recomendadas')}</small>
+            {r.culturas.length === 1 && <small>{t('Comparada com as rotações de 2 culturas')}</small>}</span>
           <b>{posicaoRanking(leitura.ranking.rank, leitura.ranking.entre)}</b>
         </div>
       )}
@@ -112,12 +116,14 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
               )
             })}
           </div>
-          {sel != null && r.culturas.length === MAX_CULTURAS && (sim.sweeps[sel] && !editor.alca ? (
+          {sel != null && (sim.sweeps[sel] && !editor.alca ? (
             <>
               <p className="hint">
                 <span className="zsw" /><span className="zsw warn" /><span className="zsw risk" />
                 <span>
-                  {t('Cores no calendário: risco de plantar {a} em cada decêndio, com {b} nas datas atuais. Soltando a barra ali, ela fica dessa cor.', { a: nomeSel, b: minuscula(nomes[1 - sel] ?? '') })}
+                  {r.culturas.length > 1
+                    ? t('Cores no calendário: risco de plantar {a} em cada decêndio, com {b} nas datas atuais. Soltando a barra ali, ela fica dessa cor.', { a: nomeSel, b: minuscula(nomes[1 - sel] ?? '') })
+                    : t('Cores no calendário: risco de plantar {a} em cada decêndio. Soltando a barra ali, ela fica dessa cor.', { a: nomeSel })}
                 </span>
               </p>
               <p className="hint"><span className="zreg" aria-hidden="true">1</span><span>{t('Sublinhado: data usual de plantio na região (±30 dias).')}</span></p>

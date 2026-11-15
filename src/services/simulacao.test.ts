@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { SIMULACAO_FIXTURE } from '../data/simulacaoFixture'
+import { SIMULACAO_1_CULTURA } from '../data/simulacaoFixture1'
 import { ErroRotacoes } from './rotacoes'
 import { corpoSimulacao, detalhe422, limparMemoriaSimulacao, lerSimulacao, simulacaoValida, simularRotacao, type PedidoSimulacao } from './simulacao'
 
@@ -64,6 +65,17 @@ describe('validação', () => {
     const ruim = structuredClone(SIMULACAO_FIXTURE)
     ruim.rotation.crops[0].harvest_date = '2027-01-01'
     expect(simulacaoValida(ruim)).toBe(false)
+  })
+  it('aceita 1 cultura (seguida de pousio) sem o sweep da 2ª; recusa 0, 3 ou pontos com outra cardinalidade', () => {
+    expect(simulacaoValida(SIMULACAO_1_CULTURA)).toBe(true)
+    expect(simulacaoValida({ ...SIMULACAO_1_CULTURA, second_planting_sweep: SIMULACAO_FIXTURE.second_planting_sweep })).toBe(false)
+    expect(simulacaoValida({ ...SIMULACAO_1_CULTURA, first_planting_sweep: SIMULACAO_FIXTURE.first_planting_sweep })).toBe(false)
+    const vazia = structuredClone(SIMULACAO_1_CULTURA)
+    ;(vazia.rotation.crops as unknown[]).length = 0
+    expect(simulacaoValida(vazia)).toBe(false)
+    const tres = structuredClone(SIMULACAO_FIXTURE)
+    ;(tres.rotation.crops as unknown[]).push(tres.rotation.crops[0])
+    expect(simulacaoValida(tres)).toBe(false)
   })
   it('lê o detail em texto ou na lista do pydantic', () => {
     expect(detalhe422({ detail: 'x' })).toBe('x')

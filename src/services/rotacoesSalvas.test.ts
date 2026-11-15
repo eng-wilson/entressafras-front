@@ -26,6 +26,12 @@ describe('rotações salvas', () => {
     localStorage.setItem(CHAVE_SALVAS, '{')
     expect(lerSalvas('t1', 2027)).toEqual([])
   })
+  it('guarda e lê uma rotação de 1 cultura (seguida de pousio); recusa 3 culturas gravadas', () => {
+    expect(guardarSalva('t1', 2027, [culturas[0]])).not.toBeNull()
+    expect(lerSalvas('t1', 2027)[0].culturas).toHaveLength(1)
+    localStorage.setItem(CHAVE_SALVAS, JSON.stringify({ t1: [{ id: 'x', ano: 2027, em: 1, culturas: [...culturas, culturas[0]] }] }))
+    expect(lerSalvas('t1', 2027)).toEqual([])
+  })
   it('ano agrícola como o backend: a próxima safra a começar', () => {
     expect(proximoAnoAgricola(new Date(2026, 10, 15))).toBe(2027)
     expect(proximoAnoAgricola(new Date(2026, 7, 31))).toBe(2026)

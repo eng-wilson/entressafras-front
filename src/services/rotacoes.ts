@@ -72,11 +72,11 @@ export function rotacoesValidas(x: unknown): x is RotationRecommendations {
   return x.rotations.every(rotacaoValida) && customValidas(x.custom_rotations)
 }
 
-/** custom_rotations da resposta: ausente ou rotações de 2 culturas com rank. */
+/** custom_rotations da resposta: ausente ou rotações de 1 cultura (seguida de pousio) ou 2, com rank. */
 function customValidas(v: unknown): boolean {
   if (v === undefined) return true
   return Array.isArray(v) && v.every(r => objeto(r) && typeof r.id === 'string' && Number.isInteger(r.rank)
-    && Array.isArray(r.crops) && r.crops.length === 2
+    && Array.isArray(r.crops) && r.crops.length >= 1 && r.crops.length <= 2
     && r.crops.every(c => objeto(c) && culturaValida(c.crop) && typeof c.planting_date === 'string' && DATA.test(c.planting_date)
       && typeof c.harvest_date === 'string' && DATA.test(c.harvest_date)))
 }

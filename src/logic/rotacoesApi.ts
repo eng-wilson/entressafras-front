@@ -148,8 +148,21 @@ export const lucroDaApi = (r: Rotation): number | null => r.economics?.profit_br
 export const mesmasCulturas = (a: CustomCropInput[], b: CustomCropInput[]) =>
   a.length === b.length && a.every((c, i) => c.code === b[i].code)
 
-function linha(a: SafraDef, b: SafraDef, pa: PerfilCultura | undefined, pb: PerfilCultura | undefined): CTRow {
+/** Nome da 2ª coluna numa rotação de 1 cultura: o resto da safra fica em pousio (traduzido na exibição). */
+export const POUSIO = 'Pousio'
+
+function linha(a: SafraDef, b: SafraDef | undefined, pa: PerfilCultura | undefined, pb: PerfilCultura | undefined): CTRow {
   const sem = 'Sem dado'
+  if (!b) return {
+    c1: a.nome, c2: POUSIO,
+    w1: sem, w2: '-',
+    soil: sem, soilWhy: 'Sem dado sobre o efeito no solo',
+    pest: sem, pestWhy: 'Sem dado sobre pragas para esta sequência.',
+    y1: pa?.prod?.y ?? '-', y2: '-',
+    u1: pa?.prod?.u,
+    p1l: a.nome, p1: pa?.prod?.p ?? 'Não é vendida',
+    p2l: POUSIO, p2: '-',
+  }
   return {
     c1: a.nome, c2: b.nome,
     // A tabela mostra o consumo calculado (Σ Kc × ET0, dados da API); estes textos ficam só para o conjunto local.
@@ -194,24 +207,23 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
   const idDe = (x: { rot: Rotation; salva?: SalvaMeta }) => (x.salva?.historico ? 'historico' : x.salva ? `salva-${x.salva.id}` : x.rot.id)
   const ids = todas.map(idDe).sort()
   for (const { rot, salva } of todas) {
-    const [ca, cb] = rot.crops
-    const a = safra(ca, 0, ano), b = safra(cb, 1, ano)
-    const pa = PERFIS[ca.crop.eco_port_code], pb = PERFIS[cb.crop.eco_port_code]
+    // Uma salva pode ter 1 cultura (seguida de pousio até 31/ago); as recomendadas têm sempre 2.
+    const [ca, cb] = rot.crops as [RotationCrop, RotationCrop?]
+    const a = safra(ca, 0, ano), b = cb ? safra(cb, 1, ano) : undefined
+    const pa = PERFIS[ca.crop.eco_port_code], pb = cb ? PERFIS[cb.crop.eco_port_code] : undefined
     const ct = linha(a, b, pa, pb)
     // Saúde do solo vem da API: o índice de proteção planejada (cobertura viva e troca de família).
     ct.soil = faixa(rot.scores.soil_protection).rotulo
     ct.soilWhy = textoProtecaoSolo(rot.soil_protection)
     // Pela cultura do catálogo (não pelo perfil mock): girassol e feijão-caupi também têm de ser reconhecidos.
-    if (salva?.historico || (atual && a.ref === atual[0] && b.ref === atual[1])) ct.atual = true
-    const barras: BarDef[] = [
-      { s: mesDaData(ca.planting_date, ano), e: mesDaData(ca.harvest_date, ano, true), label: a.nome },
-      { s: mesDaData(cb.planting_date, ano), e: mesDaData(cb.harvest_date, ano, true), label: b.nome },
-    ]
-    const fim = barras[1].e
+    if (salva?.historico || (atual && b && a.ref === atual[0] && b.ref === atual[1])) ct.atual = true
+    const barras: BarDef[] = [{ s: mesDaData(ca.planting_date, ano), e: mesDaData(ca.harvest_date, ano, true), label: a.nome }]
+    if (cb && b) barras.push({ s: mesDaData(cb.planting_date, ano), e: mesDaData(cb.harvest_date, ano, true), label: b.nome })
+    const fim = barras[barras.length - 1].e
     if (fim < 12) barras.push({ s: fim, e: 12, label: '' })
     rotacoes.push({
-      id: idDe({ rot, salva }), safras: [a, b], ct,
-      agua: pb?.score.agua ?? 0, solo: 0,
+      id: idDe({ rot, salva }), safras: b ? [a, b] : [a], ct,
+      agua: (pb ?? pa)?.score.agua ?? 0, solo: 0,
       barras, maisPragas: pb?.pragas.nivel === 'Maior risco',
       cor: ids.indexOf(idDe({ rot, salva })) % COR_ROT.length, scores: rot.scores, protecaoSolo: rot.soil_protection,
       lucro: lucroDaApi(rot),

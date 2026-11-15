@@ -16,7 +16,7 @@ export type Leitura = {
 export function lerSimulacao(r: Rascunho, sim: EstadoSimulacao): Leitura {
   const cs = r.culturas
   const vazio: Leitura = { classes: cs.map(() => 'none'), riscos: cs.map(() => null), velho: false, pior: { cls: 'none', i: -1 }, ranking: null }
-  if (cs.length < 2) return vazio
+  if (cs.length === 0) return vazio
   const dados = sim.dados
   const mesmas = !!dados && dados.rotation.crops.every((c, i) => c.crop.eco_port_code === cs[i]?.code)
   let riscos: (number | null)[] | null = null
