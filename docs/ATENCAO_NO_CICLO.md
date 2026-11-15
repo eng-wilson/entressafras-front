@@ -1,6 +1,6 @@
 # Atenção dentro de uma rotação favorável
 
-Revisão de 15/11/2026. A barra esquerda mostra as fases com atendimento baixo à demanda de água, mesmo quando o risco geral da API é favorável. O panorama não altera a ordem nem o risco e não explica o ranking, que a API não justifica.
+Revisão de 15/11/2026. O painel direito mostra as fases com atendimento baixo à demanda de água, mesmo quando o risco geral da API é favorável. Ele substitui os antigos gráficos de risco por cultura e de ciclo das culturas e não aparece na barra esquerda. O panorama não altera a ordem nem o risco e não explica o ranking, que a API não justifica.
 
 ## Origem dos números: só a API
 

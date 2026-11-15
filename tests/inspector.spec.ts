@@ -18,14 +18,10 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
   await expect(insp.getByRole('heading', { level: 2 })).toHaveText('Soja → milho safrinha')
   await expect(insp).not.toContainText('Por que ficou')
   await expect(insp.locator('.insp-provisional')).toContainText('sem cálculo para este talhão')
-  await expect(insp.getByRole('img', { name: 'Milho safrinha: risco hídrico de 30%, Arriscado, valor provisório.' })).toBeVisible()
-  await expect(insp.getByRole('img', { name: 'Soja: risco hídrico de 10%, Favorável, valor provisório.' })).toBeVisible()
-  await expect(insp.locator('.insp-phase')).toContainText('Fase crítica')
-  await expect(insp.locator('.insp-phase')).not.toContainText('30%')
-  const impacto = insp.locator('summary').filter({ hasText: 'Por que esta fase importa?' })
-  await impacto.click()
-  await expect(insp.getByText(/Sem água, flores abortam/)).toBeVisible()
-  await impacto.click()
+  await expect(insp.getByRole('region', { name: 'Momentos de atenção da rotação' })).toBeVisible()
+  await expect(insp.locator('.attention-map')).toBeVisible({ timeout: 30000 })
+  await expect(insp.locator('.insp-risk-chart, .insp-cycle-chart')).toHaveCount(0)
+  await expect(page.getByRole('complementary', { name: 'Ajustes' }).getByRole('region', { name: 'Momentos de atenção da rotação' })).toHaveCount(0)
   await page.screenshot({ path: testInfo.outputPath('inspector-desktop.png') })
 
   await insp.getByRole('button', { name: 'Comparar alternativas' }).click()
@@ -70,8 +66,8 @@ test('uma safra sem risco não produz conclusão favorável', async ({ page }) =
   const insp = painel(page)
   await expect(insp.getByRole('heading', { name: 'Faltam dados de risco' })).toBeVisible()
   await expect(insp).toContainText('O risco de Milho safrinha não foi informado')
-  await expect(insp.getByRole('img', { name: 'Milho safrinha: risco não informado.' })).toBeVisible()
-  await expect(insp.locator('.insp-risk-row.none .insp-risk-track > span')).toHaveCount(0)
+  await insp.locator('summary').filter({ hasText: 'Datas e requisitos' }).click()
+  await expect(insp.locator('.insp-status.none')).toHaveText('Sem dado')
   await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
 })
 
@@ -82,20 +78,6 @@ test('opção favorável preserva o aviso provisório e não inventa fase críti
   await expect(insp.getByRole('heading', { name: 'Favorável no risco geral da API', exact: true })).toBeVisible()
   await expect(insp.locator('.insp-provisional')).toBeVisible()
   await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
-  await expect(insp.locator('.insp-cycle-critical')).toHaveCount(0)
-})
-
-test('linha do ciclo navega pela cultura e mantém o intervalo crítico da API', async ({ page }) => {
-  await page.goto('/')
-  const insp = painel(page)
-  await insp.getByRole('button', { name: /^Ver ciclo de Soja no calendário/ }).click()
-  await expect(page.getByRole('slider')).toHaveValue('4')
-  await insp.getByRole('button', { name: /^Ver ciclo de Milho safrinha no calendário/ }).click()
-  await expect(page.locator('.dec i.zc.zcur')).toHaveCount(1)
-  await expect(page.locator('.fpill')).toContainText('Milho')
-  const risco = insp.locator('.insp-risk-track > span')
-  const comprimentos = await risco.evaluateAll(es => es.map(el => el.getBoundingClientRect().width))
-  expect(comprimentos[1] / comprimentos[0]).toBeCloseTo(3, 1)
 })
 
 test('risco calculado sem fase e sem clima mantém os limites explícitos', async ({ page }) => {
@@ -111,7 +93,8 @@ test('risco calculado sem fase e sem clima mantém os limites explícitos', asyn
   await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ status: 500, json: {} }))
   await page.goto('/')
   const insp = painel(page)
-  await expect(insp).toContainText('A fase de maior déficit não foi informada')
+  // O panorama vem do atendimento por fase da API, não do clima: a falha do clima não o apaga nem o substitui
+  await expect(insp.getByRole('region', { name: 'Momentos de atenção da rotação' })).toContainText('atendimento da API')
   await expect(insp.locator('.insp-provisional')).toHaveCount(0)
   await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
   await insp.locator('summary').filter({ hasText: 'Origem e limites dos dados' }).click()
@@ -125,6 +108,7 @@ test('painel acessível em celular, tablet e texto ampliado', async ({ page }, t
   await page.getByRole('link', { name: 'Entender esta rotação e os próximos passos' }).click()
   const insp = painel(page)
   await expect(insp).toBeInViewport()
+  await expect(insp.locator('.attention-map')).toBeVisible({ timeout: 30000 })
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: 900 })
     const limites = await insp.evaluate(el => {

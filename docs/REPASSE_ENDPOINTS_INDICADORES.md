@@ -16,7 +16,7 @@ Há duas questões distintas: uma classificação favorável no ciclo pode coexi
 - `src/components/SoilMoistureBar.tsx`: renomeado para **“Água para a cultura”**, exibindo ETa/ETc; não chamar esse índice de umidade volumétrica do solo.
 - `src/components/IsoField.tsx` e `src/components/Simulation.tsx`: compartilham com o App o resultado já calculado pelo worker.
 - `src/logic/atencaoCiclo.ts`: identifica quadros com restrição, cultura, fase e sensibilidade, sem recalcular o risco da API.
-- `src/components/AtencaoCiclo.tsx`: panorama na barra esquerda, com intervalos e ações de verificação, inclusive para rotações favoráveis na API.
+- `src/components/AtencaoCiclo.tsx`: panorama na barra direita, substituindo os gráficos anteriores, com intervalos e ações de verificação, inclusive para rotações favoráveis na API.
 - Sem dados, sem clima ou sem modelo específico da cultura: estado neutro. Não substituir por zero, dado de outra cultura ou classificação favorável.
 
 **Esta correção não conclui a integração com o backend.** O cenário da cena ainda usa clima diário sintético gerado de normais mensais. Os alertas estão identificados como simulação local. Eles não são observações de campo, previsão meteorológica nem a série calculada pelo backend.

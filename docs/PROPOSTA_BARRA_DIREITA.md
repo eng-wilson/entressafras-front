@@ -17,9 +17,9 @@ Os problemas e a sequência abaixo registram a motivação original; recomendaç
 
 ### Simplificação visual
 
-A primeira visão passou a usar barras horizontais de risco por cultura, todas na escala de 0–100%, e uma linha do ciclo por cultura no eixo comum setembro–agosto. As barras representam exclusivamente o percentual recebido da API; o ciclo usa o mapeamento de estágios já existente e destaca apenas os intervalos críticos do diagnóstico. Não há curva mensal de risco nem estimativa de melhora com manejo.
+A primeira versão usava barras de risco e uma linha do ciclo por cultura. Esses gráficos foram substituídos pelo painel **Atenção no ciclo**, na barra direita, conforme a correção de posicionamento solicitada pelo usuário. Ele apresenta os momentos de restrição do cenário local, a resposta por fase e as verificações possíveis. A barra esquerda conserva somente os dados e ajustes do talhão.
 
-Cada linha do ciclo abre o calendário na fase crítica da cultura, quando houver, ou no seu plantio. Os próximos passos usam linhas de ação com símbolos e rótulos, seguindo o padrão de listas do SwiftUI. Datas/requisitos e explicação do impacto ficam em controles expansíveis. O aviso de dado provisório permanece visível. Dados ausentes têm rótulo e trilho vazio tracejado, sem barra de 0% no lugar.
+Cada momento pode ser aberto no calendário e na cena. Os próximos passos usam linhas de ação com símbolos e rótulos, seguindo o padrão de listas do SwiftUI. Datas/requisitos e detalhes ficam em controles expansíveis. O contexto geral da API e o aviso de dado provisório permanecem visíveis, sem duplicação de cabeçalhos ou ações de comparação. Detalhes da análise local: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md).
 
 ## Problemas prioritários
 

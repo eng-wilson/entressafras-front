@@ -6,20 +6,18 @@ import './atencao-ciclo.css'
 export type AtencaoCicloProps = {
   panorama: PanoramaCiclo | null
   estado: 'carregando' | 'pronto' | 'erro' | 'sem-clima'
-  idx: number; nome: string; anosApi: number | null; provisorio: boolean
+  idx: number; anosApi: number | null
   onVerPeriodo: (idx: number) => void
-  onComparar: () => void
 }
 const icone = (estado: string) => estado === 'risk' ? 'i-xc' : 'i-alert'
 
-export function AtencaoCiclo({ panorama, estado, idx, nome, anosApi, provisorio, onVerPeriodo, onComparar }: AtencaoCicloProps) {
+export function AtencaoCiclo({ panorama, estado, idx, anosApi, onVerPeriodo }: AtencaoCicloProps) {
   const momentos = panorama?.momentos ?? []
   const avaliados = panorama?.quadros.filter(q => q.atendimento != null).length ?? 0
   const ativo = momentos.find(m => idx >= m.de && idx <= m.ate)
   const primeiros = ativo ? [ativo, ...momentos.filter(m => m !== ativo)].slice(0, 2) : momentos.slice(0, 2)
   const outros = momentos.filter(m => !primeiros.includes(m))
   const clsApi = anosApi == null ? null : classeAnos(anosApi)
-  const faixaApi = clsApi === 'good' ? 'favorável' : clsApi === 'warn' ? 'arriscado' : 'desfavorável'
   const renderMomento = (m: MomentoAtencao) => (
     <details className="attention-moment" key={`${m.safra}-${m.de}`}>
       <summary>
@@ -36,10 +34,8 @@ export function AtencaoCiclo({ panorama, estado, idx, nome, anosApi, provisorio,
     </details>
   )
   return (
-    <section className="sec attention-cycle" aria-label="Momentos de atenção da rotação">
+    <section className="attention-cycle" aria-label="Momentos de atenção da rotação">
       <h3>Atenção no ciclo</h3>
-      <p className="attention-name">{nome}</p>
-      <p className="attention-overall">API: {clsApi ? faixaApi : 'sem risco completo'}{provisorio || panorama?.provisorio ? ' · provisório' : ''}</p>
       {estado === 'carregando' && <p className="attention-note" role="status">Aguardando as rotações da API…</p>}
       {estado === 'erro' && <p className="attention-note" role="status">As rotações da API não carregaram. Sem avaliação dos momentos de atenção.</p>}
       {estado === 'sem-clima' && <p className="attention-note">Sem dados da API para avaliar os momentos.</p>}
@@ -54,7 +50,6 @@ export function AtencaoCiclo({ panorama, estado, idx, nome, anosApi, provisorio,
           {primeiros.map(renderMomento)}
           {outros.length > 0 && <details className="attention-others"><summary>Outros {outros.length} momentos</summary>{outros.map(renderMomento)}</details>}
         </div>
-        {momentos.length > 0 && <button className="attention-link" type="button" onClick={onComparar}>Comparar alternativas<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></button>}
         <details className="attention-method"><summary>Como ler estes momentos</summary>
           <p>Atendimento = água que a cultura usou ÷ água de que precisava (ETa/ETc), por fase, na média das safras históricas do balanço hídrico da API (ISNA por estágio). A API não entrega valores dia a dia: dentro de uma fase, o valor é o mesmo em todos os decêndios.</p>
           <p>Fases pelos estágios FAO-56 da cultura, posicionados nas datas de plantio e colheita da API. Crítico abaixo de 45%; atenção de 45% a menos de 55%. Estes são limiares de apresentação, não limites oficiais de manejo. Alta sensibilidade: Ky da fase igual ou acima de 1 (FAO-33), também da API.</p>

@@ -40,7 +40,7 @@
 .insp-decision > h3 .ic { align-self: flex-start; margin-top: 2px; }
 .insp .insp-provisional { display: flex; align-items: flex-start; gap: 6px; padding: 8px 10px; margin-top: 10px; background: #fff1d6; color: #704900; border-radius: 8px; font-size: var(--insp-caption); }
 .insp-provisional .ic { margin-top: 2px; }
-.insp-phase { margin: 0; }
+
 .insp-actions { display: flex; flex-direction: column; }
 .insp-action { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 12px 14px; text-align: left; border-radius: 12px; transition: background-color 150ms ease-out; }
 .insp-action + .insp-action { border-top: 1px solid var(--insp-separator); border-top-left-radius: 0; border-top-right-radius: 0; }
@@ -79,40 +79,6 @@
 .insp-disclosure-body { padding: 0 14px 16px; }
 .insp-disclosure-body p + p { margin-top: 12px; }
 .insp-method { font-size: var(--insp-caption); }
-.insp-risk-chart, .insp-cycle-chart { margin: 0; min-width: 0; }
-.insp-risk-chart figcaption, .insp-cycle-chart figcaption { font-size: var(--insp-caption); font-weight: 600; margin-bottom: 10px; }
-.insp-risk-row { margin-bottom: 10px; --bar-color: var(--insp-accent); }
-.insp-risk-row.warn { --bar-color: #a86600; }
-.insp-risk-row.risk { --bar-color: #b42332; }
-.insp-risk-row.none { --bar-color: var(--insp-secondary); }
-.insp-risk-label { display: flex; gap: 8px; justify-content: space-between; align-items: baseline; font-size: var(--insp-caption); margin-bottom: 4px; }
-.insp-risk-label > span { min-width: 0; overflow-wrap: anywhere; }
-.insp-risk-label strong { color: var(--bar-color); font-variant-numeric: tabular-nums; flex: none; font-weight: 600; }
-.insp-risk-track { position: relative; height: 12px; border-radius: 4px; background: #e0e0e6; overflow: hidden; }
-.insp-risk-track::after { content: ''; position: absolute; inset: 0 auto 0 50%; width: 1px; background: #fff; }
-.insp-risk-track > span { display: block; height: 100%; background: var(--bar-color); border-radius: 4px; }
-.insp-risk-track.missing { height: 12px; background: transparent; border: 1px dashed #8a8a90; }
-.insp-risk-track.missing::after { display: none; }
-.insp-chart-axis { display: flex; justify-content: space-between; color: var(--insp-secondary); font-size: .75rem; font-variant-numeric: tabular-nums; }
-.insp-cycle-chart > .insp-chart-axis { margin-bottom: 4px; }
-.insp-cycle-row { display: block; width: 100%; text-align: left; min-height: 48px; padding: 6px 0; border-radius: 6px; }
-.insp-cycle-row:hover { background: #e7e7ed; }
-.insp-cycle-name { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: var(--insp-caption); margin-bottom: 4px; }
-.insp-cycle-name .ic { width: 12px; height: 12px; color: var(--insp-secondary); }
-.insp-cycle-track { display: grid; grid-template-columns: repeat(36, minmax(0, 1fr)); height: 20px; border-radius: 4px; background: #e4e4e9; }
-.insp-cycle-stage { grid-row: 1; border-inline: 1px solid var(--insp-background); min-width: 0; background: #c5cdd5; }
-.insp-cycle-stage.stage-1 { background: #adb9c5; }
-.insp-cycle-stage.stage-2 { background: #8c9eaf; }
-.insp-cycle-stage.stage-3 { background: #c5cdd5; }
-.insp-cycle-critical, .insp-critical-key { background: #ffe1a6; border: 1px solid #956000; color: #775000; border-radius: 3px; }
-.insp-cycle-critical.risk, .insp-critical-key.risk { background: #f9dce0; border-color: #b42332; color: #b42332; }
-.insp-cycle-critical { grid-row: 1; z-index: 1; display: flex; align-items: center; justify-content: center; min-width: 0; }
-.insp-cycle-critical .ic { width: 12px; height: 12px; }
-.insp .insp-cycle-legend { display: flex; align-items: baseline; gap: 6px; margin-top: 6px; font-size: var(--insp-caption); color: var(--insp-secondary); }
-.insp-critical-key { display: inline-block; width: 12px; height: 10px; flex: none; }
-.insp-impact { margin-top: 8px; }
-.insp-impact summary { padding-left: 0; padding-block: 8px; font-size: var(--insp-caption); }
-.insp-impact .insp-disclosure-body { padding-left: 0; font-size: var(--insp-caption); }
 .insp-return, .inspector-jump { display: none; }
 .insp-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 

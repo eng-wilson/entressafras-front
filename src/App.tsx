@@ -127,12 +127,13 @@ export default function App() {
     () => (state.mode === 'cmp' ? { sel: cmpSel, pr: state.pr, res } : null),
     [state.mode, cmpSel, state.pr, res],
   )
-  // O Inspector não depende do decêndio: memoizado, não re-renderiza a cada passo do calendário.
-  // verPeriodo só usa setState funcional; compararAlternativas lê conj e state.rot, que estão nas dependências.
+  // O panorama (atendimento por fase da API) é estável; o cursor do Inspector acompanha o calendário.
+  // A cena continua recebendo o decêndio adiado, sem bloquear essa atualização.
   const inspector = useMemo(
-    () => <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={setVerCulturas} onVerPeriodo={verPeriodo} onComparar={compararAlternativas} />,
+    () => <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={setVerCulturas} onVerPeriodo={verPeriodo} onComparar={compararAlternativas}
+      atencao={{ panorama, estado: 'pronto', idx: state.idx }} />,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [state.rot, diags, clima.dados, res, conj],
+    [state.rot, state.idx, diags, clima.dados, res, conj, panorama],
   )
   useEffect(() => { salvar(campos) }, [campos])
 
@@ -214,8 +215,7 @@ export default function App() {
           Como funciona
         </button>
       </header>
-      <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')}
-        atencao={pronto ? { panorama, estado: 'pronto', idx: state.idx, nome: conj.rotacoes[state.rot].safras.map(s => s.nome).join(' → '), anosApi: res?.rotacoes[state.rot]?.anos ?? null, provisorio: conj.rotacoes[state.rot].safras.some(s => s.risco?.method === 'MOCK'), onVerPeriodo: verPeriodo, onComparar: compararAlternativas } : undefined} />
+      <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')} />
       <main className="main" id="rotation-workspace" tabIndex={-1}>
         {pronto && <a className="inspector-jump" href="#rotation-inspector">Entender esta rotação e os próximos passos<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></a>}
         {clima.status === 'erro' && <AvisoClima onRecarregar={clima.recarregar} />}

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { climaVisual } from '../src/render/clima.js';
+import { climaVisual, paletaCeu, interpolarClima } from '../src/render/clima.js';
 import { chaveEstresse } from '../src/render/sprites/symptoms.js';
 import { IDX, NCANAIS } from '../src/domain/channels.js';
 
@@ -14,4 +14,14 @@ const est = { modo: 'real', ag: new Float32Array(NCANAIS), cr: new Float32Array(
 const saudavel = chaveEstresse(est);
 est.ag[IDX.agua_excesso] = 0.8;
 assert.notEqual(chaveEstresse(est), saudavel, 'Excesso agudo deve invalidar o cache de sintomas');
+const claro = paletaCeu({});
+const chuvoso = paletaCeu({ molhado: 1 });
+assert.ok(chuvoso[0].every((c, i) => c < claro[0][i]), 'Chuva forte escurece o zênite');
+const alvo = { chuva: 60, molhado: 1, seca: 0, frio: 0 };
+const inicio = { chuva: 0, molhado: 0, seca: 1, frio: 0 };
+const transicao = interpolarClima(inicio, alvo, 90);
+assert.ok(transicao.molhado > 0 && transicao.molhado < 1);
+assert.equal(interpolarClima(inicio, alvo, 0).seca, 1);
+assert.deepEqual(interpolarClima(null, alvo, 16), alvo);
+assert.ok(climaVisual({ clima: { chuva: [0], tmax: [6] } }, 0).frio > 0);
 console.log('Clima visual: estados e cache de sintomas OK');

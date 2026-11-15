@@ -11,7 +11,7 @@ import { CULTURAS } from '../domain/crops/catalogo.js';
 import { createCamera } from '../render/iso/camera.js';
 import { createDiorama } from '../render/iso/diorama.js';
 import { createLavoura } from '../render/field/lavoura.js';
-import { climaVisual, desenharCeu, desenharChuva } from '../render/clima.js';
+import { climaVisual, desenharCeu, desenharChuva, desenharRotuloClima, interpolarClima } from '../render/clima.js';
 
 const WIDTH = 4.2, DEPTH = 4.2, TOTAL_H = 0.9, PROF_VISIVEL_M = 0.3;
 // Enquadramento pelo porte da cultura mostrada: uma altura fixa (a do milho) deixava a soja e as
@@ -137,6 +137,7 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
     }
 
     const t0 = performance.now();
+    let ceuAtual = null, ultimoQuadro = t0;
     function quadro() {
         if (destruido) return;
         quadroId = requestAnimationFrame(quadro);
@@ -145,12 +146,18 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
         const d = cam.dpr;
         ctx.setTransform(d, 0, 0, d, 0, 0);
         ctx.clearRect(0, 0, larg, alt);
-        desenharCeu(ctx, larg, alt, atual.clima, { rotulo: rotuloClima });
+        const agora = performance.now();
+        const reduzirMovimento = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+        ceuAtual = reduzirMovimento ? { ...atual.clima } : interpolarClima(ceuAtual, atual.clima, Math.min(64, agora - ultimoQuadro));
+        ultimoQuadro = agora;
+        // Só a atmosfera transiciona: legenda, solo e sintomas correspondem ao dia selecionado.
+        desenharCeu(ctx, larg, alt, ceuAtual, { rotulo: false, tempo: reduzirMovimento ? 0 : (agora - t0) / 1000 });
+        if (rotuloClima) desenharRotuloClima(ctx, larg, atual.clima);
         atual.cena.diorama.desenharBloco(ctx, cam);
-        const tempo = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 0 : (performance.now() - t0) / 1000;
+        const tempo = reduzirMovimento ? 0 : (agora - t0) / 1000;
         atual.cena.lavoura.desenhar(ctx, cam, tempo, -1);
         ctx.setTransform(d, 0, 0, d, 0, 0);
-        desenharChuva(ctx, larg, alt, atual.clima, tempo);
+        desenharChuva(ctx, larg, alt, ceuAtual, tempo);
     }
     quadroId = requestAnimationFrame(quadro);
 

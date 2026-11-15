@@ -1,7 +1,6 @@
-.attention-cycle { --attention-secondary: #616166; font-size: .8125rem; line-height: 1.45; overflow-wrap: anywhere; }
+.attention-cycle { --attention-secondary: #616166; font-size: var(--insp-body, .875rem); line-height: 1.5; overflow-wrap: anywhere; }
 .attention-cycle p { margin: 0 4px 8px; }
-.attention-name { font-weight: 600; overflow-wrap: anywhere; }
-.attention-overall, .attention-note { color: var(--attention-secondary); font-size: .75rem; }
+.attention-cycle .attention-note { color: var(--attention-secondary); font-size: var(--insp-caption, .8125rem); margin: 0 0 12px; }
 .attention-map { display: grid; grid-template-columns: repeat(36, minmax(0, 1fr)); gap: 2px; align-items: end; height: 22px; margin: 12px 4px 4px; }
 .attention-mark { height: 6px; border-radius: 1px; background: #c9c9d0; }
 .attention-mark.good { background: #287c44; }
@@ -26,12 +25,12 @@
 .attention-moment .ic.risk { color: #b42332; }
 .attention-moment .ic.warn { color: #875000; }
 .attention-body { padding: 0 10px 10px; }
-.attention-body p { margin: 0 0 10px; }
+.attention-cycle .attention-body p { margin: 0 0 10px; }
 .attention-link { display: flex; gap: 8px; align-items: center; justify-content: space-between; width: 100%; min-height: 44px; padding: 8px 4px; text-align: left; color: var(--tint); font-weight: 500; }
 .attention-others > summary { padding: 12px; cursor: pointer; color: var(--attention-secondary); }
 .attention-method { margin: 6px 4px 0; font-size: .75rem; color: var(--attention-secondary); }
 .attention-method > summary { cursor: pointer; padding: 10px 0; }
-.attention-method p { margin: 0 0 10px; }
+.attention-cycle .attention-method p { margin: 0 0 10px; }
 .attention-method a { color: var(--tint); text-underline-offset: 3px; }
 .attention-cycle :is(button, summary, a):focus-visible { outline: 2px solid #0a64d6; outline-offset: 2px; border-radius: 4px; }
 .attention-cycle summary:hover, .attention-link:hover { background: #e8eee9; border-radius: 8px; }

@@ -38,7 +38,6 @@ A tela envia a `POST /api/rotations/recommendations` o centro do talhão, a text
 | Local | Externo | Nome da cidade pelo Nominatim (OpenStreetMap) |
 | "O que importa": Resiliência, Saúde do solo, Produtividade | **API** | Vão como `priorities`; a ordem da lista é o `rank` da resposta |
 | "O que importa": Economia de água | Mock | Não existe na API: só destaca o eixo no mapa, não muda a ordem |
-| Atenção no ciclo: fases com atendimento baixo | **API (MOCK)** | `risk.mean_isna` por fase, fase crítica (`critical_stage`) e sensibilidade pelo Ky da fase (`yield_response_factor`). Limiares de apresentação: 45% e 55%. Detalhes: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md) |
 
 ## Simulação do talhão (centro)
 
@@ -86,12 +85,13 @@ A tela envia a `POST /api/rotations/recommendations` o centro do talhão, a text
 
 | Elemento | Origem | Detalhe |
 |---|---|---|
-| Datas de plantio e colheita | **API** | |
-| Selo por safra e frase de risco | **API (MOCK)** | |
-| "Por que ficou em Nº": resiliência | **API (MOCK)** | |
-| Saúde do solo | **API** | Proteção do solo planejada |
-| "Por que ficou em Nº": pragas | Mock | `perfis.ts` |
-| "O que você ganha" | Cadastro | Só na rotação atual do agricultor |
+| Posição na ordem e "ranking de teste" | **API (MOCK)** | `rank`; o aviso depende de `warnings` com MOCK |
+| Selo da rotação ("Favorável no risco geral da API") e "Provisório" | **API (MOCK)** | Risco da cultura mais arriscada, na régua do ZARC |
+| Atenção no ciclo: fases com atendimento baixo (no lugar dos antigos gráficos de risco e ciclo) | **API (MOCK)** | `risk.mean_isna` por fase, fase crítica (`critical_stage`) e sensibilidade pelo Ky da fase (`yield_response_factor`). Limiares de apresentação: 45% e 55%. Detalhes: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md) |
+| Datas de plantio e colheita, selo por safra | **API** / **API (MOCK)** | Datas da API; selo pelo risco da safra |
+| Saúde do solo | **API** | Proteção do solo planejada (`soil_protection`) |
+| Pragas | Mock | `perfis.ts` |
+| Como interpretar o risco, origem dos dados | **API (MOCK)** | Textos sobre o risco, o limiar e as safras de referência que vieram da API |
 
 ## Memória de cálculo ("De onde vêm estes números")
 

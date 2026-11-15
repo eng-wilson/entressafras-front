@@ -6,13 +6,11 @@ import { registroMaisRecente, resumoSafra } from '../logic/historico'
 import { chuvaDoAno } from '../logic/clima'
 import { inteiro, SEM_DADO } from '../logic/formato'
 import { NOME_EIXO } from '../logic/aptidao'
-import { AtencaoCiclo, type AtencaoCicloProps } from './AtencaoCiclo'
 
 /** Ações da lista do talhão: cada linha editável abre o que muda aquele dado. */
 export type AcaoTalhao = 'redesenhar' | 'solo' | 'historico'
 
 type Props = {
-  atencao?: AtencaoCicloProps
   pr: Priority
   onToggle: (k: keyof Priority) => void
   talhao: Talhao
@@ -65,7 +63,7 @@ const PRIORITIES = [
   { k: 'prod'  as const, label: NOME_EIXO.prod,  icon: 'n-seed'   },
 ]
 
-export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar, atencao }: Props) {
+export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props) {
   const conj = useConjunto()
   return (
     <aside className="side" aria-label="Ajustes">
@@ -99,7 +97,6 @@ export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar, atencao
         </div>
       </div>
 
-      {atencao && <AtencaoCiclo {...atencao} />}
       <div className="sec">
         <h3>O que importa</h3>
         <p className="prh">A ordem das rotações segue o que você marcar (calculada pela API). Economia de água ainda não entra na ordem.</p>

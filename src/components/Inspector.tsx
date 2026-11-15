@@ -6,8 +6,8 @@ import type { ClimaDecendios } from '../types'
 import { MONTHS_SHORT } from '../data/mock'
 import { useConjunto } from '../state/conjunto'
 import { diasDe, mesDe } from '../logic/periodo'
-import { PROBLEMA_FASE, type Diagnostico } from '../logic/diagnostico'
-import { RiskBars, CycleTimeline } from './InspectorCharts'
+import type { Diagnostico } from '../logic/diagnostico'
+import { AtencaoCiclo, type AtencaoCicloProps } from './AtencaoCiclo'
 import './inspector.css'
 
 const SELO = {
@@ -31,6 +31,7 @@ const decendio = (idx: number) => `${diasDe(idx)} ${MONTHS_SHORT[mesDe(idx)].toL
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 type Props = {
+  atencao: Pick<AtencaoCicloProps, 'panorama' | 'estado' | 'idx'>
   clima: ClimaDecendios | null
   rotIdx: number
   diag: Diagnostico | null
@@ -40,7 +41,7 @@ type Props = {
   res: Resiliencia | null
 }
 
-export function Inspector({ clima, onVerDados, onVerPeriodo, onComparar, res, rotIdx, diag }: Props) {
+export function Inspector({ clima, onVerDados, onVerPeriodo, onComparar, res, rotIdx, diag, atencao }: Props) {
   const conj = useConjunto()
   const def = conj.rotacoes[rotIdx]
   const rot = res?.rotacoes[rotIdx] ?? null
@@ -68,17 +69,10 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onComparar, res, ro
       <section className={`insp-decision ${cls}`} aria-labelledby="insp-decision-title">
         <h3 id="insp-decision-title"><Icon name={cls === 'none' ? 'i-info' : SELO[cls].icon} />{titulo}</h3>
         {incompleto && <p className="insp-caption">{rot ? `O risco de ${faltantes || 'uma das safras'} não foi informado.` : 'Risco ainda indisponível.'}</p>}
-        <RiskBars def={def} rot={rot} />
         {provisorio && <p className="insp-provisional"><Icon name="i-info" /><span><strong>Provisório</strong> · sem cálculo para este talhão</span></p>}
       </section>
 
-      <section className="insp-phase" aria-label="Ciclo e fase crítica">
-        <CycleTimeline def={def} rot={rot} diag={diag} onVerPeriodo={onVerPeriodo} />
-        {fase ? <details className="insp-disclosure insp-impact">
-          <summary><Icon name="i-drop" /><span>Por que esta fase importa?<small>{fase.nome} · {fase.nomeFase}</small></span></summary>
-          <div className="insp-disclosure-body"><p>{PROBLEMA_FASE[fase.fase]}</p><p className="insp-caption">Efeito geral, não uma previsão para o talhão.</p></div>
-        </details> : cls !== 'good' && cls !== 'none' ? <p className="insp-caption">A fase de maior déficit não foi informada.</p> : null}
-      </section>
+      <AtencaoCiclo {...atencao} anosApi={rot?.anos ?? null} onVerPeriodo={onVerPeriodo} />
 
       {(fase || conj.rotacoes.length > 1) && <div className="insp-group insp-actions" role="group" aria-label="Próximos passos">
         {fase && <button type="button" className="insp-action primary" onClick={() => onVerPeriodo(fase.de)}><Icon name="i-calendar" /><span>Ver fase no calendário</span><Icon name="i-right" /></button>}
