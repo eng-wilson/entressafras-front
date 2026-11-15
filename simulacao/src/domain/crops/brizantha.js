@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 const base = {
-    id: 'brizantha', archetype: 'graminea_touceira', cicloDias: 130, folhasFinal: 7, comprFolha: .4, largFolha: .024,
+    id: 'brizantha', archetype: 'graminea_touceira', cicloDias: 130, arte: true, adaptarArte: true, folhasFinal: 7, comprFolha: .4, largFolha: .024,
     inflorescencia: 'racemo', raizProfMax: 1.15, morfologia: { perfilhos: 8, toleranciaAl: 1 },
     fases: [
         { id: 'E', t: .03, nome: 'Emergência', folhas: 2, perfilhos: 2 }, { id: 'PER', t: .13, nome: 'Perfilhamento', folhas: 4, perfilhos: 5 },

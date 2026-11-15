@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 export default criarCultura({
-    id: 'crotalaria_juncea', nome: 'Crotalária juncea', archetype: 'leguminosa_arbustiva', cicloDias: 120,
+    id: 'crotalaria_juncea', nome: 'Crotalária juncea', archetype: 'leguminosa_arbustiva', cicloDias: 120, arte: true, adaptarArte: true,
     plantio: { linhas: 6, plantasPorLinha: 6, margem: .45, semente: 7101 }, alturaMax: [1.25, 1.62], folhasFinal: 14, comprFolha: .25,
     tipoFolha: 'simples', tipoFruto: 'vagem_inflada', tamFruto: .06, raiz: 'pivotante', raizProfMax: 1.35, fixaN: true, ramosMax: 6, vagensMax: 14,
     fases: [

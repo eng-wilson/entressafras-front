@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 export default criarCultura({
-    id: 'ruziziensis', nome: 'Braquiária ruziziensis', archetype: 'graminea_touceira', cicloDias: 120,
+    id: 'ruziziensis', nome: 'Braquiária ruziziensis', archetype: 'graminea_touceira', cicloDias: 120, arte: true, adaptarArte: true,
     plantio: { linhas: 7, plantasPorLinha: 8, margem: .32, semente: 6201 }, alturaMax: [.45, .65], folhasFinal: 8, comprFolha: .42, largFolha: .022,
     inflorescencia: 'racemo', raizProfMax: 1, morfologia: { perfilhos: 9, decumbente: true, toleranciaAl: 1 },
     fases: [
