@@ -140,3 +140,6 @@ button.insp-param:hover { background: #ededf1; }
 button.insp-param:active { background: #e0e5e1; }
 .insp-param .insp-chevron { flex: none; margin-left: -2px; }
 .insp-param-detalhe { margin-bottom: 14px; }
+/* Alertas do local (solo ou clima de um ponto distante) e lista dos avisos da API */
+.insp .insp-local { color: #805300; }
+.insp-avisos { margin: 0 0 8px; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-size: var(--insp-caption); color: var(--insp-secondary); }

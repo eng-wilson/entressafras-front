@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { aptidao, faixaDaNota, NOME_EIXO, safraLimitante, type Eixo } from '../logic/aptidao'
 import { BarraPrioridade, ILUSTRATIVO, leituraPrioridade } from './BarraPrioridade'
 import { porQueRanking } from '../logic/porQueRanking'
+import { avisosDeLocal, textoAvisoLocal } from '../logic/avisosApi'
 import type { Resiliencia, ResSafra } from '../logic/resiliencia'
 import { classeSeguranca } from '../logic/status'
 import type { ClimaDecendios } from '../types'
@@ -74,6 +75,8 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   const provisorio = rot?.safras.some(s => s.risco?.metodo === 'MOCK') ?? false
   const rankingTeste = conj.avisos.some(a => /\bMOCK\b/i.test(a))
   const porQue = conj.origem === 'api' ? porQueRanking(conj.rotacoes, rotIdx, conj.prioridades) : null
+  // Solo ou clima que não são do talhão (a API usou um ponto guardado distante ou textura padrão)
+  const avisosLocal = conj.origem === 'api' ? avisosDeLocal(conj.avisos, conj.solo, conj.propriedadesSolo) : []
   const faltantes = rot?.safras.filter(s => !s.risco).map(s => t(s.nome)).join(', ')
   const titulo = incompleto ? t('Faltam dados de risco') : cls === 'good' ? t('Favorável no risco geral da API') : t('Atenção à água')
   const c1 = t(def.ct.c1), c2 = t(def.ct.c2)
@@ -119,6 +122,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           <h3 id="insp-decision-title"><Icon name={cls === 'none' ? 'i-info' : SELO[cls].icon} />{titulo}</h3>
           {incompleto && <p className="insp-caption">{rot ? t('O risco de {culturas} não foi informado.', { culturas: faltantes || t('uma das safras') }) : t('Risco ainda indisponível.')}</p>}
           {provisorio && <p className="insp-provisional"><Icon name="i-info" /><span><strong>{t('Provisório')}</strong> · {t('sem cálculo para este talhão')}</span></p>}
+          {avisosLocal.map(a => <p key={a.tipo} className="insp-provisional insp-local" role="note"><Icon name="i-alert" /><span>{textoAvisoLocal(a)}</span></p>)}
         </section>
         <div className="insp-rank">
           <div className="insp-rank-h">
@@ -232,6 +236,12 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
                 ? t('Chuva e temperatura: {fonte}, média de {n} safras ({de} a {ate}).', { fonte: clima.fonte, n: clima.safras.length, de: clima.safras[0], ate: clima.safras.at(-1) })
                 : t('Chuva e temperatura: {fonte}, média de {n} safras.', { fonte: clima.fonte, n: clima.safras.length })
               : t('Clima indisponível. Os dados de risco recebidos são exibidos sem estimativa adicional.')}</p>
+            {/* Todos os avisos do servidor, no texto original (inglês): premissas do método, pontos de reserva, MOCK */}
+            {conj.avisos.length > 0 && <>
+              <h3>{t('Avisos da API')}</h3>
+              <ul className="insp-avisos">{conj.avisos.map((a, i) => <li key={i} lang="en">{a}</li>)}</ul>
+              <p className="insp-caption">{t('Texto original do servidor, em inglês.')}</p>
+            </>}
             {clima?.aviso_resolucao && <p>{clima.aviso_resolucao}</p>}
             <p>{t('Requisitos das culturas: catálogo EcoCrop, quando disponível. Proteção do solo e atendimento à demanda de água por fase: API. Pragas, produção e preços são ilustrativos. Receita bruta ilustrativa não representa lucro: os custos não foram considerados.')}</p>
             <p>{t('Use estas informações para comparar opções e validar o planejamento com seu agrônomo.')}</p>

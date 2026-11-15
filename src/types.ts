@@ -323,6 +323,8 @@ export type PlantingSweep = {
 export type RotationSimulationResponse = {
   agricultural_year: number
   soil_type: SoilType
+  /** Solo usado na simulação (textura informada ou estimada pelo local); a API manda desde a publicação do /simulate. */
+  soil?: SoilInfo
   priorities: Prioridades
   rotation: CustomRotation
   first_planting_sweep: PlantingSweep | null

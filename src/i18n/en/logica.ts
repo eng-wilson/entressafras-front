@@ -176,4 +176,8 @@ export const EN_LOGICA: Record<string, string> = {
   // Solo (solo.ts; os textos de TEXTURAS e CAMPOS_LAUDO estão em onboarding.ts)
   'Padrão da região': 'Regional default',
   '{textura} (laudo)': '{textura} (soil test)',
+  // avisosApi.ts: solo ou clima que não são do talhão
+  'Solo estimado de um ponto a {km} km do talhão. Informe a textura se não for parecida.': 'Soil estimated from a point {km} km from the field. Enter the texture if it is not similar.',
+  'Clima de outra região, a {km} km do talhão: os riscos descrevem aquela região.': 'Climate from another region, {km} km from the field: the risks describe that region.',
+  'Solo do local indisponível: a API assumiu textura média. Informe a textura do solo.': 'Local soil unavailable: the API assumed medium texture. Enter the soil texture.',
 }

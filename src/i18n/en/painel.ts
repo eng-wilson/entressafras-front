@@ -342,4 +342,7 @@ export const EN_PAINEL: Record<string, string> = {
   'Ainda não entra na ordem das rotações.': 'It does not affect the rotation order yet.',
   'Entra na ordem das rotações: está ligada em "O que importa".': 'It affects the rotation order: it is turned on in "What matters".',
   'Não entra na ordem agora: está desligada em "O que importa".': 'It does not affect the order now: it is turned off in "What matters".',
+  // Inspector: avisos da API na página de origem dos dados
+  'Avisos da API': 'API notices',
+  'Texto original do servidor, em inglês.': 'Original server text, in English.',
 }

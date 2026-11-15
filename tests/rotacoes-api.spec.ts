@@ -101,3 +101,20 @@ test('comparação: mesmas linhas do calendário, lucro da API no card, consumo 
   await memoria.getByLabel('Campos da API').uncheck()
   await expect(memoria).not.toContainText('organic_carbon_g_per_kg')
 })
+
+test('solo de um ponto distante: alerta curto no painel e todos os avisos da API na origem dos dados', async ({ page }) => {
+  await comTalhaoSalvo(page)
+  await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ json: CLIMA_T07 }))
+  const aviso = 'SoilGrids did not answer for this location (no answer within 25 s); soil from the nearest cached point (1694.6 km away). Send soil_type if it does not describe the field.'
+  await page.route(/\/api\/rotations\/recommendations/, r => {
+    const resp = structuredClone(ROTACOES_FIXTURE)
+    resp.warnings = [...resp.warnings, aviso]
+    return r.fulfill({ json: resp })
+  })
+  await page.goto('/')
+  const insp = page.getByRole('complementary', { name: 'Detalhe da rotação selecionada' })
+  await expect(insp.getByRole('note')).toHaveText('Solo estimado de um ponto a 1.695 km do talhão. Informe a textura se não for parecida.')
+  await insp.locator('[data-inspector-open="sources"]').click()
+  await expect(insp.getByRole('heading', { name: 'Avisos da API' })).toBeVisible()
+  await expect(insp.locator('.insp-avisos')).toContainText('1694.6 km away')
+})
