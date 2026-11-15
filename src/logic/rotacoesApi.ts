@@ -62,7 +62,6 @@ function safra(c: RotationCrop, n: 0 | 1, ano: number): SafraDef {
   return {
     nome: perfil ? (n === 1 && perfil.nome2 ? perfil.nome2 : perfil.nome) : nomeSem,
     ref: perfil?.id ?? catalogo ?? `eco:${c.crop.eco_port_code}`,
-    zarc: perfil ? (n === 1 && perfil.zarc2 !== undefined ? perfil.zarc2 : perfil.zarc) : null,
     de: decendioDaData(c.planting_date, ano),
     ate: decendioDaData(c.harvest_date, ano),
     ...(perfil?.cobertura ? { cobertura: true } : {}),

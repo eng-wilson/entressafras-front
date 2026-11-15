@@ -466,7 +466,7 @@ export const ROTACOES_FIXTURE: RotationRecommendations = {
               "max_height_m": 2
             },
             "risk": {
-              "risk_percentage": 30,
+              "risk_percentage": 45,
               "estimated_yield_loss_pct": 14.5,
               "loss_threshold_pct": 20,
               "critical_stage": "mid_season",
@@ -515,7 +515,7 @@ export const ROTACOES_FIXTURE: RotationRecommendations = {
       },
       "scores": {
         "productivity": 85.5,
-        "water_security": 70,
+        "water_security": 55,
         "soil_protection": 69.78,
         "overall": 75.09,
         "aggregation": "worst_crop"

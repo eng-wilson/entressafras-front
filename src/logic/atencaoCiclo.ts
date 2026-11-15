@@ -5,7 +5,7 @@
 // diária da simulação local (clima sintético); ela saiu destes indicadores e segue só no desenho da cena.
 // A API não entrega série diária nem por decêndio: dentro de uma fase, o valor é o mesmo em todos os decêndios.
 import type { SafraDef } from '../data/mock'
-import { NOME_FASE } from '../data/zarc'
+import { NOME_FASE } from '../data/fases'
 import type { Fase, ResRotacao } from './resiliencia'
 import { janelaLabel } from './periodo'
 import { t } from '../i18n'
@@ -37,7 +37,7 @@ export type PanoramaCiclo = {
   provisorio: boolean
 }
 
-/** Limiares de apresentação (os mesmos do widget), não níveis oficiais de manejo nem do ZARC. */
+/** Limiares de apresentação (os mesmos do widget), não níveis oficiais de manejo. */
 export const estadoAgua = (v: number | null): QuadroAgua['estado'] =>
   v == null ? 'none' : v < 0.45 ? 'risk' : v < 0.55 ? 'warn' : 'good'
 

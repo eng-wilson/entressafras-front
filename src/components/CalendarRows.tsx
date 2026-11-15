@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { rankRotations } from '../logic/rank'
-import { classeAnos, rotationStatus } from '../logic/status'
+import { classeSeguranca, rotationStatus } from '../logic/status'
 import type { Resiliencia } from '../logic/resiliencia'
 import { textoCritico, type Diagnostico, type PeriodoCritico } from '../logic/diagnostico'
 import { useConjunto } from '../state/conjunto'
@@ -144,7 +144,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
             <div className="tl">
               {rot.barras.map((bar, bi) => {
                 const sf = safras?.[bi]
-                const cls = sf?.anos != null ? classeAnos(sf.anos) : 'none'
+                const cls = sf?.seguranca != null ? classeSeguranca(sf.seguranca) : 'none'
                 const left = `${(bar.s / 12 * 100).toFixed(2)}%`
                 const width = `calc(${((bar.e - bar.s) / 12 * 100).toFixed(2)}% - 2px)`
                 const def = rot.safras[bi]

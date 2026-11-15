@@ -3,7 +3,7 @@ import { aptidao, faixaDaNota, NOME_EIXO, safraLimitante, type Eixo } from '../l
 import { BarraPrioridade, ILUSTRATIVO, leituraPrioridade } from './BarraPrioridade'
 import { porQueRanking } from '../logic/porQueRanking'
 import type { Resiliencia, ResSafra } from '../logic/resiliencia'
-import { classeAnos } from '../logic/status'
+import { classeSeguranca } from '../logic/status'
 import type { ClimaDecendios } from '../types'
 import { LEN, MONTHS_SHORT } from '../data/mock'
 import { useConjunto } from '../state/conjunto'
@@ -11,7 +11,7 @@ import { decendioDoMes, mesDe } from '../logic/periodo'
 import type { Diagnostico } from '../logic/diagnostico'
 import type { MomentoAtencao } from '../logic/atencaoCiclo'
 import { periodoMomento } from '../logic/atencaoCiclo'
-import { idioma, ordinal, t } from '../i18n'
+import { idioma, ordinal, pctFmt, t } from '../i18n'
 import { AtencaoCiclo, type AtencaoCicloProps } from './AtencaoCiclo'
 import './inspector.css'
 
@@ -35,8 +35,8 @@ function Icon({ name }: { name: string }) {
   return <svg className="ic" aria-hidden="true"><use href={`/canvas-icons.svg#${name}`} /></svg>
 }
 function Selo({ safra, compact = false }: { safra: ResSafra | undefined; compact?: boolean }) {
-  if (safra?.anos == null) return <span className="insp-status none">{t('Sem dado')}</span>
-  const cls = classeAnos(safra.anos)
+  if (safra?.seguranca == null) return <span className="insp-status none">{t('Sem dado')}</span>
+  const cls = classeSeguranca(safra.seguranca)
   return <span className={`insp-status ${cls}`}>{!compact && <Icon name={SELO[cls].icon} />}{t(SELO[cls].rotulo)}</span>
 }
 function Row({ icon, label, detail, onClick, origin, tone = 'neutral' }: { icon: string; label: string; detail?: string; onClick: () => void; origin?: string; tone?: 'neutral' | 'good' | 'warn' }) {
@@ -67,8 +67,8 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   const def = conj.rotacoes[rotIdx]
   const rot = res?.rotacoes[rotIdx] ?? null
   const lim = rot ? safraLimitante(rot) : null
-  const incompleto = !rot || rot.anos == null
-  const cls = !incompleto && lim?.anos != null ? classeAnos(lim.anos) : 'none'
+  const incompleto = !rot || rot.seguranca == null
+  const cls = !incompleto && lim?.seguranca != null ? classeSeguranca(lim.seguranca) : 'none'
   const fase = diag?.decisivo ?? null
   const culturaSelecionada = def.safras.findIndex(s => atencao.idx >= s.de && atencao.idx <= s.ate)
   const provisorio = rot?.safras.some(s => s.risco?.metodo === 'MOCK') ?? false
@@ -134,7 +134,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           <div className="insp-group insp-params">
             {PARAMETROS.map(({ k, api }) => {
               const nota = notas[k]
-              const f = faixaDaNota(k, nota, rot)
+              const f = faixaDaNota(nota)
               return (
                 <button key={k} type="button" className={`insp-param bp-linha${api != null && conj.prioridades?.[api] === 1 ? ' on' : ''}`}
                   data-inspector-open={`param-${k}`} aria-label={`${leituraPrioridade(k, nota, f)}. ${t('Ver o que significa')}`}
@@ -152,7 +152,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           <div className="insp-group insp-culture-list">
             {def.safras.map((d, n) => {
               const sf = rot?.safras[n]
-              const estado = sf?.anos != null ? classeAnos(sf.anos) : 'none'
+              const estado = sf?.seguranca != null ? classeSeguranca(sf.seguranca) : 'none'
               const nome = t(d.nome)
               const vars = { ord: ordinal(n + 1), nome, plantio: decendio(d.de), fim: decendio(d.ate) }
               return <button key={`${d.ref}-${n}`} type="button" className={`insp-culture-row${culturaSelecionada === n ? ' selected' : ''}`} aria-pressed={culturaSelecionada === n}
@@ -170,7 +170,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             {conj.rotacoes.length > 1 && <Row icon="i-layers" label={t('Comparar alternativas')} onClick={onComparar} />}
           </div>
         </section>
-        <AtencaoCiclo {...atencao} anosApi={rot?.anos ?? null} onNavegar={onNavegarPeriodo}
+        <AtencaoCiclo {...atencao} onNavegar={onNavegarPeriodo}
           onAbrirMomento={m => abrir('moment', `momento-${m.safra}-${m.de}`, m)} onAbrirMetodo={() => abrir('method', 'attention-method')} />
         <section className="insp-section" aria-label={t('Limitações e cuidados')}>
           <h3>{t('Limitações e cuidados')}</h3>
@@ -206,7 +206,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             const ligada = api != null && conj.prioridades?.[api] === 1
             return <>
               <div className="insp-group insp-param-detalhe"><div className={`insp-param bp-linha${ligada ? ' on' : ''}`}>
-                <BarraPrioridade k={k} nota={notas[k]} f={faixaDaNota(k, notas[k], rot)} />
+                <BarraPrioridade k={k} nota={notas[k]} f={faixaDaNota(notas[k])} />
               </div></div>
               <p>{t(EXPLICACAO[k])}</p>
               <p className="insp-caption">{api == null ? t('Ainda não entra na ordem das rotações.') : ligada ? t('Entra na ordem das rotações: está ligada em "O que importa".') : t('Não entra na ordem agora: está desligada em "O que importa".')}</p>
@@ -218,7 +218,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           {page === 'pests' && <><p className="insp-caption">{t(def.ct.pest)} · {t('ilustrativo')}</p><p>{t(def.ct.pestWhy)}</p><h3>{t('O que avaliar')}</h3><p>{t('Valide quais pragas ocorrem no talhão antes de definir o manejo. Este exemplo não substitui o monitoramento.')}</p></>}
           {page === 'risk' && <>
             <p>{t('O percentual indica a frequência de safras históricas com perda por falta de água acima de um limiar. Não é o percentual de produtividade que será perdido.')}</p>
-            {rot?.safras.map((s, n) => <p key={`${s.ref}-${n}`}><strong>{t(s.nome)}:</strong> {s.risco ? `${t('{pct}% das {anos} safras da referência com perda acima de {limiar}%.', { pct: s.risco.pct, anos: s.risco.anosValidos, limiar: s.risco.limiar })}${s.risco.metodo === 'MOCK' ? ` ${t('Valor de teste, não calculado para este talhão.')}` : ''}` : t('risco não informado; a tela não estima um valor no lugar.')}</p>)}
+            {rot?.safras.map((s, n) => <p key={`${s.ref}-${n}`}><strong>{t(s.nome)}:</strong> {s.risco ? `${t('{pct}% das {anos} safras da referência com perda acima de {limiar}%.', { pct: pctFmt(s.risco.pct), anos: s.risco.anosValidos, limiar: s.risco.limiar })}${s.risco.metodo === 'MOCK' ? ` ${t('Valor de teste, não calculado para este talhão.')}` : ''}` : t('risco não informado; a tela não estima um valor no lugar.')}</p>)}
             <p>{t('A faixa da rotação acompanha a safra mais arriscada, na régua de resiliência exibida. Uma safra sem dado impede uma avaliação completa.')}</p>
             <p>{t('O indicador cobre falta de água, não pragas, geada ou outros riscos.')}</p>
             <p>{rot?.safras.some(s => s.calc.fonteFases === 'local')

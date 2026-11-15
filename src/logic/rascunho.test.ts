@@ -193,8 +193,8 @@ describe('faixa de decêndios no calendário (mesma régua da barra)', () => {
   it('2ª cultura: cor pelo risco dela; data regional é só marca', () => {
     const f = faixaDoSweep(SIMULACAO_FIXTURE, 1)!
     expect(f.pontos[17]).toMatchObject({ cls: 'good', regional: true })
-    expect(f.pontos[22]).toMatchObject({ cls: 'warn', regional: true }) // 33% de risco, dentro do calendário
-    expect(f.pontos[23]).toMatchObject({ cls: 'risk', regional: false })
+    expect(f.pontos[22]).toMatchObject({ cls: 'warn', regional: true }) // 33% de risco (segurança 67), dentro do calendário
+    expect(f.pontos[23]).toMatchObject({ cls: 'warn', regional: false })
     expect(f.melhor).toBe(SIMULACAO_FIXTURE.second_planting_sweep!.best_decendio_idx)
   })
   it('1ª cultura: a 2ª fica parada; vale o risco da própria 1ª', () => {

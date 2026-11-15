@@ -47,7 +47,7 @@ export const EN_DADOS: Record<string, string> = {
   '@/ha': '@/ha',
   't/ha MS': 't/ha DM',
 
-  // Fases do ZARC (data/zarc.ts, NOME_FASE)
+  // Fases do ciclo (data/fases.ts, NOME_FASE)
   'Estabelecimento': 'Establishment',
   'Crescimento vegetativo': 'Vegetative growth',
   'Floração e enchimento de grãos': 'Flowering and grain filling',

@@ -6,7 +6,7 @@ import './atencao-ciclo.css'
 export type AtencaoCicloProps = {
   panorama: PanoramaCiclo | null
   estado: 'carregando' | 'pronto' | 'erro' | 'sem-clima'
-  idx: number; anosApi: number | null
+  idx: number
   onNavegar: (idx: number) => void
   onAbrirMomento: (momento: MomentoAtencao) => void
   onAbrirMetodo: () => void

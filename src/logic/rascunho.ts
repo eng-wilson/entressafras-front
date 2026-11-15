@@ -5,8 +5,8 @@
 import { PERFIS } from '../data/perfis'
 import { NOMES_PT } from '../data/nomesCulturas'
 import type { CropSummary, CustomCropInput, RotationSimulationResponse, SweepPoint } from '../types'
-import { classeAnos } from './status'
-import { anosDoRisco } from './resiliencia'
+import { classeSeguranca } from './status'
+import { segurancaDoRisco } from './resiliencia'
 import { decendioDaData } from './rotacoesApi'
 import { mesCurtoDe } from './periodo'
 import { ordinal, t } from '../i18n'
@@ -341,9 +341,9 @@ function ajustarCiclo(r: Rascunho, i: number, ano: number): Rascunho | null {
 export type Classe = 'good' | 'warn' | 'risk' | 'none'
 export const ROTULO_CLASSE: Record<Classe, string> = { good: 'Favorável', warn: 'Arriscado', risk: 'Desfavorável', none: 'Sem dado' }
 
-/** Mesma régua da tela principal: anos bons em 10 pelo risco hídrico da API; sem risco, sem dado. */
+/** Mesma régua da tela principal: segurança hídrica (100 − risco da API); sem risco, sem dado. */
 export const classeDoRisco = (pct: number | null | undefined): Classe =>
-  pct == null ? 'none' : classeAnos(anosDoRisco(pct))
+  pct == null ? 'none' : classeSeguranca(segurancaDoRisco(pct))
 
 const ORDEM: Classe[] = ['risk', 'warn', 'good']
 /** Pior classe entre as culturas com dado (a que não tem dado não entra); índice da cultura citada. */

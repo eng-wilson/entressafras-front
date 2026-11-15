@@ -4,7 +4,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './memoria.css'
-import { NOME_FASE } from '../data/zarc'
+import { NOME_FASE } from '../data/fases'
 import { janelaLabel } from '../logic/periodo'
 import { useConjunto } from '../state/conjunto'
 import type { ResSafra } from '../logic/resiliencia'

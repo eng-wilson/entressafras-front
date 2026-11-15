@@ -41,13 +41,12 @@ describe('conjuntoDaApi', () => {
     expect(conj.avisos.some(a => a.startsWith('MOCK'))).toBe(true)
   })
 
-  it('janelas, critério do ZARC e Kc do catálogo', () => {
+  it('janelas e Kc do catálogo', () => {
     const [soja, milho] = conj.rotacoes[2].safras
-    expect(soja).toMatchObject({ ref: 'soja', zarc: 'soja', de: 4, ate: 12, kc: [0.4, 1.15, 0.5] })
-    expect(milho).toMatchObject({ nome: 'Milho safrinha', ref: 'milho', zarc: 'milho2', de: 13, ate: 25 })
-    expect(conj.rotacoes[0].safras[1]).toMatchObject({ ref: 'milheto', zarc: 'coberturaMilheto', cobertura: true })
-    // Algodão: sem portaria copiada no front, sem critério (nada inventado)
-    expect(conj.rotacoes[3].safras[1]).toMatchObject({ ref: 'algodao', zarc: null, ate: 32 })
+    expect(soja).toMatchObject({ ref: 'soja', de: 4, ate: 12, kc: [0.4, 1.15, 0.5] })
+    expect(milho).toMatchObject({ nome: 'Milho safrinha', ref: 'milho', de: 13, ate: 25 })
+    expect(conj.rotacoes[0].safras[1]).toMatchObject({ ref: 'milheto', cobertura: true })
+    expect(conj.rotacoes[3].safras[1]).toMatchObject({ ref: 'algodao', ate: 32 })
   })
 
   it('barras do calendário pelas datas, com pousio até agosto', () => {
@@ -69,7 +68,7 @@ describe('conjuntoDaApi', () => {
     const c = conjuntoDaApi(r)
     expect(c.rotacoes).toHaveLength(4)
     // Fora do catálogo local: nome científico (os nomes comuns do EcoCrop vêm em inglês)
-    expect(c.rotacoes[1].safras[1]).toMatchObject({ nome: 'Eragrostis tef', ref: 'eco:99999', zarc: null })
+    expect(c.rotacoes[1].safras[1]).toMatchObject({ nome: 'Eragrostis tef', ref: 'eco:99999' })
     expect(c.rotacoes[1].safras[1].kc).toBeUndefined()
     expect(c.rotacoes[1].ct.y2).toBe('-')
   })

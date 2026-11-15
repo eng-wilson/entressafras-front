@@ -2,7 +2,7 @@
 
 Revisão de 14/11/2026. Este documento descreve como a tela mostra **onde, no ciclo, está o risco de cada rotação**, ou seja, por que ela recebeu o selo "Clima favorável", "arriscado" ou "desfavorável". É para quem mantém o backend.
 
-**Regra do projeto:** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. O período crítico vem da API (`risk.critical_stage` em `POST /api/rotations/recommendations`). O diagnóstico antigo, que lia o balanço hídrico ZARC feito no front, foi removido junto com esse balanço.
+**Regra do projeto:** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. O período crítico vem da API (`risk.critical_stage` em `POST /api/rotations/recommendations`). O diagnóstico antigo, que lia o balanço hídrico feito no front, foi removido junto com esse balanço.
 
 ## O que a tela mostra
 
@@ -32,7 +32,7 @@ Código: [`src/logic/diagnostico.ts`](../src/logic/diagnostico.ts), com testes e
 Uma safra tem período crítico quando:
 
 1. a API trouxe o risco e a fase crítica (`critical_stage` não nulo);
-2. a safra **não é favorável**: risco acima de 20% (régua do ZARC; 20% ou menos = favorável).
+2. a safra **não é favorável**: segurança hídrica (100 − risco) abaixo de 70, ou seja, risco acima de 30% (régua única do app).
 
 O período é a fase apontada pela API, posicionada no calendário pelos estágios FAO-56 da cultura (estágios inicial, desenvolvimento, meio e fim = fases I a IV).
 
@@ -46,7 +46,7 @@ O período é a fase apontada pela API, posicionada no calendário pelos estági
 | `fase`, `nomeFase` | Fase (0 = I … 3 = IV), de `critical_stage` |
 | `de`, `ate`, `rotulo` | Primeiro e último decêndio da fase e o texto "11 mar a 20 abr" |
 | `pct` | Risco hídrico da API, % |
-| `falhas`, `cls` | O mesmo risco na escala de 10 anos e o nível (`good` / `warn` / `risk`) |
+| `cls` | Nível pela segurança hídrica (`good` / `warn` / `risk`) |
 | `isna` | ISNA médio da fase, da API |
 | `deficitMedio`, `deficitSeco` | Consumo da cultura menos a chuva na fase, mm (ano médio e ano seco); null sem clima. Só leitura |
 
@@ -56,7 +56,7 @@ O período é a fase apontada pela API, posicionada no calendário pelos estági
 |---|---|---|
 | Soja → milheto | 20% | Nenhum (favorável) |
 | Soja → sorgo | 20% | Nenhum (favorável) |
-| Soja → milho safrinha | 30% | Milho safrinha, floração e enchimento (fase III) |
+| Soja → milho safrinha | 45% | Milho safrinha, floração e enchimento (fase III) |
 | Soja → algodão | 40% | Algodão, floração e enchimento (fase III) |
 
 A soja tem 10% em todas e não é marcada.

@@ -4,8 +4,8 @@ import './quadmap.css'
 import type { RotacaoDef } from '../data/mock'
 import { useConjunto } from '../state/conjunto'
 import {
-  aptidao, COR_ROT, detalheSafra, faixaAnos, faixaDaNota, motivo, motivoDetalhe, NOME_EIXO as NOME, nomeRot,
-  PISO, resultadoSafra, textoNivel, reais, receitaSafra, type Eixo, type Faixa,
+  aptidao, COR_ROT, detalheSafra, faixa, faixaDaNota, motivo, motivoDetalhe, NOME_EIXO as NOME, nomeRot,
+  PISO, resultadoSafra, reais, receitaSafra, type Eixo, type Faixa,
 } from '../logic/aptidao'
 import { BarraPrioridade } from './BarraPrioridade'
 import type { Resiliencia, ResRotacao, ResSafra } from '../logic/resiliencia'
@@ -34,7 +34,6 @@ const ponto = (k: Eixo, v: number): [number, number] => {
 }
 
 const SEM_DADO = { nivel: 0, rotulo: 'Sem dado', cls: 'nd' } as const
-/** Resiliência usa os níveis de risco do ZARC; os demais eixos, a nota 0–100. */
 
 /** Rótulo de origem: a rotação atual do talhão, uma salva pelo agricultor ou a posição na recomendação da API. */
 const origem = (rots: RotacaoDef[], i: number) =>
@@ -70,15 +69,15 @@ function Safra({ r, n, s }: { r: RotacaoDef; n: 0 | 1; s: ResSafra }) {
       <ul className="qm-ev">
         <li title={detalheSafra(s)}>
           <span className="qm-en">{t(NOME.risco)}</span>
-          {s.anos == null ? (
+          {s.seguranca == null ? (
             <>
               <Nota f={SEM_DADO} />
-              <span className="qm-why">{t('sem critério do ZARC para esta cultura')}</span>
+              <span className="qm-why">{t('a API não trouxe o risco desta cultura')}</span>
             </>
           ) : (
             <>
-              <Nota f={faixaAnos(s.anos)} />
-              <span className="qm-why">{resultadoSafra(s)} · {textoNivel(s.anos)}</span>
+              <Nota f={faixa(s.seguranca)} />
+              <span className="qm-why">{resultadoSafra(s)}</span>
             </>
           )}
         </li>
@@ -143,7 +142,7 @@ export function QuadMap({ sel, pr, res }: Props) {
     return { i, rot, a: aptidao(i, rot, rots) }
   })
   const resumo = dados
-    .map(d => `${d.i + 1}. ${nomeRot(rots[d.i])}: ${ORDEM.map(k => `${t(NOME[k])} ${t(faixaDaNota(k, d.a[k], d.rot)?.rotulo ?? 'Sem dado').toLowerCase()}`).join(', ')}`)
+    .map(d => `${d.i + 1}. ${nomeRot(rots[d.i])}: ${ORDEM.map(k => `${t(NOME[k])} ${t(faixaDaNota(d.a[k])?.rotulo ?? 'Sem dado').toLowerCase()}`).join(', ')}`)
     .join('; ')
   // A seleção fica nas linhas das rotações, abaixo: o botão leva o foco até elas.
   const escolher = () => {
@@ -253,7 +252,7 @@ export function QuadMap({ sel, pr, res }: Props) {
                         <Fragment key={k}>
                           {/* Mesma linha do painel direito (ícone, nome, barra, faixa), na escala do card */}
                           <li className={`bp-linha bp-compacto${pr[k] ? ' on' : ''}`} title={dica || undefined}>
-                            <BarraPrioridade k={k} nota={a[k]} f={faixaDaNota(k, a[k], rot)} />
+                            <BarraPrioridade k={k} nota={a[k]} f={faixaDaNota(a[k])} />
                           </li>
                           {/* Lucro estimado da API, dentro de Produtividade; só aparece quando o backend envia */}
                           {lucro != null && (

@@ -3,12 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './rascunho.css'
 import type { EditorRascunho } from '../../hooks/useRascunho'
-import { anosDoRisco } from '../../logic/resiliencia'
 import {
   datasCultura, diasSemCobertura, MAX_CULTURAS, posicaoRanking, ROTULO_CLASSE, tituloRascunho, traduzirCheck, type Aviso,
 } from '../../logic/rascunho'
 import { lerSimulacao } from './leitura'
-import { ordinal, t } from '../../i18n'
+import { ordinal, pctFmt, t } from '../../i18n'
 
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 const ESTAGIO: Record<string, string> = { initial: 'no início', development: 'no desenvolvimento', mid_season: 'na floração e enchimento', late_season: 'no fim do ciclo' }
@@ -61,7 +60,7 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
     ? `${rot.crops.map((c, i) => {
       const classe = t(ROTULO_CLASSE[leitura.classes[i]]).toLowerCase()
       return c.crop.risk.risk_percentage != null
-        ? t('{nome}: {classe}, risco em {n} de 10 anos', { nome: nomes[i], classe, n: 10 - anosDoRisco(c.crop.risk.risk_percentage) })
+        ? t('{nome}: {classe}, risco hídrico de {pct}%', { nome: nomes[i], classe, pct: pctFmt(c.crop.risk.risk_percentage) })
         : t('{nome}: {classe}', { nome: nomes[i], classe })
     }).join('. ')}. ${rot.would_be_recommended ? t('Ficaria em {ord}.', { ord: ordinal(rot.rank, 'm') }) : t('Fora das 4 melhores.')}`
     : ''
@@ -104,8 +103,8 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
                       <b>{nomes[i]}</b>
                       <span>{datasCultura(c, ano)}</span>
                       {risco != null && <span>{estagio && ESTAGIO[estagio]
-                        ? t('Perda crítica em {n} de 10 anos, mais {estagio}', { n: 10 - anosDoRisco(risco), estagio: t(ESTAGIO[estagio]) })
-                        : t('Perda crítica em {n} de 10 anos', { n: 10 - anosDoRisco(risco) })}</span>}
+                        ? t('Perda crítica em {pct}% das safras, mais {estagio}', { pct: pctFmt(risco), estagio: t(ESTAGIO[estagio]) })
+                        : t('Perda crítica em {pct}% das safras', { pct: pctFmt(risco) })}</span>}
                     </span>
                     <span className={`ci-s ${cls}`}>{t(ROTULO_CLASSE[cls])}</span>
                   </button>
@@ -160,7 +159,7 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
       <p className="foot">
         {t('Arraste as pontas da barra para mudar plantio e colheita, ou o meio para mover a cultura sem mudar o ciclo.')}{' '}
         {t('Pelo teclado: Tab até a ponta, setas mudam um decêndio, Shift+setas movem a cultura.')}{' '}
-        {t('Simulação da API Entressafras (balanço hídrico FAO-56 simplificado, não validado com o ZARC).')}
+        {t('Simulação da API Entressafras (balanço hídrico FAO-56 simplificado, ainda não validado em campo).')}
       </p>
     </aside>
   )

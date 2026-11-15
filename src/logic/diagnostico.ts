@@ -3,14 +3,14 @@
 // Não calcula risco: usa o risco hídrico e a fase crítica (`critical_stage`) que a API entrega para cada cultura,
 // e as fases no calendário (estágios FAO-56 da API) que resiliencia.ts organizou.
 // Documentação: docs/PERIODOS_CRITICOS.md.
-import { NOME_FASE } from '../data/zarc'
+import { NOME_FASE } from '../data/fases'
 import { janelaLabel, mesCurtoDe, mesDe } from './periodo'
-import { t } from '../i18n'
+import { pctFmt, t } from '../i18n'
 import type { Fase, ResRotacao } from './resiliencia'
-import { classeAnos } from './status'
+import { classeSeguranca } from './status'
 
 /**
- * Fase crítica apontada pela API numa safra que não é favorável (risco acima de 20%, a régua do ZARC).
+ * Fase crítica apontada pela API numa safra que não é favorável (segurança hídrica abaixo de 70, a régua do app).
  * Numa safra favorável, a fase crítica da API não vira período crítico na tela.
  */
 export type PeriodoCritico = {
@@ -26,9 +26,7 @@ export type PeriodoCritico = {
   rotulo: string
   /** Risco hídrico da API, %: safras históricas com perda crítica. */
   pct: number
-  /** O mesmo risco na escala de 10 anos (anos com perda crítica). */
-  falhas: number
-  /** Nível da safra pelo risco da API, na régua do ZARC. */
+  /** Nível da safra pela segurança hídrica (100 − risco da API), na régua única do app. */
   cls: 'good' | 'warn' | 'risk'
   /** ISNA médio da fase, da API (0–1). */
   isna: number | null
@@ -55,7 +53,7 @@ export function diagnostico(rot: ResRotacao): Diagnostico {
   rot.safras.forEach((s, si) => {
     // Só o que a API diz: safra com risco não favorável e com a fase crítica informada.
     const r = s.risco
-    if (s.anos == null || !r || classeAnos(s.anos) === 'good' || r.fase == null || r.pct <= 0) return
+    if (s.seguranca == null || !r || classeSeguranca(s.seguranca) === 'good' || r.fase == null || r.pct <= 0) return
     const f = r.fase
     const decs = s.calc.decendios.filter(d => d.fase === f)
     if (!decs.length) return
@@ -67,16 +65,16 @@ export function diagnostico(rot: ResRotacao): Diagnostico {
     const consumo = soma('consumo'), media = soma('chuvaMedia'), seco = soma('chuvaP20')
     criticos.push({
       safra: si, nome: s.nome, fase: f, nomeFase: NOME_FASE[f], de, ate, rotulo: janelaLabel(de, ate),
-      falhas: 10 - s.anos, cls: classeAnos(s.anos), pct: r.pct, isna: r.isna[f],
+      cls: classeSeguranca(s.seguranca), pct: r.pct, isna: r.isna[f],
       deficitMedio: consumo != null && media != null ? Math.round(consumo - media) : null,
       deficitSeco: consumo != null && seco != null ? Math.round(consumo - seco) : null,
     })
   })
   criticos.sort((a, b) => a.de - b.de)
-  const anos = (p: PeriodoCritico) => rot.safras[p.safra].anos ?? 10
+  const seguranca = (p: PeriodoCritico) => rot.safras[p.safra].seguranca ?? 100
   const decisivo = [...criticos].sort((a, b) =>
-    anos(a) - anos(b) || (b.deficitSeco ?? 0) - (a.deficitSeco ?? 0) || a.de - b.de)[0] ?? null
-  const limitante = rot.safras.reduce((m, s, i) => ((s.anos ?? -1) < (rot.safras[m].anos ?? -1) ? i : m), 0)
+    seguranca(a) - seguranca(b) || (b.deficitSeco ?? 0) - (a.deficitSeco ?? 0) || a.de - b.de)[0] ?? null
+  const limitante = rot.safras.reduce((m, s, i) => ((s.seguranca ?? -1) < (rot.safras[m].seguranca ?? -1) ? i : m), 0)
   return { limitante, criticos, decisivo }
 }
 
@@ -86,7 +84,7 @@ export const periodoDecisivo = (d: Diagnostico | null): number | null => d?.deci
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /** Frequência do problema, pela API: "risco hídrico de 30% (API), maior déficit de água nesta fase". */
-const frequencia = (p: PeriodoCritico) => t('risco hídrico de {pct}% (API), maior déficit de água nesta fase', { pct: p.pct })
+const frequencia = (p: PeriodoCritico) => t('risco hídrico de {pct}% (API), maior déficit de água nesta fase', { pct: pctFmt(p.pct) })
 
 /** "Milho safrinha, floração e enchimento de grãos (21 abr a 31 mai): risco hídrico de 30% (API), ..." */
 export const textoCritico = (p: PeriodoCritico): string =>
@@ -133,4 +131,4 @@ export const criticoEm = (d: Diagnostico | null, idx: number): PeriodoCritico | 
 
 /** Legenda do chip: o problema da fase e com que frequência faltou água nela. */
 export const legendaCritico = (p: PeriodoCritico): string =>
-  t('{problema} Risco hídrico de {pct}% (API), com o maior déficit de água nesta fase.', { problema: t(PROBLEMA_FASE[p.fase]), pct: p.pct })
+  t('{problema} Risco hídrico de {pct}% (API), com o maior déficit de água nesta fase.', { problema: t(PROBLEMA_FASE[p.fase]), pct: pctFmt(p.pct) })

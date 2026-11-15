@@ -45,6 +45,9 @@ export const locale = () => (atual === 'en' ? 'en-US' : 'pt-BR')
 /** Número formatado no idioma atual (vírgula decimal em pt, ponto em en). */
 export const numero = (v: number, opcoes: Intl.NumberFormatOptions = {}) => new Intl.NumberFormat(locale(), opcoes).format(v)
 
+/** Porcentagem da API no idioma da tela (até 1 casa): 13,3 / 13.3; o sinal % fica no texto. */
+export const pctFmt = (v: number) => numero(v, { maximumFractionDigits: 1 })
+
 /** Reais formatados no idioma atual: "R$ 1.235" / "R$1,235". */
 export const reaisFmt = (v: number, casas = 0) =>
   new Intl.NumberFormat(locale(), { style: 'currency', currency: 'BRL', maximumFractionDigits: casas, minimumFractionDigits: casas }).format(v)

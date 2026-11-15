@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 import { TALHAO_T07, comTalhaoSalvo } from './fixtures/talhao'
 import { CLIMA_T07 } from './fixtures/clima'
 
-// Risco e fase crítica vêm só da API (fixture): milho safrinha 30% e algodão 40% são arriscados, na fase III.
+// Risco e fase crítica vêm só da API (fixture): milho safrinha 45% e algodão 40% são arriscados (segurança hídrica abaixo de 70), na fase III.
 test.beforeEach(async ({ page }) => {
   await comTalhaoSalvo(page, { ...TALHAO_T07, textura: 'arenoso' })
   await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ json: CLIMA_T07 }))

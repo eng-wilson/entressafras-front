@@ -36,7 +36,7 @@ export const DADOS = [
   { dado: 'Requisitos das culturas (EcoCrop)', fonte: 'cultura', front: 'Temperatura, catálogo "Dados das culturas"', emUso: true,
     servido: a => (a.cultura?.eco_port_code === SOJA ? 'real' : null), precisa: '—' },
   { dado: 'Kc por cultura', fonte: 'cultura', front: 'Consumo de água (Kc × ET0)', emUso: true,
-    servido: a => (a.cultura?.water_requirements?.crop_coefficient ? 'real' : null), precisa: 'Kc calibrado pelo ZARC, se existir' },
+    servido: a => (a.cultura?.water_requirements?.crop_coefficient ? 'real' : null), precisa: 'Kc calibrado por região, se existir' },
   { dado: 'Duração dos estágios por cultura', fonte: 'cultura', front: 'Fases no calendário, curva de Kc, período crítico e estágios do talhão', emUso: true,
     servido: a => (a.cultura?.water_requirements?.stage_length_days ? 'real' : null), precisa: 'Estágios calibrados para cultivares brasileiras' },
   { dado: 'Profundidade das raízes', fonte: 'cultura', front: 'Dados das culturas (exibição)', emUso: true,

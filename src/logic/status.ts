@@ -1,15 +1,18 @@
 import type { StatusResult } from '../types'
 import { motivoCurto, type PeriodoCritico } from './diagnostico'
-import { anosDoRisco } from './resiliencia'
-import { t } from '../i18n'
+import { segurancaDoRisco } from './resiliencia'
+import { pctFmt, t } from '../i18n'
 
 const ICONS = { good:'#i-okc', warn:'#i-alert', risk:'#i-xc' }
 /** Nível pelo risco, no idioma da tela: "Favorável", "Arriscado", "Desfavorável". */
 const nivel = (cls: 'good' | 'warn' | 'risk') =>
   cls === 'good' ? t('Favorável') : cls === 'warn' ? t('Arriscado') : t('Desfavorável')
 
-/** Níveis do ZARC: 8+ anos em 10 (risco 20%) = favorável, 6–7 (30–40%) = arriscado, até 5 (acima de 40%) = desfavorável. */
-export const classeAnos = (n: number): 'good' | 'warn' | 'risk' => (n >= 8 ? 'good' : n >= 6 ? 'warn' : 'risk')
+/**
+ * Régua única do app, a mesma das prioridades, sobre a segurança hídrica (100 − risco da API):
+ * 70+ = favorável, 40–69 = arriscado, abaixo de 40 = desfavorável.
+ */
+export const classeSeguranca = (v: number): 'good' | 'warn' | 'risk' => (v >= 70 ? 'good' : v >= 40 ? 'warn' : 'risk')
 
 /** Rótulo de um período crítico pelo nível dele: "Arriscado · seca na floração (abr–mai)". */
 export const rotuloCritico = (p: PeriodoCritico) => `${nivel(p.cls)} · ${motivoCurto(p)}`
@@ -30,8 +33,8 @@ export function rotationStatus(entries: [number | null, string][]): StatusResult
   const sem = entries.find(e => e[0] == null)
   if (sem) return statusSemCriterio(sem[1])
   const [pct, crop] = (entries as [number, string][]).slice().sort((a, b) => b[0] - a[0])[0]
-  const cls = classeAnos(anosDoRisco(pct))
-  const base = t('Risco hídrico de {pct}% ({cultura}), da API', { pct, cultura: t(crop) })
+  const cls = classeSeguranca(segurancaDoRisco(pct))
+  const base = t('Risco hídrico de {pct}% ({cultura}), da API', { pct: pctFmt(pct), cultura: t(crop) })
   const label = cls === 'good' ? t('Clima favorável') : cls === 'warn' ? t('Clima arriscado') : t('Clima desfavorável')
   return {
     cls, icon: ICONS[cls],

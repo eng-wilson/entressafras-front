@@ -2,24 +2,24 @@
 // portátil de /simulacao, e do decêndio simulado para a safra e o dia que o talhão mostra.
 // Puro: sem DOM. A cena em si fica em components/IsoField.tsx.
 import type { SafraDef } from '../data/mock'
-import type { ZarcId } from '../data/zarc'
 import type { Decendio, Ponto } from '../types'
 import type { Normais, RotacaoSim, SafraSim } from '../sim/api'
 import { CULTURAS, NORMAIS, radiacaoExtraterrestre } from '../sim/api.js'
 import { mesDe, decendioDoMes } from './periodo'
 
-/** Milho de segunda safra (portarias do ZARC de safrinha): produtividade de referência menor. */
-const SAFRINHA: (ZarcId | null)[] = ['milho2', 'milhoBraquiaria']
 /** Cultura sem modelo na simulação: desenha como gramínea genérica (o milho), como em logic/estagios.ts. */
 const CULTURA_RESERVA = 'milho'
 
-/** Uma safra do app na simulação: a cultura pelo id do catálogo; o consórcio entra como companheira. */
-function safraSim(s: SafraDef): Omit<SafraSim, 'plantio'> {
+/**
+ * Uma safra do app na simulação: a cultura pelo id do catálogo; o consórcio entra como companheira. Milho na
+ * 2ª safra (safrinha) tem produtividade de referência menor.
+ */
+function safraSim(s: SafraDef, n: number): Omit<SafraSim, 'plantio'> {
   const cultura = s.ref in CULTURAS ? s.ref : CULTURA_RESERVA
   return {
     cultura,
     ...(s.companheira && s.companheira in CULTURAS ? { companheira: s.companheira } : {}),
-    ...(cultura === 'milho' && SAFRINHA.includes(s.zarc) ? { potencial: 130 } : {}),
+    ...(cultura === 'milho' && n === 1 ? { potencial: 130 } : {}),
   }
 }
 
@@ -35,7 +35,7 @@ export function rotacaoSim(rot: number, safras: SafraDef[]): RotacaoSim {
   return {
     id: `rot${rot}`,
     nome: safras.map(s => s.nome).join(' → '),
-    safras: safras.map(s => ({ ...safraSim(s), nome: s.nome, plantio: plantioDoDecendio(s.de) })),
+    safras: safras.map((s, n) => ({ ...safraSim(s, n), nome: s.nome, plantio: plantioDoDecendio(s.de) })),
   }
 }
 

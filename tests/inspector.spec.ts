@@ -46,7 +46,7 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
   await expect(insp.getByRole('heading', { level: 2 })).toHaveText('Soja → milho safrinha')
 
   await insp.getByRole('button', { name: 'Como interpretar o risco' }).click()
-  await expect(insp).toContainText('30% das 10 safras da referência com perda acima de 20%')
+  await expect(insp).toContainText('45% das 10 safras da referência com perda acima de 20%')
   await expect(insp).toContainText('não é uma probabilidade de seca nessas datas')
 })
 

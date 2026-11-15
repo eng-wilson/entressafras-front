@@ -75,15 +75,13 @@ export const EN_LOGICA: Record<string, string> = {
   'Fraca': 'Weak',
 
   // Motivos e explicações (aptidao.ts)
-  'risco {n}% no ZARC': '{n}% risk in ZARC',
-  'acima do risco aceito pelo ZARC (40%)': 'above the risk accepted by ZARC (40%)',
   'sem risco da API': 'no risk from the API',
   'risco hídrico de {pct}% (API)': 'water risk of {pct}% (API)',
   'risco hídrico de {pct}% (API, provisório)': 'water risk of {pct}% (API, provisional)',
   'A API não trouxe o risco hídrico desta cultura; a tela não faz estimativa própria.': 'The API did not return the water risk for this crop; the screen makes no estimate of its own.',
   'Risco hídrico de {cultura} calculado pela API Entressafras: em {pct}% das {safras} safras históricas a perda por falta de água passou de {limiar}%.': 'Water risk for {cultura} calculated by the Entressafras API: in {pct}% of the {safras} historical seasons, the loss from lack of water exceeded {limiar}%.',
   'A perda média estimada por falta de água é de {perda}%.': 'The estimated average loss from lack of water is {perda}%.',
-  'Leitura pela régua do ZARC: {nivel}.': 'Read on the ZARC scale: {nivel}.',
+  'Segurança hídrica: {nota} de 100 ({faixa}).': 'Water security: {nota} out of 100 ({faixa}).',
   'Atenção: o servidor ainda marca este valor como MOCK (provisório, não calculado com o clima do talhão).': 'Attention: the server still marks this value as MOCK (provisional, not calculated with the field climate).',
   'aguardando as rotações': 'waiting for the rotations',
   'produção preservada de {p}% (perda por falta de água: {perda}%)': '{p}% of production preserved (loss from lack of water: {perda}%)',

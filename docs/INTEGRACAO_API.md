@@ -60,7 +60,7 @@ Legenda: **API** · **API (MOCK)**: marcado provisório pelo servidor até 15/11
 | Cena | Desenho do talhão | Front | Motor local (`simulacao/`); só visual, nenhum indicador lê a série dele |
 | Rotações | Quais rotações, datas, barras | **API** | `rotations[]`, `planting_date`, `harvest_date` |
 | Rotações | Ordem 1º a 4º | **API (MOCK)** | `rank` |
-| Rotações | Selo de clima, hachura do período crítico | **API (MOCK)** | `risk_percentage` (régua do ZARC), `critical_stage` |
+| Rotações | Selo de clima, hachura do período crítico | **API (MOCK)** | `risk_percentage` (régua única do app), `critical_stage` |
 | Rotações | Tag "Atual" | Cadastro | Safra mais recente do histórico |
 | Rotações | Tag "Mais pragas" | Mock | `src/data/perfis.ts` |
 | Comparação | Mapa: resiliência, produtividade, saúde do solo | **API (MOCK)** | `scores.water_security`, `productivity`, `soil_protection` |
@@ -75,7 +75,7 @@ Legenda: **API** · **API (MOCK)**: marcado provisório pelo servidor até 15/11
 | Memória de cálculo | Consumo por decêndio | Front/API | Kc × ET0 |
 | Dados das culturas | Tudo | **API** | EcoCrop e FAO-56 |
 
-Limiares de apresentação definidos no front (não são da API nem oficiais): régua do ZARC para o risco (até 20% favorável, 30–40% arriscado); 45% e 55% para o atendimento à demanda; Ky ≥ 1 para fase sensível.
+Limiares de apresentação definidos no front (não são da API nem oficiais): régua única do app para o risco, pela segurança hídrica 100 − risco (70+ favorável, 40–69 arriscado, abaixo de 40 desfavorável); 45% e 55% para o atendimento à demanda; Ky ≥ 1 para fase sensível.
 
 ## Pendências
 

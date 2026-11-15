@@ -1,13 +1,13 @@
 // Resiliência climática de cada safra: o risco hídrico que a API Entressafras calcula para a cultura
 // (POST /api/rotations/recommendations, campo `risk`). O front NÃO calcula risco: regra do projeto, quando um
-// endpoint resolve algo que a tela mostra, vale só o dado da API (o antigo balanço hídrico ZARC do front foi
+// endpoint resolve algo que a tela mostra, vale só o dado da API (o antigo balanço hídrico do front foi
 // removido). Aqui só se organiza o que veio: a nota da safra, as fases no calendário e o consumo de água.
 //
 // O consumo (Kc × ET0) continua no front porque a API não o entrega pronto; os dois fatores vêm da API
 // (Kc do catálogo, ET0 do clima por decêndio).
 import type { ClimaDecendios, CropCalendarInfo, Decendio, Textura } from '../types'
 import type { SafraDef } from '../data/mock'
-import { FASES, type CulturaRef } from '../data/zarc'
+import { FASES, type CulturaRef } from '../data/fases'
 import { diasDe, mesCurtoDe, mesDe } from './periodo'
 import { t } from '../i18n'
 
@@ -55,8 +55,8 @@ export type RiscoApi = {
   isnaCiclo: number | null
 }
 
-/** Risco da API na régua do ZARC (só a escala de leitura): 30% → 7 de 10 anos sem perda crítica. */
-export const anosDoRisco = (pct: number) => Math.min(10, Math.max(0, Math.round((100 - pct) / 10)))
+/** Segurança hídrica da safra, 0–100: 100 − risco hídrico da API (a mesma escala das outras prioridades). */
+export const segurancaDoRisco = (pct: number) => Math.min(100, Math.max(0, Math.round(100 - pct)))
 
 /** Um decêndio da janela da safra. Campos de clima null enquanto o clima não chega (nunca 0). */
 export type CalcDecendio = {
@@ -78,8 +78,8 @@ export type ResSafra = {
   cobertura: boolean
   de: number
   ate: number
-  /** Nota da safra pelo risco da API, na escala de 10 anos (anosDoRisco); null = a API não trouxe o risco. */
-  anos: number | null
+  /** Segurança hídrica da safra, 0–100 (segurancaDoRisco); null = a API não trouxe o risco. */
+  seguranca: number | null
   risco: RiscoApi | null
   /** Consumo de água da cultura no ciclo (Kc × ET0), mm; null sem clima ou sem Kc. */
   consumo: number | null
@@ -96,8 +96,8 @@ export type ResSafra = {
     calendario: CropCalendarInfo | null
   }
 }
-/** anos: o da safra mais arriscada (a API dá o risco por cultura); null se alguma safra não tem risco. */
-export type ResRotacao = { anos: number | null; safras: ResSafra[] }
+/** seguranca: a da safra mais arriscada (a API dá o risco por cultura); null se alguma safra não tem risco. */
+export type ResRotacao = { seguranca: number | null; safras: ResSafra[] }
 export type Resiliencia = {
   rotacoes: ResRotacao[]
   /** Período do clima histórico ('' sem clima). */
@@ -143,7 +143,7 @@ function safra(s: SafraDef, dec: Decendio[] | null): ResSafra {
   const risco = riscoApi(s)
   return {
     nome: s.nome, ref: s.ref, cobertura: !!s.cobertura, de: s.de, ate: s.ate,
-    anos: risco ? anosDoRisco(risco.pct) : null, risco,
+    seguranca: risco ? segurancaDoRisco(risco.pct) : null, risco,
     consumo: somaOuNulo(decendios.map(d => d.consumo)),
     chuva: somaOuNulo(decendios.map(d => d.chuvaMedia)),
     calc: { kc, fases, fonteFases: s.fases ? 'api' : 'local', decendios, calendario: s.calendario ?? null },
@@ -154,8 +154,8 @@ function safra(s: SafraDef, dec: Decendio[] | null): ResSafra {
 export function resiliencia(clima: ClimaDecendios | null, textura: Textura | null, rotacoesDef: SafraDef[][]): Resiliencia {
   const rotacoes: ResRotacao[] = rotacoesDef.map(defs => {
     const safras = defs.map(s => safra(s, clima?.decendios ?? null))
-    const anos = safras.some(s => s.anos == null) ? null : Math.min(...safras.map(s => s.anos as number))
-    return { anos, safras }
+    const seguranca = safras.some(s => s.seguranca == null) ? null : Math.min(...safras.map(s => s.seguranca as number))
+    return { seguranca, safras }
   })
   const h = clima?.safras ?? []
   return {

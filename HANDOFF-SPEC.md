@@ -17,7 +17,7 @@
 
 **Usuário:** produtor rural com pouca experiência técnica. Por isso: linguagem simples, status sempre com ícone e texto, números arredondados, nenhum jargão sem explicação.
 
-**Dados:** todos ilustrativos (mock), em `renderVals()` do arquivo de referência. Na versão real virão de ZARC/MAPA, NASA POWER, GPM, SMAP etc. A UI precisa mostrar "Sem dado" ou "-" quando faltar dado (padrão já usado na tabela).
+**Dados:** todos ilustrativos (mock), em `renderVals()` do arquivo de referência. Na versão real virão da API Entressafras, NASA POWER, GPM, SMAP etc. A UI precisa mostrar "Sem dado" ou "-" quando faltar dado (padrão já usado na tabela).
 
 ---
 
@@ -155,7 +155,7 @@ Cada componente reaproveita as classes de `canvas.css`. Não renomeie as classes
 | `MonthStrip` | `.months .mo .wx-wrap .wx .dec` | `idx`, `onPickMonth` | 12 botões (Set…Ago); ícone de clima pela chuva do mês; Set e Out com `.past` (opacidade reduzida); mês ativo `.hi` (anel azul + texto 700) |
 | `DecadeSlider` | `.selnum .scrub .track .fill .knob input[type=range]` | `idx 0–35`, `onChange`, `valueText` | `<input type=range>` nativo invisível sobre trilho/knob desenhados. Ver 5.1 |
 | `RotationRow` | `.row .rh .rk .nm .then .tag .pest .st.stw .tl .b` | `rotation`, `rank`, `status`, `isCurrent`, `isLast` | Linha atual tem `.sel` (fundo verde 10%), tag "Atual" e chip "Mais pragas" |
-| `StatusBadge` | `.st.stw.{good|warn|risk}` + `.ct-tip.ct-tip2.tip-r` | `level`, `n`, `crop` | Ícone + "Clima favorável/arriscado/desfavorável"; tooltip "Histórico {nível}" / "Água suficiente em N de 10 anos (cultura)" |
+| `StatusBadge` | `.st.stw.{good|warn|risk}` + `.ct-tip.ct-tip2.tip-r` | `level`, `n`, `crop` | Ícone + "Clima favorável/arriscado/desfavorável"; tooltip "Histórico {nível}" / "Risco hídrico de N% (cultura), da API" |
 | `CompareTable` | `.ctab .ct-h .ct-c .ct-rot .ct-wv .ct-wi .ct-pst .ct-tip` | `rows`, `order` | `role="table"`; grid `minmax(0,1.5fr) repeat(3,minmax(0,1fr))`, gap 24; 2 sublinhas por rotação (cultura 1 / "depois" cultura 2) |
 | `Inspector` | `.eyebrow h2 .verdict .why.dt .dt-i .why .wi .link .foot` | `rotation`, `rank` | Conteúdo fixo da rotação "Soja depois milho safrinha"; só o "Nº" muda com o ranking. "Ver todos os dados" **sem ação** |
 | `Icon` | `.ic` + `<use href="/canvas-icons.svg#id">` | `id`, `className` | Traço 2px, `currentColor`, 16×16 padrão |
@@ -257,7 +257,7 @@ Cada componente reaproveita as classes de `canvas.css`. Não renomeie as classes
 | Talhão iso | `role="img" aria-label="Talhão em 11 a 20 de dezembro: Soja · floração"` |
 | Segmentado | `role="group" aria-label="Modo de visualização"` + `aria-pressed` |
 | Slider | `aria-label` + `aria-valuetext` (5.1) |
-| Status | `tabindex="0"` + `aria-label="Clima arriscado. Água suficiente em 5 de 10 anos (milho), para estas culturas e datas."`; tooltip `role="tooltip"` |
+| Status | `tabindex="0"` + `aria-label="Clima arriscado. Risco hídrico de 45% (milho), da API, para estas culturas e datas."`; tooltip `role="tooltip"` |
 | Tabela | `role="table" aria-label="Comparação das rotações"`. **[proposta]** usar `<table>` semântica ou `role="row"/"cell"` (hoje só há `role="table"` em uma grid de divs) |
 | Inspector | `<aside aria-label="Detalhe da rotação selecionada">` |
 
