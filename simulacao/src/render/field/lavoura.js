@@ -121,6 +121,8 @@ export function createLavoura(crop, { width, depth }) {
     }
 
     function desenhar(ctx, cam, tempo, destaque = -1) {
+        // A mesma ordem é invertida pelo hit-test; sprites continuam voltados à tela.
+        ordem.sort((a, b) => cam.proj(plants[a].px, 0, plants[a].pz)[1] - cam.proj(plants[b].px, 0, plants[b].pz)[1] || a - b);
         const S = cam.escala, d = cam.dpr;
         ctx.save();
         // Sombras no topo (luz vindo da direita), recortadas no topo do bloco: a sombra da planta da

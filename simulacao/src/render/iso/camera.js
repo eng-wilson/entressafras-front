@@ -10,34 +10,44 @@ export function createCamera() {
     const cam = {
         escala: 100, ox: 0, oy: 0, dpr: 1,
         zoom: 1, escalaBase: 100,
+        quarto: 0,
+        girar(passos = 1) { cam.quarto = ((cam.quarto + passos) % 4 + 4) % 4; },
+        orientar(x, z, inverso = false) {
+            const q = inverso ? (4 - cam.quarto) % 4 : cam.quarto;
+            return q === 1 ? [-z, x] : q === 2 ? [-x, -z] : q === 3 ? [z, -x] : [x, z];
+        },
 
         proj(x, y, z) {
+            [x, z] = cam.orientar(x, z);
             return [cam.ox + (x - z) * C30 * cam.escala, cam.oy + (x + z) * S30 * cam.escala - y * cam.escala];
         },
 
         // Vetores de tela de 1 unidade de mundo em cada eixo.
-        eixoX() { return [C30 * cam.escala, S30 * cam.escala]; },
-        eixoZ() { return [-C30 * cam.escala, S30 * cam.escala]; },
+        eixoX() { const p = cam.proj(1, 0, 0); return [p[0] - cam.ox, p[1] - cam.oy]; },
+        eixoZ() { const p = cam.proj(0, 0, 1); return [p[0] - cam.ox, p[1] - cam.oy]; },
         eixoY() { return [0, -cam.escala]; },
 
         // Ponto da tela -> mundo no plano horizontal y = y0.
         noPlanoY(sx, sy, y0 = 0) {
             const a = (sx - cam.ox) / (C30 * cam.escala);               // x - z
             const b = (sy - cam.oy + y0 * cam.escala) / (S30 * cam.escala); // x + z
-            return { x: (a + b) / 2, z: (b - a) / 2 };
+            const [x, z] = cam.orientar((a + b) / 2, (b - a) / 2, true);
+            return { x, z };
         },
 
         // Ponto da tela -> mundo no plano vertical x = x0 (retorna z e y).
         noPlanoX(sx, sy, x0) {
-            const z = x0 - (sx - cam.ox) / (C30 * cam.escala);
-            const y = ((x0 + z) * S30 * cam.escala - (sy - cam.oy)) / cam.escala;
+            const ex = cam.eixoX(), ez = cam.eixoZ();
+            const z = (sx - cam.ox - x0 * ex[0]) / ez[0];
+            const y = (cam.oy + x0 * ex[1] + z * ez[1] - sy) / cam.escala;
             return { z, y };
         },
 
         // Ponto da tela -> mundo no plano vertical z = z0 (retorna x e y).
         noPlanoZ(sx, sy, z0) {
-            const x = z0 + (sx - cam.ox) / (C30 * cam.escala);
-            const y = ((x + z0) * S30 * cam.escala - (sy - cam.oy)) / cam.escala;
+            const ex = cam.eixoX(), ez = cam.eixoZ();
+            const x = (sx - cam.ox - z0 * ez[0]) / ex[0];
+            const y = (cam.oy + x * ex[1] + z0 * ez[1] - sy) / cam.escala;
             return { x, y };
         },
 

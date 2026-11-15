@@ -78,7 +78,9 @@ export function createProfile2D({ width, depth, totalH, profTotalM, res = 1024 }
 
     const faces = [
         { parede: 0, canvas: document.createElement('canvas'), est: estaticos(11.3) },   // +X: ao longo de z
-        { parede: 2, canvas: document.createElement('canvas'), est: estaticos(37.9) }    // +Z: ao longo de x
+        { parede: 2, canvas: document.createElement('canvas'), est: estaticos(37.9) },
+        { parede: 1, canvas: document.createElement('canvas'), est: estaticos(21.3) },
+        { parede: 3, canvas: document.createElement('canvas'), est: estaticos(47.9) }
     ];
     for (const f of faces) {
         f.canvas.width = FW; f.canvas.height = FH;
@@ -87,7 +89,9 @@ export function createProfile2D({ width, depth, totalH, profTotalM, res = 1024 }
     }
 
     // Células da borda: (i, j) da célula c0 e da vizinha ao longo da face.
-    const bordaCel = (parede, c0) => parede === 0 ? [GRID - 1, c0, GRID - 1, c0 + 1] : [c0, GRID - 1, c0 + 1, GRID - 1];
+    const bordaCel = (parede, c0) => parede < 2
+        ? [parede === 0 ? GRID - 1 : 0, c0, parede === 0 ? GRID - 1 : 0, c0 + 1]
+        : [c0, parede === 2 ? GRID - 1 : 0, c0 + 1, parede === 2 ? GRID - 1 : 0];
 
     // Estado do dia por face, pré-amostrado: AMS colunas ao longo da borda x AMK linhas em profundidade.
     // As linhas cobrem só a profundidade representada (profTotalM), não a simulada inteira.
@@ -168,12 +172,13 @@ export function createProfile2D({ width, depth, totalH, profTotalM, res = 1024 }
         const TR = topo.width, fx = topo.getContext('2d');
         const FAIXA = Math.max(4, Math.round(TR * 0.012));
         // Topo: x do canvas = x do mundo, y = z. Face 0 (+X) corre em z na coluna da direita; face 2 (+Z) em x na linha de baixo.
-        const im = parede === 0 ? fx.getImageData(TR - FAIXA - 1, 0, FAIXA, TR) : fx.getImageData(0, TR - FAIXA - 1, TR, FAIXA);
+        const im = parede < 2 ? fx.getImageData(parede === 0 ? TR - FAIXA - 1 : 0, 0, FAIXA, TR)
+            : fx.getImageData(0, parede === 2 ? TR - FAIXA - 1 : 0, TR, FAIXA);
         const px = im.data, col = new Float32Array(TR * 3);
         for (let i = 0; i < TR; i++) {
             let r = 0, g = 0, b = 0;
             for (let k = 0; k < FAIXA; k++) {
-                const o = (parede === 0 ? i * FAIXA + k : k * TR + i) * 4;
+                const o = (parede < 2 ? i * FAIXA + k : k * TR + i) * 4;
                 r += px[o]; g += px[o + 1]; b += px[o + 2];
             }
             col[i * 3] = r / FAIXA; col[i * 3 + 1] = g / FAIXA; col[i * 3 + 2] = b / FAIXA;
