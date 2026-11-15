@@ -1,5 +1,7 @@
 # Indicadores das rotações
 
+> **Regra do projeto (14/11/2026):** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. A resiliência climática e a ordem das rotações vêm da API (`POST /api/rotations/recommendations`). O balanço hídrico ZARC que o front fazia foi removido. Água, solo e produtividade continuam ilustrativos (mock), porque a API ainda não os entrega. Detalhes: [PLANO_INTEGRACAO.md](PLANO_INTEGRACAO.md), fase 5.
+
 Revisão de 14/11/2026. Este documento descreve como a tela calcula cada um dos quatro indicadores (Resiliência climática, Economia de água, Saúde do solo e Produtividade) e a ordenação das rotações. Para cada um, indica a fórmula, a origem de cada dado (API real ou mock), as faixas de nota, onde a regra está no código e o que falta para sair do mock.
 
 As pendências com o backend estão detalhadas em [PLANO_INTEGRACAO.md](PLANO_INTEGRACAO.md). Este documento só aponta para elas.
@@ -8,11 +10,11 @@ As pendências com o backend estão detalhadas em [PLANO_INTEGRACAO.md](PLANO_IN
 
 | Indicador | Origem dos dados | Escala da nota | Por safra? | Situação |
 |---|---|---|---|---|
-| Resiliência climática | Clima real (API) + critérios do ZARC (mock) | Fixa: 10 pontos por ano em 10 | Sim | Calculado |
+| Resiliência climática | Risco hídrico por cultura da API (`risk`) | Fixa: 10 pontos por ano em 10 | Sim | Da API (hoje marcado MOCK pelo servidor) |
 | Economia de água | `SCORE.agua` (mock) | Relativa às 4 rotações | Não | Ilustrativo |
 | Saúde do solo | `SCORE.solo` e `soilWhy` (mock) | Relativa às 4 rotações | Não | Ilustrativo |
 | Produtividade | Receita em R$/ha, de sacas e preços em `CT` (mock) | Proporcional à melhor rotação | Só o R$/ha | Ilustrativo (dados), coerente (nota = receita) |
-| Ordenação (1º a 4º) | Os mesmos valores dos eixos do mapa | Posição | Não | Segue os indicadores |
+| Ordenação (1º a 4º) | `rank` da API | Posição | Não | Da API (hoje marcado MOCK pelo servidor) |
 
 "Escala relativa" significa que a nota de uma rotação depende das outras: em água e solo, a melhor das quatro recebe 100 e a pior recebe 12. Na produtividade, a melhor recebe 100 e as demais ficam proporcionais à receita dela. Se uma rotação entrar ou sair, essas notas mudam. A resiliência é a única com escala fixa, o que é pré-requisito para o futuro montador de rotação.
 
@@ -29,66 +31,25 @@ Código: [`src/logic/aptidao.ts`](../src/logic/aptidao.ts).
 | Resiliência climática | 8 a 10 anos (risco 20% no ZARC) | 6 ou 7 anos (risco 30% ou 40%) | até 5 anos (acima de 40%) | `faixaAnos` / `classeAnos` |
 | Água, solo, produtividade | nota ≥ 70 | nota ≥ 40 | nota < 40 | `faixa` |
 
-Cada eixo também tem um valor bruto no sentido "maior = melhor" (`valorEixo`): anos em 10 para a resiliência, R$/ha para a produtividade e `−SCORE` para água e solo. A ordenação usa esses valores.
+A ordem das rotações não usa estas notas: vem do `rank` da API.
 
-As faixas da resiliência seguem os níveis de risco do ZARC. As dos outros eixos são cortes ilustrativos, sem fundamentação.
+As faixas da resiliência seguem os níveis de risco do ZARC (risco da API até 20% = Ótima, 30–40% = Média, acima = Fraca). As dos outros eixos são cortes ilustrativos, sem fundamentação.
 
 ## Resiliência climática
 
-**O que mede:** em quantos de 10 anos a chuva da região bastou para a cultura passar pelas fases críticas do ciclo. Segue o método do Zoneamento Agrícola de Risco Climático (ZARC, MAPA/Embrapa).
+**O que mostra:** o risco hídrico de cada cultura, calculado pela API: a porcentagem das safras históricas em que a perda de produtividade por falta de água passou do limiar (`loss_threshold_pct`, hoje 20%).
 
-**Código:** cálculo em [`src/logic/resiliencia.ts`](../src/logic/resiliencia.ts); parâmetros em [`src/data/zarc.ts`](../src/data/zarc.ts); janelas das safras em `SAFRAS`, em [`src/data/mock.ts`](../src/data/mock.ts); textos em [`aptidao.ts`](../src/logic/aptidao.ts); memória de cálculo em [`MemoriaCalculo.tsx`](../src/components/MemoriaCalculo.tsx).
+**Código:** [`src/logic/resiliencia.ts`](../src/logic/resiliencia.ts) só organiza o que veio da API; textos em [`aptidao.ts`](../src/logic/aptidao.ts); exibição dos dados em [`MemoriaCalculo.tsx`](../src/components/MemoriaCalculo.tsx).
 
-### Passo a passo
+1. **Risco da safra:** `risk.risk_percentage` da cultura, sem nenhuma conta no front.
+2. **Leitura na régua do ZARC:** só para classificar (selo e cor): anos sem perda crítica = (100 − risco) ÷ 10. Até 20% = favorável (8 ou mais em 10), 30–40% = arriscado, acima de 40% = desfavorável.
+3. **Rotação:** vale a safra mais arriscada (a API entrega o risco por cultura, não por ano).
+4. **Nota no mapa:** `max(12, anos × 10)`.
+5. **Sem risco na resposta:** "Sem dado de risco". A tela não estima nada no lugar.
 
-1. **Janela e fases.** Cada safra tem uma janela em decêndios (`SAFRAS`). A janela é dividida nas 4 fases do ZARC, nas proporções 20/30/30/20%: I estabelecimento, II crescimento vegetativo, III floração e enchimento de grãos, IV maturação.
-2. **Necessidade de água.** Em cada decêndio, necessidade = Kc × ET0. A ET0 vem da API. O Kc vem da FAO-56: constante na fase I, sobe na II, fica constante na III e desce na IV.
-3. **Água no solo.** A capacidade (CAD, em mm) é a da portaria do ZARC da cultura, escolhida pela textura do talhão. Sem textura no cadastro, usa a média.
-4. **10 anos típicos.** A API traz, por decêndio, a chuva média e a chuva superada em 8 de cada 10 anos (p20), mas não a série ano a ano. Para cada decêndio, ajustamos uma lognormal que passa pela média e pelo p20. Em seguida geramos 10 anos nos quantis 5%, 15%, …, 95%, com o mesmo quantil em todos os decêndios do ano (um ano seco é seco em toda a safra).
-5. **Balanço hídrico.** Em cada ano, de 1º de setembro (solo sem água disponível) até o fim da rotação:
-   - a chuva entra no solo até a CAD, e o excesso se perde;
-   - a cultura usa o mínimo entre a necessidade e a água disponível;
-   - fora das safras, o solo descoberto evapora com Kc 0,3;
-   - na troca de cultura, a água acima da nova CAD é descartada.
-6. **ISNA por fase.** Para cada fase, ISNA = água usada ÷ água necessária.
-7. **Critério.** O ano conta como "chuva bastou" se cada fase avaliada pela portaria atingir o ISNA mínimo:
+O que o front ainda calcula aqui, por não vir pronto da API: o consumo de água do ciclo (Σ Kc × ET0), com Kc e ET0 da API, e a posição das fases no calendário, pelas datas e estágios FAO-56 da API.
 
-   | Safra | Critério (`ZarcId`) | Fase I | Fase II | Fase III | CAD arenoso / médio / argiloso |
-   |---|---|---|---|---|---|
-   | Soja, soja precoce | `soja` | ≥ 0,50 | — | ≥ 0,55 | 32 / 55 / 72 mm |
-   | Milho safrinha | `milho2` | ≥ 0,60 | — | ≥ 0,50 | 30 / 47 / 72 mm |
-   | Milho + braquiária | `milhoBraquiaria` | ≥ 0,70 | — | ≥ 0,50 | 31,8 / 54,6 / 72,6 mm |
-   | Sorgo | `sorgoGranifero` | ≥ 0,60 | — | ≥ 0,45 | 35 / 55 / 75 mm |
-   | Crotalária + milheto | `coberturaMilheto` | ≥ 0,70 | ≥ 0,60 | ≥ 0,40 | 42 / 66 / 90 mm |
-
-   As fontes (número da portaria, item e URL) estão em `CRITERIOS`, em `zarc.ts`, e aparecem na memória de cálculo.
-8. **Resultado.** O resultado da safra é quantos dos 10 anos passaram. A rotação considera um ano bom só se todas as safras passaram naquele ano; na prática, isso dá o número da safra mais fraca (`safraLimitante`). O nível de risco vem de `nivelZarc`: 8 ou mais = 20%, 7 = 30%, 6 = 40%, até 5 = fora do zoneamento.
-9. **Nota no mapa.** `max(12, anos × 10)`. Sem clima carregado, a nota é `null` e a tela mostra "Sem dado".
-
-### Onde aparece
-
-- **Mapa (Comparação):** o eixo "Resiliência climática". O texto ao lado nomeia a safra limitante.
-- **"Ver por safra":** a nota de cada safra e o link "Como chegamos nestes números", que mostra todos os dados de entrada e as tabelas por decêndio e por ano.
-- **Calendário:** a cor de cada barra de safra e o selo "Clima favorável/arriscado/desfavorável".
-- **Tabela de comparação:** o ícone de histórico ao lado da umidade necessária.
-- **Painel lateral:** o selo de cada safra da rotação atual e a frase de resumo.
-
-### O que é real e o que é mock
-
-- **Real (API):** `chuva_media`, `chuva_p20`, `et0_media`, `safras`, `fonte` e `celula`, de `/api/clima/decendios`.
-- **Mock, com fonte (portaria ou FAO):** ISNA mínimo, CAD, Kc e proporção das fases.
-- **Aproximação nossa:**
-  - a classe de solo AD da soja e do consórcio, derivada da textura;
-  - a mesma proporção de fases para todas as culturas;
-  - o critério da cobertura, por analogia com o sorgo forrageiro;
-  - o Kc 0,3 do solo sem cultura;
-  - o solo vazio em 1º de setembro;
-  - os anos sintéticos.
-- **Fora da conta:** temperatura e geada, excesso de chuva na colheita, ISNA de excesso hídrico na fase IV, veranicos dentro do decêndio, irrigação.
-
-### Para sair do mock
-
-Ver PLANO_INTEGRACAO.md, Fase 4. Em resumo: critérios do ZARC por UF, cultura e safra, vindos do backend; classe de solo pela granulometria; série climática ano a ano (ou o ISNA calculado no backend); janelas de plantio do ZARC ou do agricultor.
+**Ressalva atual:** o servidor marca o risco como `MOCK` (valores provisórios, iguais para qualquer talhão). A tela avisa isso no texto do risco e na memória de cálculo.
 
 ## Economia de água
 
@@ -165,15 +126,11 @@ Até 14/11/2026 a nota vinha de `SCORE.prod`, um mock sem unidade que não batia
 
 ## Ordenação das rotações (1º a 4º)
 
-**Código:** [`src/logic/rank.ts`](../src/logic/rank.ts); regra também descrita em [HANDOFF-SPEC.md](../HANDOFF-SPEC.md), na seção "Ordenação".
+**Código:** [`src/logic/rank.ts`](../src/logic/rank.ts).
 
-**Regra:**
-1. Para cada prioridade marcada na lateral, cada rotação soma quantas outras são melhores que ela naquele eixo. Os valores são os mesmos do mapa (`valorEixo`): anos de resiliência calculados com o clima, receita em R$/ha, e água e solo do mock.
-2. As rotações são ordenadas pela soma, da menor para a maior. O desempate é por mais anos com chuva suficiente e, depois, pela ordem de `CT`.
-3. Sem prioridade marcada, vale só a resiliência.
-4. Enquanto o clima não carrega, a resiliência fica de fora da conta (não há dado para comparar); os demais eixos marcados continuam ordenando.
+A ordem é o `rank` da API. A tela não reordena. As prioridades marcadas em "O que importa" só destacam os quadrantes do mapa de aptidão.
 
-Até 14/11/2026 a ordenação usava `SCORE.risco`, um mock (5, 8, 10, 15) que não batia com a resiliência calculada. Por isso uma rotação podia aparecer em 2º lugar com o selo "Clima arriscado". Esse campo foi removido.
+Até 14/11/2026 a ordem era calculada no front a partir das prioridades. Pela regra do projeto, isso foi removido quando a API passou a entregar o rank.
 
 ## Glossário
 
