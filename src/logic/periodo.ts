@@ -1,5 +1,5 @@
 // Decêndios do ano agrícola: idx 0 = 1–10 set … 35 = 21–31 ago (mesma numeração da API /api/clima/decendios).
-import { LEN, MONTHS } from '../data/mock'
+import { LEN, MONTHS, MONTHS_SHORT } from '../data/mock'
 
 /** Mês (0 = setembro … 11 = agosto) do decêndio. */
 export const mesDe = (idx: number) => Math.floor(idx / 3)
@@ -18,3 +18,12 @@ export function diasDe(idx: number): string {
 
 /** "11 a 20 de dezembro". */
 export const periodoLabel = (idx: number) => `${diasDe(idx)} de ${MONTHS[mesDe(idx)]}`
+
+const mesCurto = (idx: number) => MONTHS_SHORT[mesDe(idx)].toLowerCase()
+/** Primeiro dia do decêndio: "21 out". */
+export const inicioDe = (idx: number) => `${decendioDoMes(idx) * 10 + 1} ${mesCurto(idx)}`
+/** Último dia do decêndio: "10 fev", "31 jan". */
+export const fimDe = (idx: number) =>
+  `${decendioDoMes(idx) === 2 ? LEN[mesDe(idx)] : decendioDoMes(idx) * 10 + 10} ${mesCurto(idx)}`
+/** "21 out a 10 fev": do 1º dia do decêndio `de` ao último do decêndio `ate`. */
+export const janelaLabel = (de: number, ate: number) => `${inicioDe(de)} a ${fimDe(ate)}`

@@ -45,7 +45,7 @@ test('falha no catálogo preserva temperaturas e permite tentar novamente', asyn
   await page.goto('/')
   const temp = page.locator('.pl').filter({ hasText: 'Temperatura' })
   await expect(temp).toContainText('Sem referência')
-  await expect(temp).toContainText('mín 21° máx 29°')
+  await expect(temp.locator('.wg-v')).toHaveText('21° a 29°')
   await expect(page.getByRole('alert')).toContainText('requisitos da cultura')
   await comCulturasFixas(page)
   await page.getByRole('button', { name: 'Tentar de novo' }).click()

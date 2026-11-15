@@ -1,15 +1,10 @@
-import { SCORE } from '../data/mock'
-import type { Priority } from '../types'
+import type { RotacaoDef } from '../data/mock'
 
-// Retorna rpos[4]: rpos[i] é a posição (0=1º, 3=último) da rotação i
-export function rankRotations(pr: Priority): number[] {
-  const act = (['risco','agua','solo','prod'] as const).filter(k => pr[k])
-  const keys = act.length ? act : ['risco' as const]
-  const pts = [0,1,2,3].map(i =>
-    keys.reduce((a, k) => a + [0,1,2,3].filter(j => SCORE[k][j] < SCORE[k][i]).length, 0)
-  )
-  const ordered = [0,1,2,3].sort((a,b) => (pts[a] - pts[b]) || (SCORE.risco[a] - SCORE.risco[b]))
-  const rpos = [0,0,0,0]
-  ordered.forEach((ri, p) => { rpos[ri] = p })
-  return rpos
+/**
+ * rpos[i] é a posição (0 = 1º) da rotação i. A ordem é a da API (`rank` de POST /api/rotations/recommendations):
+ * o conjunto já chega ordenado por ela (logic/rotacoesApi.ts). Regra do projeto: quando a API resolve algo que a
+ * tela mostra, o front não recalcula. As prioridades marcadas na lateral só destacam o mapa de aptidão.
+ */
+export function rankRotations(defs: RotacaoDef[]): number[] {
+  return defs.map((_, i) => i)
 }

@@ -5,10 +5,25 @@ import { classeChuva, classeChuvaDecendio, ROTULO_CHUVA, iconeChuva } from '../l
 import { chuvaMeses, climaDoPeriodo } from '../logic/clima'
 import { periodoLabel, mesDe, decendioDoMes } from '../logic/periodo'
 import { inteiro } from '../logic/formato'
+import type { Diagnostico } from '../logic/diagnostico'
 
-type Props = { idx: number; decendios: Decendio[] | null; onIdx: (i: number) => void }
+type Props = {
+  idx: number; decendios: Decendio[] | null; onIdx: (i: number) => void
+  /** Diagnóstico da rotação selecionada: marca os decêndios críticos e a zona que mais pesa. */
+  diag?: Diagnostico | null
+}
 
-export function MonthStrip({ idx, onIdx, decendios }: Props) {
+export function MonthStrip({ idx, onIdx, decendios, diag = null }: Props) {
+  const zona = diag?.decisivo ?? null
+  const naZonaIdx = !!zona && idx >= zona.de && idx <= zona.ate
+  /**
+   * Zona que mais pesa: cada número ganha o fundo do nível; juntos formam uma faixa contínua que cobre a
+   * divisória dos meses. Pontas arredondadas (zs/ze); o decêndio simulado fica sólido (zcur).
+   */
+  const marca = (i: number) => {
+    if (!zona || i < zona.de || i > zona.ate) return ''
+    return `zc ${zona.cls}${i === zona.de ? ' zs' : ''}${i === zona.ate ? ' ze' : ''}${i === idx ? ' zcur' : ''}`
+  }
   const activeM = mesDe(idx)
   const decInM = decendioDoMes(idx)
   const scrubRef = useRef<HTMLDivElement>(null)
@@ -27,7 +42,8 @@ export function MonthStrip({ idx, onIdx, decendios }: Props) {
   const meses = chuvaMeses(decendios)
   const periodo = climaDoPeriodo(decendios, idx)
   const mm = periodo.chuvaDecendio
-  const sliderText = periodoLabel(idx) + (mm == null ? ', chuva sem dado' : `, ${ROTULO_CHUVA[classeChuvaDecendio(mm)]}, ${inteiro(mm)} milímetros no decêndio`) + (periodo.tmin == null || periodo.tmax == null ? '' : `, de ${inteiro(periodo.tmin)} a ${inteiro(periodo.tmax)} graus`)
+  const naZona = naZonaIdx ? ', período que mais pesa no clima da rotação' : ''
+  const sliderText = periodoLabel(idx) + naZona + (mm == null ? ', chuva sem dado' : `, ${ROTULO_CHUVA[classeChuvaDecendio(mm)]}, ${inteiro(mm)} milímetros no decêndio`) + (periodo.tmin == null || periodo.tmax == null ? '' : `, de ${inteiro(periodo.tmin)} a ${inteiro(periodo.tmax)} graus`)
 
   const knobPct = `${((idx + 0.5) / 36 * 100).toFixed(3)}%`
   const fillPct  = `${(idx / 35 * 100).toFixed(3)}%`
@@ -61,7 +77,7 @@ export function MonthStrip({ idx, onIdx, decendios }: Props) {
                 </svg>}
               </span>
               <span className="dec" aria-hidden="true">
-                <i>1</i><i>2</i><i>3</i>
+                {[0, 1, 2].map(d => <i key={d} className={marca(mi * 3 + d) || undefined}>{d + 1}</i>)}
               </span>
             </button>
           )
@@ -69,7 +85,8 @@ export function MonthStrip({ idx, onIdx, decendios }: Props) {
       </div>
 
       {/* Número do decêndio acima do knob — absoluto relativo ao wrapper */}
-      <span className="selnum" style={{ left: knobPct }} aria-hidden="true">
+      {/* Dentro da zona, o decêndio simulado já aparece sólido na faixa: o número flutuante sai */}
+      <span className="selnum" style={{ left: knobPct, visibility: naZonaIdx ? 'hidden' : undefined }} aria-hidden="true">
         {decNum}
       </span>
 
@@ -99,6 +116,15 @@ export function MonthStrip({ idx, onIdx, decendios }: Props) {
         <span className="track" aria-hidden="true">
           <span className="fill" style={{ width: fillPct }} />
         </span>
+        {/* Zona que mais pesa no selo da rotação selecionada, sobre o trilho */}
+        {zona && (
+          <span className="zrail" aria-hidden="true">
+            <span
+              className={`zseg ${zona.cls}`}
+              style={{ left: `${Math.max(0, (zona.de - 0.5) / 35 * 100).toFixed(3)}%`, width: `${((zona.ate - zona.de + 1) / 35 * 100).toFixed(3)}%` }}
+            />
+          </span>
+        )}
         <span className="knob" style={{ left: knobPct }} aria-hidden="true" />
         <input
           type="range"

@@ -1,3 +1,6 @@
+import type { CulturaRef, ZarcId } from './zarc'
+import type { CropRisk } from '../types'
+
 // TMIN, TMAX e THIS_RAIN alimentam apenas testes e a fixture de clima.
 // Temperaturas mínimas por décimo (setembro décimo 0 → agosto décimo 35)
 export const TMIN = [19,19,19,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,21,20,20,20,17,17,17,15,15,15,14,14,14,15,15,15]
@@ -16,7 +19,12 @@ export const THIS_RAIN = [45,150,180,230,200,280,250,120,40,10,5,15]
 export const USUAL_RAIN = [40,130,220,280,250,180,80,40,15,10,15,25]
 
 export type StageKey = 'bare'|'ready'|'seed'|'emerg'|'veg'|'flor'|'ench'|'mat'|'straw'
-export type Stage = { crop: 'soja'|'milho'|null; k: StageKey; name: string; from: number; to: number }
+export type Stage = {
+  /** Planta desenhada no talhão (o desenho só tem soja e milho). */
+  crop: 'soja'|'milho'|null; k: StageKey; name: string; from: number; to: number
+  /** Cultura de verdade da safra (requisitos do catálogo) e nome exibido; ausentes fora das safras. */
+  ref?: CulturaRef | string; cultura?: string
+}
 
 // Estágios fenológicos da rotação r4 (Soja → Milho safrinha)
 export const STAGES: Stage[] = [
@@ -40,35 +48,101 @@ export const STAGES: Stage[] = [
   { crop: null,    k: 'bare',  name: 'Pousio',                        from: 32, to: 35 },
 ]
 
-// Histórico climático: [anos com água suficiente em 10, nome da cultura]
-export const FREQ: Record<string, [number, string][]> = {
-  r1: [[8, 'soja']],
-  r2: [[7, 'soja'], [7, 'sorgo']],
-  r3: [[8, 'soja precoce'], [5, 'milho']],
-  r4: [[3, 'soja'], [5, 'milho safrinha']],
+// Cada safra aponta a curva de consumo de água (ref → data/zarc.ts, KC) e a portaria do ZARC que a avalia (zarc).
+// Em consórcio vale a cultura que define a safra: o milho (vendido); na cobertura, o milheto.
+/** Janela de uma safra em decêndios (idx 0 = 1–10 set), inclusiva. */
+export type SafraDef = {
+  nome: string
+  /** Id da cultura no catálogo local (data/culturas.ts): requisitos do EcoCrop e Kc de reserva. */
+  ref: CulturaRef | string
+  /** Portaria do ZARC que avalia a safra; null = sem critério conhecido (a resiliência fica "Sem dado"). */
+  zarc: ZarcId | null
+  de: number; ate: number
+  cobertura?: boolean
+  /** Cultura plantada junto, só no desenho do talhão (id do simulador). */
+  companheira?: string
+  /** Kc (início, meio, fim) do catálogo da API; ausente = consumo sem dado. */
+  kc?: [number, number, number]
+  /** Fração do ciclo em cada fase (I a IV), dos estágios FAO-56 da API; ausente = FASES (20/30/30/20%). */
+  fases?: [number, number, number, number]
+  /** Profundidade das raízes no plantio e máxima, m (API); exibida nos dados da cultura. */
+  raiz?: { ini: number; max: number }
+  /** Risco hídrico da cultura, da API: é a única fonte da resiliência na tela (mesmo enquanto MOCK). */
+  risco?: CropRisk
 }
 
-// Scores por critério (menor = melhor); índice = rotação 0–3
-export const SCORE: Record<string, number[]> = {
-  risco: [5, 8, 10, 15],
-  agua:  [-8, -7, -6.5, -4],
-  solo:  [0, 60, 10, 110],
-  prod:  [-58, -120, -160, -150],
-}
+/** Barra do calendário, em meses desde 1º de setembro (0–12); sem rótulo = pousio. */
+export type BarDef = { s: number; e: number; label: string }
 
 export type CTRow = {
-  c1: string; c2: string; f1: number; f2: number | null
+  c1: string; c2: string
   w1: string; w2: string; soil: string; soilWhy: string
   pest: string; pestWhy: string
   y1: string; y2: string; p1l: string; p1: string; p2l: string; p2: string
+  /** Unidade da produção de cada safra; ausente = sc/ha. */
+  u1?: string; u2?: string
   atual?: boolean
 }
-export const CT: CTRow[] = [
-  { c1:'Soja', c2:'Crotalária + milheto', f1:8, f2:null, w1:'450–800 mm', w2:'Sem dado', soil:'Melhora', soilWhy:'Fixa nitrogênio e cobre o solo', pest:'Menor risco', pestWhy:'A crotalária não hospeda as principais pragas e nematoides da soja.', y1:'58', y2:'-', p1l:'Soja', p1:'R$ 152,45', p2l:'Crotalária + milheto', p2:'Não é vendida' },
-  { c1:'Soja', c2:'Sorgo',                f1:7, f2:7,    w1:'450–800 mm', w2:'~450 mm',  soil:'Mantém', soilWhy:'A palhada do sorgo protege o solo', pest:'Menor risco', pestWhy:'O sorgo não hospeda as principais pragas da soja.', y1:'58', y2:'62', p1l:'Soja', p1:'R$ 152,45', p2l:'Sorgo', p2:'R$ 44,00' },
-  { c1:'Soja precoce', c2:'Milho + braquiária', f1:8, f2:5, w1:'450–800 mm', w2:'380–550 mm', soil:'Melhora', soilWhy:'Raízes e palha da braquiária', pest:'Maior risco', pestWhy:'Soja e milho em sequência: pragas como o percevejo passam de uma para a outra.', y1:'55', y2:'105', p1l:'Soja', p1:'R$ 152,45', p2l:'Milho', p2:'R$ 66,60' },
-  { c1:'Soja', c2:'Milho safrinha', f1:3, f2:5, w1:'450–800 mm', w2:'380–550 mm', soil:'Mantém', soilWhy:'Solo descoberto por 4 meses', pest:'Maior risco', pestWhy:'Repete soja e milho da safra anterior: as pragas continuam no talhão.', y1:'52', y2:'98', p1l:'Soja', p1:'R$ 152,45', p2l:'Milho', p2:'R$ 66,60', atual:true },
+
+/** Uma rotação exibida: janelas das safras, textos da tabela e scores ilustrativos (menor = melhor). */
+export type RotacaoDef = {
+  id: string
+  safras: SafraDef[]
+  ct: CTRow
+  agua: number
+  solo: number
+  barras: BarDef[]
+  maisPragas?: boolean
+}
+
+/** Rotações da tela: da API (POST /api/rotations/recommendations) ou o conjunto local dos testes. */
+export type ConjuntoRotacoes = {
+  origem: 'api' | 'local'
+  /** Ano de início da safra: 2027 = set/2027 a ago/2028. */
+  ano: number
+  rotacoes: RotacaoDef[]
+  /** Avisos do backend e do adaptador (ex.: ranking MOCK, rotação sem dado suficiente). */
+  avisos: string[]
+}
+
+// Conjunto local (o protótipo original): 4 rotações fixas, na ordem de CT. Hoje alimenta só testes e fixtures.
+export const SAFRAS: SafraDef[][] = [
+  [{ nome: 'Soja', ref: 'soja', zarc: 'soja', de: 5, ate: 15 }, { nome: 'Crotalária + milheto', ref: 'milheto', zarc: 'coberturaMilheto', de: 16, ate: 27, cobertura: true, companheira: 'crotalaria_spectabilis' }],
+  [{ nome: 'Soja', ref: 'soja', zarc: 'soja', de: 5, ate: 15 }, { nome: 'Sorgo', ref: 'sorgo', zarc: 'sorgoGranifero', de: 16, ate: 27 }],
+  [{ nome: 'Soja precoce', ref: 'soja', zarc: 'soja', de: 3, ate: 12 }, { nome: 'Milho + braquiária', ref: 'milho', zarc: 'milhoBraquiaria', de: 13, ate: 26, companheira: 'brizantha_marandu' }],
+  [{ nome: 'Soja', ref: 'soja', zarc: 'soja', de: 5, ate: 15 }, { nome: 'Milho safrinha', ref: 'milho', zarc: 'milho2', de: 16, ate: 28 }],
 ]
+
+// Scores ilustrativos (menor = melhor); índice = rotação 0–3. Resiliência e produtividade já não vêm daqui:
+// a primeira é calculada com o clima (logic/resiliencia.ts) e a segunda com a receita de CT (receitaHa).
+export const SCORE: Record<'agua' | 'solo', number[]> = {
+  agua:  [-8, -7, -6.5, -4],
+  solo:  [0, 60, 10, 110],
+}
+
+export const CT: CTRow[] = [
+  { c1:'Soja', c2:'Crotalária + milheto', w1:'450–800 mm', w2:'Sem dado', soil:'Melhora', soilWhy:'Fixa nitrogênio e cobre o solo', pest:'Menor risco', pestWhy:'A crotalária não hospeda as principais pragas e nematoides da soja.', y1:'58', y2:'-', p1l:'Soja', p1:'R$ 152,45', p2l:'Crotalária + milheto', p2:'Não é vendida' },
+  { c1:'Soja', c2:'Sorgo',                w1:'450–800 mm', w2:'~450 mm',  soil:'Mantém', soilWhy:'A palhada do sorgo protege o solo', pest:'Menor risco', pestWhy:'O sorgo não hospeda as principais pragas da soja.', y1:'58', y2:'62', p1l:'Soja', p1:'R$ 152,45', p2l:'Sorgo', p2:'R$ 44,00' },
+  { c1:'Soja precoce', c2:'Milho + braquiária', w1:'450–800 mm', w2:'380–550 mm', soil:'Melhora', soilWhy:'Raízes e palha da braquiária', pest:'Maior risco', pestWhy:'Soja e milho em sequência: pragas como o percevejo passam de uma para a outra.', y1:'55', y2:'105', p1l:'Soja', p1:'R$ 152,45', p2l:'Milho', p2:'R$ 66,60' },
+  { c1:'Soja', c2:'Milho safrinha', w1:'450–800 mm', w2:'380–550 mm', soil:'Mantém', soilWhy:'Solo descoberto por 4 meses', pest:'Maior risco', pestWhy:'Repete soja e milho da safra anterior: as pragas continuam no talhão.', y1:'52', y2:'98', p1l:'Soja', p1:'R$ 152,45', p2l:'Milho', p2:'R$ 66,60', atual:true },
+]
+
+// Barras desenhadas à mão na referência visual (meses desde setembro).
+const BARRAS_LOCAIS: BarDef[][] = [
+  [{ s: 1.7, e: 5.3, label: 'Soja' }, { s: 5.3, e: 9.4, label: 'Crotalária + milheto' }, { s: 9.4, e: 12, label: '' }],
+  [{ s: 1.7, e: 5.3, label: 'Soja' }, { s: 5.4, e: 9.4, label: 'Sorgo' }, { s: 9.4, e: 12, label: '' }],
+  [{ s: 1, e: 4.4, label: 'Soja precoce' }, { s: 4.4, e: 9, label: 'Milho + braquiária' }, { s: 9, e: 12, label: '' }],
+  [{ s: 1.7, e: 5.3, label: 'Soja' }, { s: 5.6, e: 9.6, label: 'Milho safrinha' }, { s: 9.6, e: 12, label: '' }],
+]
+
+export const CONJUNTO_LOCAL: ConjuntoRotacoes = {
+  origem: 'local',
+  ano: 2026,
+  avisos: [],
+  rotacoes: SAFRAS.map((safras, i) => ({
+    id: `r${i + 1}`, safras, ct: CT[i], agua: SCORE.agua[i], solo: SCORE.solo[i], barras: BARRAS_LOCAIS[i], maisPragas: i === 3,
+  })),
+}
 
 export const MONTHS = ['setembro','outubro','novembro','dezembro','janeiro','fevereiro','março','abril','maio','junho','julho','agosto']
 export const MONTHS_SHORT = ['Set','Out','Nov','Dez','Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago']

@@ -1,11 +1,13 @@
+import { useConjunto } from '../state/conjunto'
 type Props = { mode: 'cal' | 'cmp'; onMode: (m: 'cal' | 'cmp') => void }
 
 export function RotationsHeader({ mode, onMode }: Props) {
+  const conj = useConjunto()
   return (
     <div className="mstrip">
       <div className="ms-title">
         <h2 className="h2r">Rotações</h2>
-        <p>Safra 2026/27 · ordenadas para o clima previsto</p>
+        <p>Safra {conj.ano}/{String(conj.ano + 1).slice(2)} · na ordem recomendada pela API</p>
       </div>
       {/* + button — no action per spec */}
       <button className="add" type="button" aria-label="Adicionar rotação" disabled>

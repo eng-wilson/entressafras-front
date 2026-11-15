@@ -13,6 +13,14 @@ function faixa(v: unknown) {
     && (v.absolute_min == null || v.optimal_min == null || Number(v.absolute_min) <= Number(v.optimal_min))
     && (v.absolute_max == null || v.optimal_max == null || Number(v.optimal_max) <= Number(v.absolute_max))
 }
+const nums = (v: unknown, ks: string[]) => objeto(v) && ks.every(k => typeof v[k] === 'number' && Number.isFinite(v[k]))
+/** Perfil hídrico FAO-56: ausente (cache antigo), null (sem perfil) ou com os campos que a tela usa. */
+function hidricoValido(w: unknown) {
+  return w === undefined || w === null || (objeto(w)
+    && nums(w.crop_coefficient, ['initial', 'mid_season', 'late_season'])
+    && nums(w.stage_length_days, ['initial', 'development', 'mid_season', 'late_season', 'total'])
+    && nums(w.root_depth_m, ['initial', 'max']))
+}
 export function culturaValida(v: unknown): v is CropDetail {
   if (!objeto(v) || !objeto(v.temperature) || !objeto(v.crop_cycle) || !objeto(v.soil)) return false
   const solo = v.soil
@@ -21,6 +29,7 @@ export function culturaValida(v: unknown): v is CropDetail {
     && faixa(v.rainfall) && faixa(v.soil_ph)
     && numero(v.crop_cycle.min_days) && numero(v.crop_cycle.max_days)
     && SOLOS.every(k => objeto(solo[k]) && textos(solo[k].optimal) && textos(solo[k].absolute))
+    && hidricoValido(v.water_requirements)
 }
 async function consultar(caminho: string, signal?: AbortSignal): Promise<unknown> {
   const resposta = await fetch(`${API_URL}${caminho}`, { signal })
@@ -42,7 +51,8 @@ export async function detalheCultura(codigo: number, signal?: AbortSignal): Prom
   return v
 }
 
-export const CHAVE_CACHE_CULTURAS = 'entressafras.culturas.v1'
+// v2: entradas passam a guardar water_requirements (estágios, raízes e Kc).
+export const CHAVE_CACHE_CULTURAS = 'entressafras.culturas.v2'
 export const TTL_CULTURAS = 7 * 24 * 3600 * 1000
 type Entrada = { em: number; dados: CropDetail }
 const memoria = new Map<number, Entrada>()

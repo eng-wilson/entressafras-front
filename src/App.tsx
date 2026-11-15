@@ -1,6 +1,6 @@
 import { useClimaDecendios } from './hooks/useClimaDecendios'
 import { AvisoClima } from './components/AvisoClima'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { AppState, DadosTalhao, EstadoTalhoes, Talhao } from './types'
 import { Sidebar } from './components/Sidebar'
 import { Simulation } from './components/Simulation'
@@ -10,15 +10,28 @@ import { Onboarding, type ModoOnboarding } from './onboarding/Onboarding'
 import { carregar, salvar } from './services/storage'
 import { reverso } from './services/geocoding'
 import { classeDaTextura } from './logic/solo'
-import { STAGES } from './data/mock'
+import type { ConjuntoRotacoes } from './data/mock'
+import { useRotacoes } from './hooks/useRotacoes'
+import { conjuntoDaApi } from './logic/rotacoesApi'
+import { ConjuntoContext } from './state/conjunto'
 import { useCultura } from './hooks/useCultura'
 import { CatalogoCulturas } from './components/CatalogoCulturas'
+import { resiliencia } from './logic/resiliencia'
+import { diagnostico, periodoDecisivo } from './logic/diagnostico'
+import { estagioEm, estagios } from './logic/estagios'
 
 const DEFAULT: AppState = {
   idx: 10,
   mode: 'cal',
   pr: { risco: true, agua: false, solo: true, prod: false },
+  rot: 0,
 }
+
+/** Antes da API responder: nenhuma rotação (a tela mostra o carregamento, sem mock no lugar). */
+const conjVazio: ConjuntoRotacoes = { origem: 'api', ano: new Date().getFullYear(), rotacoes: [], avisos: [] }
+
+/** Rotação inicial: a que o agricultor já faz (se veio na recomendação), senão a 1ª da API. */
+const inicial = (c: ConjuntoRotacoes) => Math.max(0, c.rotacoes.findIndex(r => r.ct.atual))
 
 const novoId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}`)
 const mesmoContorno = (a: Talhao['contorno'], b: Talhao['contorno']) => JSON.stringify(a) === JSON.stringify(b)
@@ -28,6 +41,10 @@ export default function App() {
   const [campos, setCampos] = useState<EstadoTalhoes>(carregar)
   const [edicao, setEdicao] = useState<Exclude<ModoOnboarding, 'novo'> | null>(null)
   const [verCulturas, setVerCulturas] = useState(false)
+  // Rotações marcadas no modo Comparação (posições no conjunto): começa com a atual (ou a 1ª) e mais uma
+  const [cmpSel, setCmpSel] = useState<number[]>([0, 1])
+  const toggleCmp = (i: number) =>
+    setCmpSel(s => (s.includes(i) ? (s.length > 1 ? s.filter(x => x !== i) : s) : [...s, i].sort()))
   const setIdx  = (idx: number) => setState(s => ({ ...s, idx }))
   const setMode = (mode: 'cal'|'cmp') => setState(s => ({ ...s, mode }))
   const togglePr = (k: keyof AppState['pr']) =>
@@ -36,8 +53,35 @@ export default function App() {
   const talhao = campos.talhoes.find(t => t.id === campos.ativo) ?? null
 
   const clima = useClimaDecendios(talhao?.centro ?? null)
-  const culturaAtual = STAGES.find(s => state.idx >= s.from && state.idx <= s.to)?.crop ?? null
+  const textura = talhao?.textura ?? null
+  const recomendadas = useRotacoes(talhao?.centro ?? null, textura)
+  const historico = talhao?.historico ?? null
+  const conj = useMemo(
+    () => (recomendadas.dados ? conjuntoDaApi(recomendadas.dados, historico) : null),
+    [recomendadas.dados, historico],
+  )
+  // Conjunto novo (outro talhão ou solo): volta à rotação inicial e às marcadas da comparação.
+  const [conjVisto, setConjVisto] = useState<ConjuntoRotacoes | null>(null)
+  if (conj !== conjVisto) {
+    setConjVisto(conj)
+    if (conj) {
+      const i = inicial(conj)
+      setState(s => ({ ...s, rot: i }))
+      setCmpSel(conj.rotacoes.length > 1 ? [...new Set([i, i === 0 ? 1 : 0])].sort() : [0])
+    }
+  }
+  const rotOk = !!conj && state.rot < conj.rotacoes.length
+  const fases = useMemo(() => (conj && rotOk ? estagios(conj.rotacoes[state.rot].safras) : null), [conj, rotOk, state.rot])
+  const culturaAtual = fases ? estagioEm(fases, state.idx).ref ?? null : null
   const cultura = useCultura(talhao ? culturaAtual : null)
+  const res = useMemo(
+    () => (conj ? resiliencia(clima.dados, textura, conj.rotacoes.map(r => r.safras)) : null),
+    [clima.dados, textura, conj],
+  )
+  const diags = useMemo(() => res?.rotacoes.map(diagnostico) ?? null, [res])
+  // Selecionar uma rotação já leva a simulação ao período que mais pesa no selo dela; `idx` explícito = clique numa marca.
+  const selecionar = (rot: number, idx?: number) =>
+    setState(s => ({ ...s, rot, idx: idx ?? periodoDecisivo(diags?.[rot] ?? null) ?? s.idx }))
   useEffect(() => { salvar(campos) }, [campos])
 
   // Nome da cidade do talhão: uma consulta quando o contorno é novo ou mudou.
@@ -84,7 +128,9 @@ export default function App() {
     )
   }
 
+  const pronto = conj && rotOk && fases && conj.rotacoes.length > 0
   return (
+    <ConjuntoContext.Provider value={conj ?? conjVazio}>
     <div className="app">
       <header className="bar">
         <div className="app-name">Field Shift</div>
@@ -99,14 +145,26 @@ export default function App() {
       <main className="main">
         {clima.status === 'erro' && <AvisoClima onRecarregar={clima.recarregar} />}
         {cultura.status === 'erro' && <div className="aviso" role="alert">Os requisitos da cultura não carregaram. <button className="link" type="button" onClick={cultura.recarregar}>Tentar de novo</button></div>}
-        <Simulation idx={state.idx} clima={clima} cultura={cultura} />
+        {recomendadas.status === 'erro' && (
+          <div className="aviso" role="alert">
+            As rotações recomendadas não carregaram.
+            <button className="link" type="button" onClick={recomendadas.recarregar}>Tentar de novo</button>
+          </div>
+        )}
+        {recomendadas.status === 'carregando' && <p className="aviso" role="status">Buscando as rotações recomendadas para o talhão…</p>}
+        {conj && conj.rotacoes.length === 0 && <p className="aviso" role="status">Nenhuma rotação recomendada para este talhão.</p>}
+        {pronto && <>
+        <Simulation idx={state.idx} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={state.mode === 'cmp' ? { sel: cmpSel, pr: state.pr, res } : null} />
         <Rotations
-          idx={state.idx} mode={state.mode} pr={state.pr}
+          idx={state.idx} mode={state.mode} sel={cmpSel} onToggleSel={toggleCmp} res={res}
+          rot={state.rot} onRot={selecionar} diags={diags}
           onIdx={setIdx} onMode={setMode} decendios={clima.dados?.decendios ?? null}
         />
+        </>}
       </main>
-      <Inspector idx={state.idx} pr={state.pr} clima={clima.dados} onVerDados={() => setVerCulturas(true)} />
+      {pronto && <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={() => setVerCulturas(true)} />}
       {verCulturas && <CatalogoCulturas inicial={culturaAtual ?? 'soja'} onFechar={() => setVerCulturas(false)} />}
     </div>
+    </ConjuntoContext.Provider>
   )
 }

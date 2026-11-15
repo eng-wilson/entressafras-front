@@ -55,8 +55,18 @@ export function CatalogoCulturas({ inicial, onFechar }: { inicial: string; onFec
             <div key={chave}><dt>{nome}</dt><dd>Preferencial: {opcoes(dados.soil[chave].optimal)}<br />Limites: {opcoes(dados.soil[chave].absolute)}</dd></div>)}
           <div><dt>Limite letal no início do crescimento</dt><dd>{dados.temperature.killing_early_growth == null ? 'Sem dado' : `${numero(dados.temperature.killing_early_growth)} °C`}</dd></div>
           <div><dt>Limite letal no repouso</dt><dd>{dados.temperature.killing_rest == null ? 'Sem dado' : `${numero(dados.temperature.killing_rest)} °C`}</dd></div>
+          {(() => {
+            const w = dados.water_requirements
+            if (!w) return <div><dt>Estágios e raízes (FAO-56)</dt><dd>Sem perfil hídrico no catálogo</dd></div>
+            const d = w.stage_length_days
+            return <>
+              <div><dt>Estágios (FAO-56)</dt><dd>Inicial {d.initial} · desenvolvimento {d.development} · meio {d.mid_season} · fim {d.late_season} dias (total {d.total})</dd></div>
+              <div><dt>Profundidade das raízes</dt><dd>{numero(w.root_depth_m.initial)} m no plantio, até {numero(w.root_depth_m.max)} m</dd></div>
+              <div><dt>Coeficiente de cultura (Kc)</dt><dd>{numero(w.crop_coefficient.initial)} no início · {numero(w.crop_coefficient.mid_season)} no meio · {numero(w.crop_coefficient.late_season)} no fim</dd></div>
+            </>
+          })()}
         </dl>
-        <p className="culturas-nota">Fonte: catálogo EcoCrop, via API Entressafras. Requisitos gerais da espécie; a chuva anual não equivale ao consumo de água por ciclo. Ciclos e rotações da simulação permanecem ilustrativos.</p>
+        <p className="culturas-nota">Fonte: catálogo EcoCrop e perfis FAO-56 (CropWat), via API Entressafras. Requisitos gerais da espécie, não calibrados por região; a chuva anual não equivale ao consumo de água por ciclo. Ciclos e rotações da simulação permanecem ilustrativos.</p>
       </>}
     </dialog>, document.body,
   )
