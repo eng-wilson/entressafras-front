@@ -61,7 +61,8 @@ test('sem o atendimento por fase na resposta, nada é estimado: sem momentos e w
   })
   await page.goto('/')
   const painel = page.getByRole('region', { name: 'Momentos de atenção da rotação' })
-  await expect(painel).toContainText('A API não trouxe o atendimento por fase')
+  // Sem momento de atenção, a seção fica oculta
+  await expect(page.locator('section.attention-cycle')).toBeHidden()
   await expect(painel.locator('.attention-moment')).toHaveCount(0)
   const agua = page.locator('.cena-card').filter({ hasText: 'Água para a cultura' })
   await expect(agua.locator('.wg-v')).toHaveText('—')

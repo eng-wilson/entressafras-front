@@ -18,8 +18,9 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
   await expect(insp.getByRole('heading', { level: 2 })).toHaveText('Soja → milho safrinha')
   await expect(insp).not.toContainText('Por que ficou')
   await expect(insp.locator('.insp-provisional')).toContainText('sem cálculo para este talhão')
-  await expect(insp.getByRole('region', { name: 'Momentos de atenção da rotação' })).toBeVisible()
-  await expect(insp.locator('.attention-map')).toBeVisible({ timeout: 30000 })
+  // Esta rotação não tem momento de atenção: a seção fica oculta (só aparece quando há)
+  await expect(insp.locator('.insp-rank-why')).toBeVisible({ timeout: 30000 })
+  await expect(insp.locator('section.attention-cycle')).toBeHidden()
   await expect(insp.locator('.insp-risk-chart, .insp-cycle-chart')).toHaveCount(0)
   await expect(page.getByRole('complementary', { name: 'Ajustes' }).getByRole('region', { name: 'Momentos de atenção da rotação' })).toHaveCount(0)
   await page.screenshot({ path: testInfo.outputPath('inspector-desktop.png') })
@@ -97,7 +98,7 @@ test('risco calculado sem fase e sem clima mantém os limites explícitos', asyn
   await page.goto('/')
   const insp = painel(page)
   // O panorama vem do atendimento por fase da API, não do clima: a falha do clima não o apaga nem o substitui
-  await expect(insp.getByRole('region', { name: 'Momentos de atenção da rotação' })).toContainText('atendimento da API')
+  await expect(insp.locator('section.attention-cycle')).toBeHidden()
   await expect(insp.locator('.insp-provisional')).toHaveCount(0)
   await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
   await insp.getByRole('button', { name: 'Origem e limites dos dados' }).click()
@@ -111,7 +112,7 @@ test('painel acessível em celular, tablet e texto ampliado', async ({ page }, t
   await page.getByRole('link', { name: 'Entender esta rotação e os próximos passos' }).click()
   const insp = painel(page)
   await expect(insp).toBeInViewport()
-  await expect(insp.locator('.attention-map')).toBeVisible({ timeout: 30000 })
+  await expect(insp.locator('.insp-rank')).toBeVisible({ timeout: 30000 })
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: 900 })
     const limites = await insp.evaluate(el => {
