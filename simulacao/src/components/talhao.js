@@ -126,9 +126,10 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024, t =
         const { cena, sim, crop, classe, dia } = atual;
         const reg = sim.plantas[dia];
         atual.clima = climaVisual(sim, dia);
-        // Colhido (pousio): t antes da 1ª fase = nenhuma planta. A cultura nunca fica de pé depois da colheita.
-        const t = atual.colhido ? -1 : dia / crop.cicloDias;
-        cena.lavoura.atualizar(t, reg, { ...MODO.planta, clima: atual.clima });
+        // Colhido (pousio): progresso antes da 1ª fase = nenhuma planta. A cultura nunca fica de pé depois da colheita.
+        // (Não chamar de `t`: é o nome da função de tradução usada logo abaixo.)
+        const progresso = atual.colhido ? -1 : dia / crop.cicloDias;
+        cena.lavoura.atualizar(progresso, reg, { ...MODO.planta, clima: atual.clima });
         cena.diorama.atualizar({ sim, dia, classe, modo: MODO.solo, lavoura: cena.lavoura, reg });
         const estado = t(atual.clima.seca > 0.7 ? 'Seca intensa' : atual.clima.seca > 0.25 ? 'Estresse por seca ou calor' : atual.clima.chuva >= 30 ? 'Chuva intensa' : atual.clima.chuva >= 0.2 ? 'Chuva' : 'Sem chuva');
         canvas.setAttribute('aria-label', t('Talhão simulado: {estado}, {chuva} mm de chuva no dia. Arraste para mover; mais e menos para zoom; zero para restaurar.', { estado, chuva: atual.clima.chuva.toFixed(1) }));
