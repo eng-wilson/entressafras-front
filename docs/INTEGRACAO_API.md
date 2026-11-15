@@ -18,10 +18,10 @@ Base: `VITE_API_URL` (padrão `https://entressafras-backend-production.up.railwa
 | `GET /api/health` | OK | Diagnóstico | — |
 | `GET /api/clima/decendios?lat&lon` | OK | Chuva, ET0 e temperatura por decêndio (NASA POWER) | 7 dias, 20 pontos, `entressafras.clima.decendios.v1` |
 | `GET /api/crops`, `/api/crops/{code}` | OK | Requisitos EcoCrop; Kc, estágios, raízes e Ky (FAO-56) | 7 dias, 20 culturas, `entressafras.culturas.v2` |
-| `POST /api/rotations/recommendations` | **Erro 500** | Rotações, ordem, risco, escalas 0–100, proteção do solo, solo usado, calendário | 1 dia, 20 pedidos, `entressafras.rotacoes.v2` |
+| `POST /api/rotations/recommendations` | OK (≈25 s) | Rotações, ordem, risco, escalas 0–100, proteção do solo, solo usado, calendário | 1 dia, 20 pedidos, `entressafras.rotacoes.v2` |
 | `GET /api/clima/diario` | Não usado | — | — |
 
-**Recomendações fora do ar.** Respondeu 500 em todos os testes de 15/11. Com textura informada, falha depois de cerca de 154 s; sem textura (solo estimado pelo SoilGrids), falha em 0,3 s. A tela mostra "As rotações recomendadas não carregaram" com "Tentar de novo". O front espera até 90 s; se o endpoint voltar demorando 154 s, esse limite precisará subir.
+**Recomendações de volta (15/11, à tarde):** 200 em cerca de 25 s, com risco calculado (`FAO56_SIMPLIFIED_KY`, 30 safras), sem MOCK. Antes, de manhã, respondia 500. Ainda não confirmado: o pedido **sem** `soil_type` (solo estimado pelo SoilGrids), que falhava na hora. O front espera até 90 s.
 
 **Clima diário não usado de propósito:** traz umidade regional (`gwettop`/`gwetroot`), não a resposta hídrica da cultura, e não resolveria nenhum indicador atual.
 
@@ -38,7 +38,7 @@ A resposta é validada antes de entrar na tela: exige `soil`, `priorities` e, em
 
 ## Origem de cada dado na tela
 
-Legenda: **API** · **API (MOCK)**: o servidor marca como provisório · **Front/API**: conta do front com insumos da API · **Cadastro** · **Mock** · **Externo**.
+Legenda: **API** · **API (MOCK)**: marcado provisório pelo servidor até 15/11; a tela mostra "provisório" só se o servidor voltar a marcar MOCK · **Front/API**: conta do front com insumos da API · **Cadastro** · **Mock** · **Externo**.
 
 | Área | Dado | Origem | Campo ou arquivo |
 |---|---|---|---|
@@ -76,20 +76,20 @@ Limiares de apresentação definidos no front (não são da API nem oficiais): r
 
 | Prioridade | Pendência | Efeito na tela hoje |
 |---|---|---|
-| 1 | `POST /api/rotations/recommendations` responde 500 | Tela sem rotações |
-| 2 | Risco, ranking e escalas ainda marcados MOCK (última resposta real: 14/11) | Valores "provisórios", iguais para qualquer talhão e solo |
+| 1 | Confirmar o pedido sem `soil_type` (falhava com 500 em 15/11 de manhã) | Talhão sem textura informada pode ficar sem rotações |
+| 2 | Nomes comuns em português no catálogo | Culturas novas dependem do catálogo local (`src/data/culturas.ts`); fora dele, nome científico |
 | 3 | Série por dia ou decêndio da resposta hídrica (ETa, ETc, água na zona das raízes) | Atendimento constante dentro de cada fase; veranicos curtos não aparecem |
 | 4 | Economia de água por rotação | Eixo e prioridade mock |
 | 5 | Produção (sc/ha) e preço por cultura e região | Tabela e receita mock |
 | 6 | Efeito da sequência de culturas nas pragas | Tag e texto mock |
-| 7 | Nome comum das culturas em português | Nomes em `perfis.ts` |
 | 8 | Umidade do solo atual, previsão do tempo | Não exibidos |
 
 ### Front
 
-- **Quando as recomendações voltarem:** trocar a fixture `src/data/rotacoesFixture.ts` (hoje montada pelo contrato) pela resposta real; rodar `npm run dados:status`; conferir se o risco deixou de ser MOCK; rever o limite de 90 s.
+- **Fixtures:** a resposta real de 15/11 está em `src/data/rotacoesRealFixture.ts` (com testes próprios). A `rotacoesFixture.ts`, montada pelo contrato, segue nos testes de lógica; migrá-los para a real exige reescrever as expectativas (outras culturas e risco).
+- **Culturas novas da API** (ex.: feijão-caupi, girassol): incluir no catálogo local para ter nome em português e requisitos; perfis de produção, preço e pragas não existem para elas (aparecem "Sem dado").
 - **Paridade visual:** os 5 testes de `tests/ui-parity.spec.ts` comparam com imagens das 4 rotações antigas. Atualizar as imagens depende de aprovação visual.
-- **Painel direito em edição:** havia edições sem commit na pasta principal (navegação entre momentos de atenção e "scrubber" de períodos), ainda não integradas à `main`.
+- **Painel direito:** as edições locais (navegação entre momentos, faixa de períodos) foram portadas sobre a API. Caso de borda: ao chegar ao primeiro momento, "Momento anterior" fica desabilitado e o foco se perde.
 
 ## Como manter
 
