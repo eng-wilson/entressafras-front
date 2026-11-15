@@ -52,6 +52,10 @@ export const pctFmt = (v: number) => numero(v, { maximumFractionDigits: 1 })
 export const reaisFmt = (v: number, casas = 0) =>
   new Intl.NumberFormat(locale(), { style: 'currency', currency: 'BRL', maximumFractionDigits: casas, minimumFractionDigits: casas }).format(v)
 
+/** Dólares formatados no idioma atual: "US$ 5.876" / "$5,876". */
+export const usdFmt = (v: number, casas = 0) =>
+  new Intl.NumberFormat(locale(), { style: 'currency', currency: 'USD', maximumFractionDigits: casas, minimumFractionDigits: casas }).format(v)
+
 /** Ordinal: pt "1ª"/"1º" (genero f/m), en "1st", "2nd", "3rd", "4th"… */
 export function ordinal(n: number, genero: 'f' | 'm' = 'f'): string {
   if (atual === 'pt') return `${n}${genero === 'f' ? 'ª' : 'º'}`

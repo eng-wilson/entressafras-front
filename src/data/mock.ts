@@ -93,18 +93,16 @@ export type RotacaoDef = {
   id: string
   safras: SafraDef[]
   ct: CTRow
-  /** Score ilustrativo de água (mock, menor = melhor); a API não entrega economia de água. */
-  agua: number
   /** Score ilustrativo de solo (mock, menor = melhor); só no conjunto local. Na API vale `scores.soil_protection`. */
   solo: number
   barras: BarDef[]
   maisPragas?: boolean
   /** Posição em COR_ROT, estável quando a API só reordena as mesmas rotações. */
   cor: number
-  /** Escalas 0–100 da API (produtividade preservada, segurança hídrica, proteção do solo, média). */
+  /** Escalas 0–100 da API (produtividade preservada, segurança hídrica, proteção do solo, faturamento, média). */
   scores?: RotationScores
-  /** Lucro estimado da rotação em R$/ha, da API; ausente enquanto o backend não envia. */
-  lucro?: number | null
+  /** Faturamento de referência da API (US$/ha): bruto e com o desconto hídrico. */
+  faturamento?: { bruto: number | null; ajustado: number | null }
   /** Índice de proteção do solo planejada, da API. */
   protecaoSolo?: SoilProtection
   /** Rotação criada pelo agricultor ("Nova"), ranqueada pela API em custom_rotations; id da salva no navegador. */
@@ -139,8 +137,7 @@ export const SAFRAS: SafraDef[][] = [
 
 // Scores ilustrativos (menor = melhor); índice = rotação 0–3. Resiliência e produtividade já não vêm daqui:
 // a primeira é calculada com o clima (logic/resiliencia.ts) e a segunda com a receita de CT (receitaHa).
-export const SCORE: Record<'agua' | 'solo', number[]> = {
-  agua:  [-8, -7, -6.5, -4],
+export const SCORE: Record<'solo', number[]> = {
   solo:  [0, 60, 10, 110],
 }
 
@@ -164,7 +161,7 @@ export const CONJUNTO_LOCAL: ConjuntoRotacoes = {
   ano: 2026,
   avisos: [],
   rotacoes: SAFRAS.map((safras, i) => ({
-    id: `r${i + 1}`, safras, ct: CT[i], agua: SCORE.agua[i], solo: SCORE.solo[i], barras: BARRAS_LOCAIS[i], maisPragas: i === 3, cor: i,
+    id: `r${i + 1}`, safras, ct: CT[i], solo: SCORE.solo[i], barras: BARRAS_LOCAIS[i], maisPragas: i === 3, cor: i,
   })),
 }
 

@@ -15,8 +15,6 @@ export type PerfilCultura = {
   prod: { y: string; u: string; p: string } | null
   /** Efeito nas pragas como 2ª safra depois da soja. (O efeito no solo vem da API: proteção do solo planejada.) */
   pragas: { nivel: 'Menor risco' | 'Maior risco'; porque: string }
-  /** Score ilustrativo de água como 2ª safra (menor = melhor), na escala de SCORE em mock.ts. A API não o entrega. */
-  score: { agua: number }
 }
 
 export const PERFIS: Record<number, PerfilCultura> = {
@@ -24,30 +22,25 @@ export const PERFIS: Record<number, PerfilCultura> = {
     id: 'soja', nome: 'Soja',
     prod: { y: '58', u: 'sc/ha', p: 'R$ 152,45' },
     pragas: { nivel: 'Maior risco', porque: 'Soja depois de soja mantém as pragas e os nematoides no talhão.' },
-    score: { agua: -5 },
   },
   2175: {
     id: 'milho', nome: 'Milho', nome2: 'Milho safrinha',
     prod: { y: '98', u: 'sc/ha', p: 'R$ 66,60' },
     pragas: { nivel: 'Maior risco', porque: 'Soja e milho em sequência: pragas como o percevejo passam de uma para a outra.' },
-    score: { agua: -4 },
   },
   48747: {
     id: 'sorgo', nome: 'Sorgo',
     prod: { y: '62', u: 'sc/ha', p: 'R$ 44,00' },
     pragas: { nivel: 'Menor risco', porque: 'O sorgo não hospeda as principais pragas da soja.' },
-    score: { agua: -7 },
   },
   8418: {
     id: 'milheto', nome: 'Milheto', cobertura: true,
     prod: null,
     pragas: { nivel: 'Menor risco', porque: 'O milheto quebra a sequência de hospedeiros das pragas da soja.' },
-    score: { agua: -8 },
   },
   1160: {
     id: 'algodao', nome: 'Algodão', nome2: 'Algodão 2ª safra',
     prod: { y: '280', u: '@/ha', p: 'R$ 62,00' },
     pragas: { nivel: 'Maior risco', porque: 'Soja e algodão compartilham pragas como a mosca-branca e o percevejo.' },
-    score: { agua: -2 },
   },
 }

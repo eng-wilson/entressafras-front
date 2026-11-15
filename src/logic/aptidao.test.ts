@@ -13,14 +13,14 @@ const resApi = resiliencia(climaDeMock(), 'medio', API.map(r => r.safras))
 const rot = (i: number) => res.rotacoes[i]
 
 describe('aptidao', () => {
-  it('água e solo: 100 à melhor rotação e o piso à pior', () => {
-    expect(aptidao(0, rot(0), ROTS).agua).toBe(100)
-    expect(aptidao(3, rot(3), ROTS).agua).toBe(12)
+  it('solo (conjunto local): 100 à melhor rotação e o piso à pior', () => {
     expect(aptidao(0, rot(0), ROTS).solo).toBe(100)
     expect(aptidao(3, rot(3), ROTS).solo).toBe(12)
   })
 
-  it('produtividade proporcional à receita da melhor rotação', () => {
+  it('conjunto local: produtividade e faturamento proporcionais à receita da melhor rotação', () => {
+    expect(aptidao(2, rot(2), ROTS).fat).toBe(100)
+    expect(aptidao(0, rot(0), ROTS).fat).toBe(57)
     expect(aptidao(2, rot(2), ROTS).prod).toBe(100) // soja precoce → milho + braquiária: R$ 15.378/ha
     expect(aptidao(3, rot(3), ROTS).prod).toBe(94) // R$ 14.454 ÷ 15.378
     expect(aptidao(1, rot(1), ROTS).prod).toBe(75) // R$ 11.570 ÷ 15.378
@@ -64,7 +64,8 @@ describe('faixa e motivo', () => {
     expect(safraLimitante(r).nome).toBe('Milho safrinha')
     expect(motivo(API[2], 'risco', r)).toBe('milho safrinha: risco hídrico de 45% (API, provisório)')
     expect(motivo(API[2], 'solo', r)).toBe('cobertura viva em 208 de 366 dias; a troca de cultura muda de família botânica')
-    expect(motivo(API[2], 'agua', r)).toBeNull()
+    expect(motivo(API[2], 'fat', r)).toMatch(/^US\$\s2\.390\/ha com a perda hídrica \(US\$\s2\.510\/ha sem perda\)$/)
+    expect(motivoDetalhe('fat', r)).toBe('Estimativa com base em médias nacionais (FAO), sem custos de produção.')
   })
 
   it('explica o risco da API e avisa quando ele é MOCK', () => {

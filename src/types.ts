@@ -1,4 +1,5 @@
-export type Priority = { risco: boolean; agua: boolean; solo: boolean; prod: boolean }
+/** Prioridades da lateral. `fat` = faturamento (`revenue` na API). */
+export type Priority = { risco: boolean; fat: boolean; solo: boolean; prod: boolean }
 
 export type AppState = {
   idx: number       // 0–35 (décimo 0 = 1–10 set)
@@ -225,26 +226,33 @@ export type RotationScores = {
   /** 100 − risco hídrico (pior das duas culturas). */
   water_security: number | null
   soil_protection: number
-  /** Média das três. */
+  /**
+   * Faturamento de referência (FAOSTAT, média do Brasil) com o desconto hídrico, dividido pelo teto do catálogo.
+   * null = cultura fora do catálogo de preços; ausente em respostas antigas (tratar como null).
+   */
+  revenue?: number | null
+  /** Média de productivity, water_security e soil_protection (sem revenue). NÃO é a nota que ordenou a lista. */
   overall: number | null
+  /** Sempre "WORST_CROP": productivity e water_security usam a pior cultura da rotação. */
   aggregation?: string
 }
-export type Rotation = {
+/** Faturamento de referência da rotação (US$/ha), por rotação nas respostas de /recommendations e /simulate. */
+export type RevenueFields = {
+  /** Soma do faturamento de referência das culturas, sem desconto. */
+  gross_revenue_usd_ha?: number | null
+  /** Com o desconto hídrico de cada cultura no local: o valor por trás de scores.revenue. */
+  water_adjusted_revenue_usd_ha?: number | null
+}
+export type Rotation = RevenueFields & {
   id: string; rank: number; crops: [RotationCrop, RotationCrop]
   soil_protection: SoilProtection
   scores: RotationScores
-  /** Resultado econômico da rotação. CONTRATO PROVISÓRIO: o backend ainda não publicou; ajustar em lucroDaApi. */
-  economics?: RotationEconomics | null
 }
-/** Provisório: lucro por hectare da rotação (receita menos custo), em reais. */
-export type RotationEconomics = {
-  profit_brl_per_ha: number | null
-  revenue_brl_per_ha?: number | null
-  cost_brl_per_ha?: number | null
-  method?: string
-}
-/** Prioridades do ranking na API: 1 liga o indicador, 0 desliga. */
-export type Priorities = { productivity: 0 | 1; water_security: 0 | 1; soil_protection: 0 | 1 }
+/**
+ * Prioridades do ranking na API: 1 liga, 0 desliga. A API ordena pela média das notas ligadas (tudo desligado: pelo
+ * menor risco hídrico). Chave ausente recebe o padrão {1, 1, 1, 0}; chave desconhecida é ignorada: enviar as quatro.
+ */
+export type Priorities = { productivity: 0 | 1; water_security: 0 | 1; soil_protection: 0 | 1; revenue: 0 | 1 }
 /** Solo usado na simulação e de onde veio (textura informada ou estimativa pelo local). */
 export type SoilInfo = {
   source: 'SOILGRIDS_SAXTON_RAWLS_2006' | 'REQUEST_TEXTURE_CLASS' | string
@@ -289,7 +297,7 @@ export type SimulatedCrop = RotationCrop & {
   crop: CropWithRisk & { family?: string | null; crop_cycle?: { min_days: number | null; max_days: number | null } }
   calendar: CropCalendarInfo
 }
-export type CustomRotation = {
+export type CustomRotation = RevenueFields & {
   id: string
   /** Posição entre os candidatos da recomendação (1 = melhor que todos). */
   rank: number

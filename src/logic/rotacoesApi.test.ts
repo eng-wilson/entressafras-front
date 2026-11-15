@@ -3,7 +3,7 @@ import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
 import { SIMULACAO_FIXTURE } from '../data/simulacaoFixture'
 import { SIMULACAO_1_CULTURA } from '../data/simulacaoFixture1'
 import { climaDeMock } from '../data/climaFixture'
-import { conjuntoDaApi, decendioDaData, historicoEcoCrop, lucroDaApi, mesDaData, mesmasCulturas, nomeRotacao, prioridadesApi, rotacaoAtualEcoCrop, textoProtecaoSolo } from './rotacoesApi'
+import { conjuntoDaApi, decendioDaData, historicoEcoCrop, faturamentoDaApi, mesDaData, mesmasCulturas, nomeRotacao, prioridadesApi, rotacaoAtualEcoCrop, textoProtecaoSolo } from './rotacoesApi'
 import { resiliencia } from './resiliencia'
 import { diagnostico } from './diagnostico'
 import { aptidao } from './aptidao'
@@ -107,9 +107,11 @@ describe('contrato de 15/11/2026: prioridades, histórico, scores e proteção d
     expect(historicoEcoCrop(null)).toEqual([])
   })
 
-  it('prioridades da lateral → API; economia de água não tem equivalente', () => {
-    expect(prioridadesApi({ risco: true, agua: true, solo: false, prod: true }))
-      .toEqual({ water_security: 1, productivity: 1, soil_protection: 0 })
+  it('prioridades da lateral → API, sempre as quatro chaves (faturamento → revenue)', () => {
+    expect(prioridadesApi({ risco: true, fat: true, solo: false, prod: true }))
+      .toEqual({ water_security: 1, productivity: 1, soil_protection: 0, revenue: 1 })
+    expect(prioridadesApi({ risco: false, fat: false, solo: false, prod: false }))
+      .toEqual({ water_security: 0, productivity: 0, soil_protection: 0, revenue: 0 })
   })
 
   it('cada rotação mantém a cor quando a API só reordena', () => {
@@ -119,12 +121,13 @@ describe('contrato de 15/11/2026: prioridades, histórico, scores e proteção d
     for (const rot of conj.rotacoes) expect(reordenado.rotacoes.find(x => x.id === rot.id)!.cor).toBe(rot.cor)
   })
 
-  it('resiliência, produtividade e saúde do solo vêm dos scores da API (escala absoluta)', () => {
+  it('resiliência, produtividade, saúde do solo e faturamento vêm dos scores da API (escala absoluta)', () => {
     const r = conj.rotacoes[3]
-    expect(aptidao(3, null, conj.rotacoes)).toMatchObject({
+    expect(aptidao(3, null, conj.rotacoes)).toEqual({
       risco: Math.round(r.scores!.water_security!),
       prod: Math.round(r.scores!.productivity!),
       solo: Math.round(r.scores!.soil_protection),
+      fat: Math.round(r.scores!.revenue!),
     })
     expect(r.ct.soilWhy).toBe(textoProtecaoSolo(r.protecaoSolo!))
     expect(conj.solo?.texture_class).toBe('medium')
@@ -132,9 +135,9 @@ describe('contrato de 15/11/2026: prioridades, histórico, scores e proteção d
 
   it('score ausente (risco desconhecido) fica sem nota, sem estimativa local', () => {
     const r = structuredClone(ROTACOES_FIXTURE)
-    r.rotations[0].scores = { ...r.rotations[0].scores, water_security: null, productivity: null }
+    r.rotations[0].scores = { ...r.rotations[0].scores, water_security: null, productivity: null, revenue: null }
     const c = conjuntoDaApi(r)
-    expect(aptidao(0, null, c.rotacoes)).toMatchObject({ risco: null, prod: null })
+    expect(aptidao(0, null, c.rotacoes)).toMatchObject({ risco: null, prod: null, fat: null })
   })
 })
 
@@ -211,13 +214,14 @@ describe('rotação atual do talhão (última safra do histórico) na comparaç�
   })
 })
 
-describe('lucro estimado (contrato provisório)', () => {
-  it('vem da API quando enviado; sem o campo, fica ausente (nada estimado no front)', () => {
+describe('faturamento de referência (US$/ha)', () => {
+  it('vem da API, bruto e com o desconto hídrico; sem os campos, fica null (nada estimado no front)', () => {
     const r = structuredClone(ROTACOES_FIXTURE)
-    r.rotations[0].economics = { profit_brl_per_ha: 1234.5 }
-    expect(lucroDaApi(r.rotations[0])).toBe(1234.5)
+    delete r.rotations[1].gross_revenue_usd_ha
+    delete r.rotations[1].water_adjusted_revenue_usd_ha
+    expect(faturamentoDaApi(r.rotations[0])).toEqual({ bruto: 1340, ajustado: 1300 })
     const c = conjuntoDaApi(r)
-    expect(c.rotacoes[0].lucro).toBe(1234.5)
-    expect(c.rotacoes[1].lucro).toBeNull()
+    expect(c.rotacoes.find(x => x.id === r.rotations[0].id)!.faturamento).toEqual({ bruto: 1340, ajustado: 1300 })
+    expect(c.rotacoes.find(x => x.id === r.rotations[1].id)!.faturamento).toEqual({ bruto: null, ajustado: null })
   })
 })

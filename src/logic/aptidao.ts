@@ -1,7 +1,7 @@
 import type { CTRow, RotacaoDef } from '../data/mock'
 import type { Priority } from '../types'
 import type { ResRotacao, ResSafra } from './resiliencia'
-import { numero as fmtNumero, pctFmt, t } from '../i18n'
+import { numero as fmtNumero, pctFmt, t, usdFmt } from '../i18n'
 
 export type Eixo = keyof Priority
 
@@ -11,8 +11,8 @@ export const PISO = 12
 /** Escala da API (0–100, absoluta) na posição do mapa, com o piso para o ponto não sumir no centro. */
 const doApi = (v: number | null | undefined) => (v == null ? null : Math.max(PISO, Math.round(v)))
 
-/** Mock relativo (menor = melhor): 100 à melhor rotação e o piso à pior. Só para o que a API não entrega. */
-function relativa(k: 'agua' | 'solo', r: RotacaoDef, rots: RotacaoDef[]) {
+/** Mock relativo (menor = melhor): 100 à melhor rotação e o piso à pior. Só no conjunto local, sem `scores`. */
+function relativa(k: 'solo', r: RotacaoDef, rots: RotacaoDef[]) {
   const v = rots.map(x => x[k])
   const min = Math.min(...v)
   const max = Math.max(...v)
@@ -20,32 +20,36 @@ function relativa(k: 'agua' | 'solo', r: RotacaoDef, rots: RotacaoDef[]) {
 }
 
 /**
- * Nota 0–100 por eixo. Com a resposta da API (`scores`), três eixos são dela, em escala absoluta:
- * - Resiliência = `water_security` (100 − risco hídrico da pior cultura).
+ * Nota 0–100 por eixo. Com a resposta da API (`scores`), os quatro eixos são dela, em escala absoluta:
+ * - Resiliência = `water_security` (% de safras sem perda crítica, pior cultura).
  * - Produtividade = `productivity` (100 − perda estimada por falta de água).
  * - Saúde do solo = `soil_protection` (cobertura viva e troca de família botânica).
- * - Economia de água: a API não entrega; segue o score ilustrativo (mock), relativo entre as rotações.
- * Sem `scores` (conjunto local dos testes): resiliência pela segurança hídrica, produtividade pela receita e solo pelo mock.
+ * - Faturamento = `revenue` (faturamento de referência com desconto hídrico ÷ teto do catálogo).
+ * Sem `scores` (conjunto local dos testes): resiliência pela segurança hídrica, produtividade e faturamento
+ * pela receita ilustrativa e solo pelo mock.
  */
 export function aptidao(i: number, rot: ResRotacao | null, rots: RotacaoDef[]): Record<Eixo, number | null> {
   const r = rots[i]
-  const agua = relativa('agua', r, rots)
   if (r.scores) {
-    return { risco: doApi(r.scores.water_security), agua, solo: doApi(r.scores.soil_protection), prod: doApi(r.scores.productivity) }
+    return {
+      risco: doApi(r.scores.water_security), fat: doApi(r.scores.revenue),
+      solo: doApi(r.scores.soil_protection), prod: doApi(r.scores.productivity),
+    }
   }
   const maior = Math.max(...rots.map(x => receitaHa(x.ct)))
+  const receita = maior > 0 ? Math.max(PISO, Math.round((100 * receitaHa(r.ct)) / maior)) : PISO
   return {
     risco: rot?.seguranca != null ? Math.max(PISO, rot.seguranca) : null,
-    agua,
+    fat: receita,
     solo: relativa('solo', r, rots),
-    prod: maior > 0 ? Math.max(PISO, Math.round((100 * receitaHa(r.ct)) / maior)) : PISO,
+    prod: receita,
   }
 }
 
 // Nome de cada eixo: todos femininos e no sentido "mais = melhor"
 export const NOME_EIXO: Record<Eixo, string> = {
   risco: 'Resiliência climática',
-  agua: 'Economia de água',
+  fat: 'Faturamento',
   solo: 'Saúde do solo',
   prod: 'Produtividade',
 }
@@ -121,11 +125,22 @@ export function motivo(r: RotacaoDef, k: Eixo, rot: ResRotacao | null): string |
     const p = r.scores?.productivity
     return p != null ? t('produção preservada de {p}% (perda por falta de água: {perda}%)', { p: Math.round(p), perda: Math.round(100 - p) }) : reais(receitaHa(r.ct))
   }
+  if (k === 'fat') {
+    const f = r.faturamento
+    if (f?.ajustado == null) return r.scores ? t('sem faturamento de referência para esta rotação') : reais(receitaHa(r.ct))
+    return f.bruto != null && f.bruto !== f.ajustado
+      ? t('{ajustado}/ha com a perda hídrica ({bruto}/ha sem perda)', { ajustado: usdFmt(f.ajustado), bruto: usdFmt(f.bruto) })
+      : t('{ajustado}/ha com a perda hídrica', { ajustado: usdFmt(f.ajustado) })
+  }
   return null
 }
 
+/** Ressalva do faturamento da API, junto de toda nota ou valor dele. */
+export const RESSALVA_FATURAMENTO = 'Estimativa com base em médias nacionais (FAO), sem custos de produção.'
+
 /** Explicação completa (tooltip) de onde vem o motivo; null quando o motivo curto já basta. */
 export function motivoDetalhe(k: Eixo, rot: ResRotacao | null): string | null {
+  if (k === 'fat') return t(RESSALVA_FATURAMENTO)
   if (k !== 'risco' || !rot) return null
   return detalheSafra(safraLimitante(rot))
 }

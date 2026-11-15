@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { aptidao, faixaDaNota, NOME_EIXO, safraLimitante, type Eixo } from '../logic/aptidao'
+import { aptidao, faixaDaNota, NOME_EIXO, RESSALVA_FATURAMENTO, safraLimitante, type Eixo } from '../logic/aptidao'
 import { BarraPrioridade, ILUSTRATIVO, leituraPrioridade } from './BarraPrioridade'
 import { porQueRanking } from '../logic/porQueRanking'
 import { avisosDeLocal, textoAvisoLocal } from '../logic/avisosApi'
@@ -22,13 +22,13 @@ const SELO = {
   risk: { icon: 'i-xc', rotulo: 'Desfavorável' },
 } as const
 // Prioridades na região: as 4 do "O que importa"; a chave da API diz se a prioridade está ligada no ranking.
-const PARAMETROS: { k: Eixo; api: 'water_security' | 'soil_protection' | 'productivity' | null }[] = [
-  { k: 'risco', api: 'water_security' }, { k: 'agua', api: null }, { k: 'solo', api: 'soil_protection' }, { k: 'prod', api: 'productivity' },
+const PARAMETROS: { k: Eixo; api: 'water_security' | 'soil_protection' | 'productivity' | 'revenue' | null }[] = [
+  { k: 'risco', api: 'water_security' }, { k: 'fat', api: 'revenue' }, { k: 'solo', api: 'soil_protection' }, { k: 'prod', api: 'productivity' },
 ]
 /** O que cada prioridade significa (página de detalhe ao tocar nela). */
 const EXPLICACAO: Record<Eixo, string> = {
   risco: 'Quanto a rotação resiste à falta de água no clima deste local. Vem do risco hídrico que a API calcula para as duas safras, nos anos históricos.',
-  agua: 'Quanto a rotação economiza água em comparação com as outras opções. Ainda é ilustrativo: a API não calcula este indicador.',
+  fat: 'Quanto a rotação fatura por hectare, com a perda por falta de água neste local descontada. Estimativa da API com médias nacionais (FAO), sem custos de produção.',
   solo: 'Quanto a rotação protege o solo: dias com cobertura viva e troca de família botânica entre as culturas. É um índice de planejamento da API, não uma medida do solo.',
   prod: 'Quanto da produtividade a rotação preserva diante da falta de água, pela cultura mais afetada. Calculado pela API para este local.',
 }
@@ -105,7 +105,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   }, [page, def.id])
 
   const soloBom = def.ct.soil === 'Melhora' || def.ct.soil === 'Ótima'
-  // Notas 0–100 da rotação neste talhão (escalas da API; economia de água ainda é ilustrativa)
+  // Notas 0–100 da rotação neste talhão (escalas da API)
   const notas = aptidao(rotIdx, rot, conj.rotacoes)
   const ordSafra = (n: number, cobertura: boolean | undefined) =>
     cobertura ? t('{ord} safra · cobertura', { ord: ordinal(n + 1) }) : t('{ord} safra', { ord: ordinal(n + 1) })
@@ -130,7 +130,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             <strong aria-label={t('{pos} de {total} opções recebidas', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}>{t('{pos} de {total}', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}</strong>
           </div>
           {/* Por que nesta posição: média das prioridades ligadas nas escalas da API, contra a vizinha na lista */}
-          {porQue && <p className="insp-rank-why">{porQue} <span>{t('Economia de água não entra na ordem: a API ainda não a calcula.')}</span></p>}
+          {porQue && <p className="insp-rank-why">{porQue}{conj.prioridades?.revenue === 1 && <> <span>{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).toLowerCase() })}</span></>}</p>}
         </div>
         {/* Como a rotação atende às 4 prioridades neste talhão: visual, quase sem texto */}
         <section className="insp-section" aria-label={t('Prioridades na sua região')}>
@@ -230,7 +230,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
               : t('A fase de maior déficit é apontada pela API; o percentual de risco não é uma probabilidade de seca nessas datas. As datas da fase são posicionadas no calendário pelos estágios do ciclo recebidos da API.')}</p>
           </>}
           {page === 'sources' && <>
-            <p>{conj.origem === 'api' ? t('Rotações e datas: API Entressafras. A ordem é recebida da API: a média das prioridades ligadas nas escalas 0–100 dela (economia de água não entra).') : t('Rotações e datas ilustrativas.')}{rankingTeste ? ` ${t('O ranking ainda é de teste.')}` : ''}</p>
+            <p>{conj.origem === 'api' ? t('Rotações e datas: API Entressafras. A ordem é recebida da API: a média das prioridades ligadas nas escalas 0–100 dela. Faturamento: preço ao produtor × produtividade, médias do Brasil (FAOSTAT), descontada a perda hídrica no local e sem custos de produção.') : t('Rotações e datas ilustrativas.')}{rankingTeste ? ` ${t('O ranking ainda é de teste.')}` : ''}</p>
             <p>{clima
               ? clima.safras.length
                 ? t('Chuva e temperatura: {fonte}, média de {n} safras ({de} a {ate}).', { fonte: clima.fonte, n: clima.safras.length, de: clima.safras[0], ate: clima.safras.at(-1) })

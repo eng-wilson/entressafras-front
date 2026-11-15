@@ -176,8 +176,11 @@ export const ROTACOES_FIXTURE: RotationRecommendations = {
         "water_security": 80,
         "soil_protection": 65.96,
         "overall": 79.32,
+        "revenue": 22.1,
         "aggregation": "worst_crop"
-      }
+      },
+      "gross_revenue_usd_ha": 1340,
+      "water_adjusted_revenue_usd_ha": 1300
     },
     {
       "id": "1150-48747-2027-10-15",
@@ -347,8 +350,11 @@ export const ROTACOES_FIXTURE: RotationRecommendations = {
         "water_security": 80,
         "soil_protection": 69.78,
         "overall": 80.26,
+        "revenue": 28.4,
         "aggregation": "worst_crop"
-      }
+      },
+      "gross_revenue_usd_ha": 1720,
+      "water_adjusted_revenue_usd_ha": 1670
     },
     {
       "id": "1150-2175-2027-10-15",
@@ -518,8 +524,11 @@ export const ROTACOES_FIXTURE: RotationRecommendations = {
         "water_security": 55,
         "soil_protection": 69.78,
         "overall": 75.09,
+        "revenue": 40.7,
         "aggregation": "worst_crop"
-      }
+      },
+      "gross_revenue_usd_ha": 2510,
+      "water_adjusted_revenue_usd_ha": 2390
     },
     {
       "id": "1150-1160-2027-10-15",
@@ -689,8 +698,11 @@ export const ROTACOES_FIXTURE: RotationRecommendations = {
         "water_security": 60,
         "soil_protection": 83.17,
         "overall": 75.06,
+        "revenue": 69.0,
         "aggregation": "worst_crop"
-      }
+      },
+      "gross_revenue_usd_ha": 4220,
+      "water_adjusted_revenue_usd_ha": 4054
     }
   ],
   "assumptions": {
@@ -721,6 +733,7 @@ export const ROTACOES_FIXTURE: RotationRecommendations = {
   "priorities": {
     "productivity": 1,
     "water_security": 1,
-    "soil_protection": 1
+    "soil_protection": 1,
+    "revenue": 0
   }
 }

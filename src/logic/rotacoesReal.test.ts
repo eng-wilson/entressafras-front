@@ -30,7 +30,7 @@ describe('resposta real da API (15/11/2026)', () => {
   })
 
   it('traz prioridades usadas, solo, propriedades do SoilGrids e calendário regional', () => {
-    expect(conj.prioridades).toEqual({ productivity: 0, water_security: 1, soil_protection: 1 })
+    expect(conj.prioridades).toEqual({ productivity: 0, water_security: 1, soil_protection: 1, revenue: 0 })
     expect(conj.solo).toMatchObject({ source: 'REQUEST_TEXTURE_CLASS', texture_class: 'clayey' })
     expect(conj.propriedadesSolo).toMatchObject({ source: 'SOILGRIDS', clay_pct: 24.7 })
     expect(conj.rotacoes[3].safras[0].calendario).toMatchObject({ source: 'GGCMI_PHASE3_V1_01', data_source: 'Brazil CONAB' })

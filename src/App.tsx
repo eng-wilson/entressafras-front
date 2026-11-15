@@ -36,7 +36,8 @@ import { ordinal, t, type Idioma } from './i18n'
 const DEFAULT: AppState = {
   idx: 10,
   mode: 'cal',
-  pr: { risco: true, agua: false, solo: true, prod: false },
+  // Mesmo padrão da API: as três agronômicas ligadas, faturamento desligado.
+  pr: { risco: true, fat: false, solo: true, prod: true },
   rot: 0,
 }
 

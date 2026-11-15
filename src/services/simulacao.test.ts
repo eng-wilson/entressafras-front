@@ -87,9 +87,9 @@ describe('validação', () => {
 describe('pedido de simulação alinhado ao da recomendação', () => {
   const base = { ponto: { lat: -12.5, lon: -55.7 }, ano: 2027, culturas: [{ code: 1150 }, { code: 2175 }], sweep: true }
   it('sem textura informada não manda soil_type; manda as mesmas prioridades e histórico', () => {
-    const corpo = corpoSimulacao({ ...base, solo: null, prioridades: { water_security: 1, productivity: 0, soil_protection: 1 }, historico: [1150, 2175] })
+    const corpo = corpoSimulacao({ ...base, solo: null, prioridades: { water_security: 1, productivity: 0, soil_protection: 1, revenue: 1 }, historico: [1150, 2175] })
     expect(corpo).not.toHaveProperty('soil_type')
-    expect(corpo).toMatchObject({ priorities: { water_security: 1, productivity: 0, soil_protection: 1 }, crop_history: [1150, 2175] })
+    expect(corpo).toMatchObject({ priorities: { water_security: 1, productivity: 0, soil_protection: 1, revenue: 1 }, crop_history: [1150, 2175] })
   })
   it('com textura, manda soil_type; sem histórico, não manda crop_history', () => {
     const corpo = corpoSimulacao({ ...base, solo: 'clayey', historico: [] })

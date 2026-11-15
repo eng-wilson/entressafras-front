@@ -2,14 +2,15 @@ import { describe, expect, it } from 'vitest'
 import type { RotacaoDef } from '../data/mock'
 import { escalasDaOrdem, notaDaOrdem, porQueRanking } from './porQueRanking'
 
-const rot = (water_security: number | null, soil_protection: number, productivity: number | null) =>
-  ({ scores: { water_security, soil_protection, productivity, overall: null } }) as unknown as RotacaoDef
-const RESILIENCIA_E_SOLO = { water_security: 1, soil_protection: 1, productivity: 0 } as const
+const rot = (water_security: number | null, soil_protection: number, productivity: number | null, revenue: number | null = null) =>
+  ({ scores: { water_security, soil_protection, productivity, revenue, overall: null } }) as unknown as RotacaoDef
+const RESILIENCIA_E_SOLO = { water_security: 1, soil_protection: 1, productivity: 0, revenue: 0 } as const
 
 describe('por que nesta posição (escalas da API, prioridades ligadas)', () => {
-  it('a ordem usa só as prioridades ligadas; sem nenhuma, as três', () => {
+  it('a ordem usa só as prioridades ligadas; sem nenhuma, o risco hídrico (water_security), como a API', () => {
     expect(escalasDaOrdem(RESILIENCIA_E_SOLO)).toEqual(['water_security', 'soil_protection'])
-    expect(escalasDaOrdem({ water_security: 0, soil_protection: 0, productivity: 0 })).toHaveLength(3)
+    expect(escalasDaOrdem({ water_security: 0, soil_protection: 0, productivity: 0, revenue: 0 })).toEqual(['water_security'])
+    expect(escalasDaOrdem({ water_security: 0, soil_protection: 0, productivity: 0, revenue: 1 })).toEqual(['revenue'])
     expect(notaDaOrdem(rot(100, 74.4, 98.4).scores, ['water_security', 'soil_protection'])).toBeCloseTo(87.2)
     expect(notaDaOrdem(rot(null, 74, 98).scores, ['water_security'])).toBeNull()
   })
@@ -26,6 +27,13 @@ describe('por que nesta posição (escalas da API, prioridades ligadas)', () => 
       'À frente da 2ª por 16,0 pontos na média de resiliência climática e saúde do solo, sobretudo em resiliência climática (90,0 contra 60,0).')
     expect(porQueRanking(rots, 1, RESILIENCIA_E_SOLO)).toBe(
       'Atrás da 1ª por 16,0 pontos na média de resiliência climática e saúde do solo, sobretudo em resiliência climática (60,0 contra 90,0).')
+  })
+
+  it('só faturamento ligado: compara a nota de faturamento; sem ela (fora do catálogo), não explica', () => {
+    const SO_FATURAMENTO = { water_security: 0, soil_protection: 0, productivity: 0, revenue: 1 } as const
+    expect(porQueRanking([rot(90, 80, 50, 69), rot(60, 78, 99, 41)], 0, SO_FATURAMENTO)).toBe(
+      'À frente da 2ª por 28,0 pontos na média de faturamento.')
+    expect(porQueRanking([rot(90, 80, 50, 69), rot(60, 78, 99, null)], 0, SO_FATURAMENTO)).toBeNull()
   })
 
   it('sem escala da API (risco desconhecido) ou com uma rotação só, não explica nada', () => {

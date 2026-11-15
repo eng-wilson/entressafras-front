@@ -1,5 +1,7 @@
 # Indicadores das rotações
 
+> **Revisão de 15/11/2026 (tarde):** "Economia de água" saiu. O 4º indicador agora é **Faturamento** (`scores.revenue`), também uma prioridade da API (`revenue`). As quatro prioridades vão sempre explícitas, com padrão `{productivity: 1, water_security: 1, soil_protection: 1, revenue: 0}`, e as quatro notas são exibidas mesmo quando a prioridade está desligada.
+
 > **Revisão de 15/11/2026:** com o contrato novo da API, Resiliência, Produtividade e Saúde do solo vêm das escalas 0–100 da API (`scores`), e a ordem vem do `rank` calculado pelas prioridades enviadas. Economia de água continua mock. As seções de Saúde do solo e Produtividade abaixo descrevem o mock anterior e ficam como histórico. Mapa atualizado: [INTEGRACAO_API.md](INTEGRACAO_API.md).
 
 > **Regra do projeto (14/11/2026):** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. A resiliência climática e a ordem das rotações vêm da API (`POST /api/rotations/recommendations`). O balanço hídrico que o front fazia foi removido. Água, solo e produtividade continuam ilustrativos (mock), porque a API ainda não os entrega. Detalhes: [INTEGRACAO_API.md](INTEGRACAO_API.md).
@@ -13,7 +15,7 @@ Estado da integração e pendências com o backend: [INTEGRACAO_API.md](INTEGRAC
 | Indicador | Origem dos dados | Escala da nota | Por safra? | Situação |
 |---|---|---|---|---|
 | Resiliência climática | Risco hídrico por cultura da API (`risk`) | Fixa: 10 pontos por ano em 10 | Sim | Da API (hoje marcado MOCK pelo servidor) |
-| Economia de água | `SCORE.agua` (mock) | Relativa às 4 rotações | Não | Ilustrativo |
+| Faturamento | `scores.revenue` e `water_adjusted_revenue_usd_ha` da API | Fixa: 0–100 (teto = par de maior faturamento do catálogo) | Não (o R$/ha por safra é mock) | Da API (médias nacionais FAOSTAT, sem custos) |
 | Saúde do solo | `scores.soil_protection` e `soil_protection` da API | Fixa: 0–100 | Não | Da API (índice de planejamento) |
 | Produtividade | `scores.productivity` da API (produção preservada) | Fixa: 0–100 | Só o R$/ha (mock) | Da API (hoje marcado MOCK pelo servidor) |
 | Ordenação (1º a 4º) | `rank` da API, pelas prioridades enviadas | Posição | Não | Da API (hoje marcado MOCK pelo servidor) |
@@ -52,27 +54,15 @@ O que o front ainda calcula aqui, por não vir pronto da API: o consumo de água
 
 **Ressalva atual:** o servidor marca o risco como `MOCK` (valores provisórios, iguais para qualquer talhão). A tela avisa isso no texto do risco e na memória de cálculo.
 
-## Economia de água
+## Faturamento
 
-**O que mede (intenção):** quanta água a rotação consome. Menos consumo = melhor.
+**O que mede:** faturamento bruto de referência da rotação (preço ao produtor × produtividade, média do Brasil, FAOSTAT), com cada cultura descontada pela perda hídrica no local. Não inclui custos de produção.
 
-**Como é calculado hoje:** a partir de um número fixo por rotação em `SCORE.agua`, em [`mock.ts`](../src/data/mock.ts). Menor = melhor; a unidade não está documentada.
+**Como é calculado:** pela API. `scores.revenue` = faturamento com desconto hídrico ÷ teto do catálogo (as duas culturas de maior faturamento, hoje algodão + amendoim, ~US$ 5.876/ha). 100 = esse par sem perda. `null` quando uma cultura está fora do catálogo de preços.
 
-| Rotação | `SCORE.agua` | Nota |
-|---|---|---|
-| Soja → crotalária + milheto | −8 | 100 |
-| Soja → sorgo | −7 | 78 |
-| Soja precoce → milho + braquiária | −6,5 | 67 |
-| Soja → milho safrinha | −4 | 12 |
+**Na tela:** eixo "Faturamento" do mapa de aptidão, linha "Faturamento com perda hídrica" (US$/ha, `water_adjusted_revenue_usd_ha`) no card, 4ª nota do rascunho. A ressalva "médias nacionais (FAO), sem custos" acompanha o valor.
 
-Nota = `round(12 + 88 × (max − valor) ÷ (max − min))`, com o mínimo e o máximo calculados entre as 4 rotações.
-
-**Inconsistência conhecida:** o "Ver por safra" mostra o consumo de água calculado pelo clima real (Σ Kc × ET0, em mm). Esse consumo não alimenta a nota do eixo, então os dois podem se contradizer.
-
-**Para sair do mock:**
-- definir o que o eixo mede: consumo total do ciclo (Σ Kc × ET0), eficiência (receita por mm) ou água que sobra no solo para a safra seguinte;
-- passar a usar a soma do consumo calculado das safras;
-- adotar uma escala fixa (mm), em vez da relativa.
+**Atenção:** com Produtividade também ligada, a perda hídrica pesa duas vezes na ordem (o backend avisa em `warnings`).
 
 ## Saúde do solo
 
@@ -89,7 +79,7 @@ Nota = `round(12 + 88 × (max − valor) ÷ (max − min))`, com o mínimo e o m
 | Soja → sorgo | 60 | 52 | A palhada do sorgo protege o solo |
 | Soja → milho safrinha | 110 | 12 | Solo descoberto por 4 meses |
 
-Mesma fórmula relativa da Economia de água.
+Nota = `round(12 + 88 × (max − valor) ÷ (max − min))`, com o mínimo e o máximo calculados entre as 4 rotações.
 
 **Para sair do mock:** este indicador é da rotação inteira, porque depende de como as safras se combinam. Insumos candidatos:
 - meses de solo descoberto, que já dá para tirar das janelas em `SAFRAS`;
@@ -129,7 +119,7 @@ Até 14/11/2026 a nota vinha de `SCORE.prod`, um mock sem unidade que não batia
 
 **Código:** [`src/logic/rank.ts`](../src/logic/rank.ts) e [`src/logic/rotacoesApi.ts`](../src/logic/rotacoesApi.ts) (`prioridadesApi`).
 
-A ordem é o `rank` da API. As prioridades de "O que importa" vão na requisição (`priorities`): Resiliência → `water_security`, Produtividade → `productivity`, Saúde do solo → `soil_protection`. Com todas desligadas, a API ordena pelo pior risco hídrico. Economia de água não existe na API e não muda a ordem. O front não reordena.
+A ordem é o `rank` da API. As prioridades de "O que importa" vão na requisição (`priorities`): Resiliência → `water_security`, Produtividade → `productivity`, Saúde do solo → `soil_protection`, Faturamento → `revenue`, sempre as quatro chaves (a API completa as ausentes com o padrão e ignora as desconhecidas). A API ordena pela média das notas ligadas, com pesos iguais. Com todas desligadas, ordena pelo pior risco hídrico. O front não reordena: trocar um toggle refaz a requisição, porque a data de plantio escolhida para cada par também pode mudar.
 
 ## Glossário
 

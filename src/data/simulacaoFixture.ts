@@ -8,7 +8,8 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
   "priorities": {
     "productivity": 1,
     "water_security": 1,
-    "soil_protection": 1
+    "soil_protection": 1,
+    "revenue": 0
   },
   "rotation": {
     "id": "custom-1150-48747-2027-10-21",

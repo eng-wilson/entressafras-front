@@ -52,6 +52,7 @@ function rotacaoValida(r: unknown): boolean {
   if (!objeto(r) || typeof r.id !== 'string' || !Number.isInteger(r.rank) || !Array.isArray(r.crops) || r.crops.length !== 2) return false
   const sc = r.scores, sp = r.soil_protection
   return objeto(sc) && escala(sc.productivity) && escala(sc.water_security) && finito(sc.soil_protection) && escala(sc.overall)
+    && (sc.revenue === undefined || escala(sc.revenue))
     && objeto(sp) && finito(sp.score) && Number.isInteger(sp.living_cover_days) && Number.isInteger(sp.season_days)
     && finito(sp.cover_fraction) && finito(sp.family_change_fraction) && Array.isArray(sp.botanical_families)
     && r.crops.every(c => objeto(c) && culturaValida(c.crop)
@@ -146,15 +147,15 @@ async function pedirRotacoes(p: PedidoRotacoes, signal?: AbortSignal): Promise<R
 
 // ---------- Cache ----------
 // O "ano que vem" muda e o backend ainda evolui: um dia basta. Chave: ponto, solo, histórico, prioridades e salvas.
-// v2: formato com scores, proteção do solo, solo do SoilGrids e calendário.
-export const CHAVE_CACHE_ROTACOES = 'entressafras.rotacoes.v2'
+// v2: formato com scores, proteção do solo, solo do SoilGrids e calendário. v3: prioridade e nota de faturamento.
+export const CHAVE_CACHE_ROTACOES = 'entressafras.rotacoes.v3'
 export const TTL_ROTACOES = 24 * 60 * 60 * 1000
 const MAX_ENTRADAS = 20
 
 type Entrada = { em: number; dados: RotationRecommendations }
 const memoria = new Map<string, Entrada>()
 
-const bits = (q: Priorities) => `${q.water_security}${q.productivity}${q.soil_protection}`
+const bits = (q: Priorities) => `${q.water_security}${q.productivity}${q.soil_protection}${q.revenue}`
 export const chaveRotacoes = (p: PedidoRotacoes) =>
   `${p.ponto.lat.toFixed(2)},${p.ponto.lon.toFixed(2)},${p.solo ?? 'auto'},${p.historico.join('-')},${bits(p.prioridades)},${p.ano ?? ''}` +
   (p.custom?.length ? `,${JSON.stringify(p.custom)}` : '')

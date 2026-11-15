@@ -7,7 +7,7 @@ import { EN_PAINEL } from './en/painel'
 import { EN_ONBOARDING } from './en/onboarding'
 import { EN_LOGICA } from './en/logica'
 import { EN_DADOS } from './en/dados'
-import { definirIdioma, numero, ordinal, reaisFmt, t } from '.'
+import { definirIdioma, numero, ordinal, reaisFmt, t, usdFmt } from '.'
 
 afterEach(() => definirIdioma('pt'))
 
@@ -56,6 +56,7 @@ describe('t() e formatos', () => {
     definirIdioma('en')
     expect(numero(1234.5, { maximumFractionDigits: 1 })).toBe('1,234.5')
     expect(reaisFmt(1234.5)).toMatch(/^R\$\s?1,235$/)
+    expect(usdFmt(5876.4)).toBe('$5,876')
     expect([1, 2, 3, 4, 11, 12, 13, 21].map(n => ordinal(n))).toEqual(['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st'])
   })
 })

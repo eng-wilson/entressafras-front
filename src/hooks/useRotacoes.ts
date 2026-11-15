@@ -28,13 +28,14 @@ export function useRotacoes({ ponto, solo, historico, prioridades, salvas = null
 } {
   const lat = ponto?.lat, lon = ponto?.lon
   const hist = historico.join('-')
-  const { water_security: ws, productivity: pd, soil_protection: sp } = prioridades
+  // Pelo valor, não pela referência: as quatro chaves entram inteiras no pedido (e na chave do cache).
+  const prioridadesJson = JSON.stringify(prioridades)
   // Sem salvas, o pedido fica como antes (ano padrão da API, mesma chave de cache).
   const extraJson = JSON.stringify(salvas?.custom.length ? { ano: salvas.ano, custom: salvas.custom } : {})
   const pedido = lat !== undefined && lon !== undefined
     ? {
         ponto: { lat, lon }, solo, historico: hist ? hist.split('-').map(Number) : [],
-        prioridades: { water_security: ws, productivity: pd, soil_protection: sp }, ...JSON.parse(extraJson),
+        prioridades: JSON.parse(prioridadesJson) as Priorities, ...JSON.parse(extraJson),
       }
     : null
   const chave = pedido ? chaveRotacoes(pedido) : null

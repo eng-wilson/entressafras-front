@@ -5,14 +5,14 @@ import type { RotacaoDef } from '../data/mock'
 import { useConjunto } from '../state/conjunto'
 import {
   aptidao, COR_ROT, detalheSafra, faixa, faixaDaNota, motivo, motivoDetalhe, NOME_EIXO as NOME, nomeRot,
-  PISO, resultadoSafra, reais, receitaSafra, type Eixo, type Faixa,
+  PISO, RESSALVA_FATURAMENTO, resultadoSafra, reais, receitaSafra, type Eixo, type Faixa,
 } from '../logic/aptidao'
 import { BarraPrioridade } from './BarraPrioridade'
 import type { Resiliencia, ResRotacao, ResSafra } from '../logic/resiliencia'
 import { janelaLabel as janela } from '../logic/periodo'
 import { MemoriaCalculo } from './MemoriaCalculo'
 import type { Priority } from '../types'
-import { ordinal, reaisFmt, t } from '../i18n'
+import { ordinal, t, usdFmt } from '../i18n'
 
 const S = 360 // lado do SVG
 const C = S / 2 // centro = 0
@@ -22,11 +22,11 @@ const L = C - R // borda esquerda/superior do quadrado
 // Cada prioridade é um quadrante; o eixo corre do centro (0) até o canto (100).
 const DIR: Record<Eixo, [number, number]> = {
   risco: [-1, -1],
-  agua: [1, -1],
+  fat: [1, -1],
   solo: [1, 1],
   prod: [-1, 1],
 }
-const ORDEM: Eixo[] = ['risco', 'agua', 'solo', 'prod']
+const ORDEM: Eixo[] = ['risco', 'fat', 'solo', 'prod']
 
 const ponto = (k: Eixo, v: number): [number, number] => {
   const [dx, dy] = DIR[k]
@@ -124,7 +124,7 @@ function PorSafra({ r, rot, num, onFechar }: { r: RotacaoDef; rot: ResRotacao; n
       <ul className="qm-sfs">
         {rot.safras.map((s, n) => <Safra key={n} r={r} n={n as 0 | 1} s={s} />)}
       </ul>
-      <p className="qm-sfn">{t('Economia de água e saúde do solo valem para o ciclo inteiro: dependem de como as duas safras se combinam.')}</p>
+      <p className="qm-sfn">{t('Faturamento e saúde do solo valem para o ciclo inteiro: dependem de como as duas safras se combinam.')}</p>
     </dialog>,
     document.body,
   )
@@ -211,7 +211,7 @@ export function QuadMap({ sel, pr, res }: Props) {
 
             {/* nomes fora do quadrado, 100 nos cantos, 0 no centro */}
             <text x={L} y={L - 12} className={`qm-lb${pr.risco ? ' on' : ''}`}>{t(NOME.risco)}</text>
-            <text x={S - L} y={L - 12} textAnchor="end" className={`qm-lb${pr.agua ? ' on' : ''}`}>{t(NOME.agua)}</text>
+            <text x={S - L} y={L - 12} textAnchor="end" className={`qm-lb${pr.fat ? ' on' : ''}`}>{t(NOME.fat)}</text>
             <text x={L} y={S - L + 22} className={`qm-lb${pr.prod ? ' on' : ''}`}>{t(NOME.prod)}</text>
             <text x={S - L} y={S - L + 22} textAnchor="end" className={`qm-lb${pr.solo ? ' on' : ''}`}>{t(NOME.solo)}</text>
             <text x={C + 6} y={C - 6} className="qm-n">0</text>
@@ -247,18 +247,18 @@ export function QuadMap({ sel, pr, res }: Props) {
                       const m = motivo(rots[i], k, rot)
                       const d = motivoDetalhe(k, rot)
                       const dica = [m, d].filter(Boolean).join('\n')
-                      const lucro = k === 'prod' ? rots[i].lucro : null
+                      // Valor em US$/ha por trás da nota de faturamento; só quando a API o envia
+                      const fat = k === 'fat' ? rots[i].faturamento?.ajustado ?? null : null
                       return (
                         <Fragment key={k}>
                           {/* Mesma linha do painel direito (ícone, nome, barra, faixa), na escala do card */}
                           <li className={`bp-linha bp-compacto${pr[k] ? ' on' : ''}`} title={dica || undefined}>
                             <BarraPrioridade k={k} nota={a[k]} f={faixaDaNota(a[k])} />
                           </li>
-                          {/* Lucro estimado da API, dentro de Produtividade; só aparece quando o backend envia */}
-                          {lucro != null && (
-                            <li className="qm-lucro">
-                              <span className="qm-en">{t('Lucro estimado')}</span>
-                              <span className={`qm-lucro-v${lucro < 0 ? ' neg' : ''}`}>{reaisFmt(lucro)}/ha</span>
+                          {fat != null && (
+                            <li className="qm-fat" title={t(RESSALVA_FATURAMENTO)}>
+                              <span className="qm-en">{t('Faturamento com perda hídrica')}</span>
+                              <span className="qm-fat-v">{usdFmt(fat)}/ha</span>
                             </li>
                           )}
                         </Fragment>

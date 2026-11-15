@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './rascunho.css'
 import type { EditorRascunho } from '../../hooks/useRascunho'
+import { RESSALVA_FATURAMENTO } from '../../logic/aptidao'
 import {
   datasCultura, diasDePousio, diasSemCobertura, posicaoRanking, ROTULO_CLASSE, tituloRascunho, traduzirCheck, type Aviso,
 } from '../../logic/rascunho'
@@ -157,6 +158,7 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
             <div className="nota"><b>{nota(scores.productivity)}</b>{t('Produtividade')}</div>
             <div className="nota"><b>{nota(scores.water_security)}</b>{t('Segurança hídrica')}</div>
             <div className="nota"><b>{nota(scores.soil_protection)}</b>{t('Proteção do solo')}</div>
+            <div className="nota" title={t(RESSALVA_FATURAMENTO)}><b>{nota(scores.revenue ?? null)}</b>{t('Faturamento')}</div>
           </div>
         </div>
       )}

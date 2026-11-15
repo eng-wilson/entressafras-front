@@ -67,7 +67,11 @@ export const EN_LOGICA: Record<string, string> = {
 
   // Eixos e notas (aptidao.ts: NOME_EIXO e Faixa.rotulo, traduzidos na exibição)
   'Resiliência climática': 'Climate resilience',
-  'Economia de água': 'Water savings',
+  'Faturamento': 'Revenue',
+  'Estimativa com base em médias nacionais (FAO), sem custos de produção.': 'Estimate based on national averages (FAO), without production costs.',
+  'sem faturamento de referência para esta rotação': 'no reference revenue for this rotation',
+  '{ajustado}/ha com a perda hídrica ({bruto}/ha sem perda)': '{ajustado}/ha with the water loss ({bruto}/ha without loss)',
+  '{ajustado}/ha com a perda hídrica': '{ajustado}/ha with the water loss',
   'Saúde do solo': 'Soil health',
   'Produtividade': 'Productivity',
   'Ótima': 'Strong',
@@ -111,6 +115,7 @@ export const EN_LOGICA: Record<string, string> = {
   'resiliência climática': 'climate resilience',
   'saúde do solo': 'soil health',
   'produtividade': 'productivity',
+  'faturamento': 'revenue',
   '{lista} e {ultimo}': '{lista} and {ultimo}',
   'Empate técnico com a {pos}: {a} contra {b} na média de {escalas}. A ordem entre elas pode mudar com pequenas variações.': 'Technical tie with the {pos}: {a} vs. {b} in the average of {escalas}. The order between them may change with small variations.',
   ', sobretudo em {escala} ({x} contra {y})': ', mainly in {escala} ({x} vs. {y})',

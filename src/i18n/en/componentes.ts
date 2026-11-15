@@ -102,8 +102,8 @@ export const EN_COMPONENTES: Record<string, string> = {
   'Talhão': 'Field',
   'Trocar de talhão ou adicionar um novo': 'Switch fields or add a new one',
   'O que importa': 'What matters',
-  'A ordem das rotações segue o que você marcar (calculada pela API). Economia de água ainda não entra na ordem.':
-    'The rotation order follows what you select (calculated by the API). Water savings does not affect the order yet.',
+  'A ordem das rotações segue o que você marcar (calculada pela API). Faturamento é uma estimativa com médias nacionais (FAO), sem custos.':
+    'The rotation order follows what you select (calculated by the API). Revenue is an estimate from national averages (FAO), without costs.',
 
   // Simulation
   'Comparação das rotações marcadas': 'Comparison of the selected rotations',

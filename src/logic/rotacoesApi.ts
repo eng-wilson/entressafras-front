@@ -9,7 +9,7 @@ import { CULTURAS, REFERENCIAS_CULTURAS } from '../data/culturas'
 import { NOMES_PT } from '../data/nomesCulturas'
 import { COR_ROT, faixa } from './aptidao'
 import { t } from '../i18n'
-import type { CustomCropInput, Historico, Priorities, Priority, Rotation, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
+import type { CustomCropInput, Historico, Priorities, Priority, RevenueFields, Rotation, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
 
 const data = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
@@ -89,9 +89,12 @@ export function historicoEcoCrop(h: Historico | null | undefined): number[] {
   return out
 }
 
-/** Prioridades da lateral → API. "Economia de água" não tem equivalente na API e não entra no ranking. */
+/**
+ * Prioridades da lateral → API. Sempre as quatro chaves: a API completa as ausentes com o padrão {1, 1, 1, 0} e
+ * ignora as desconhecidas, então um envio parcial ligaria o que o agricultor desligou.
+ */
 export const prioridadesApi = (pr: Priority): Priorities => ({
-  water_security: pr.risco ? 1 : 0, productivity: pr.prod ? 1 : 0, soil_protection: pr.solo ? 1 : 0,
+  water_security: pr.risco ? 1 : 0, productivity: pr.prod ? 1 : 0, soil_protection: pr.solo ? 1 : 0, revenue: pr.fat ? 1 : 0,
 })
 
 /** "Cobertura viva em 208 de 366 dias; a troca de cultura muda de família botânica." */
@@ -138,11 +141,11 @@ export function rotacaoAtualEcoCrop(h: Historico | null | undefined): CustomCrop
   return codigos && codigos.every((c): c is number => c != null) ? codigos.map(code => ({ code })) : null
 }
 
-/**
- * Lucro estimado da rotação em R$/ha, quando a API enviar. Único ponto que conhece o nome do campo: quando o
- * backend publicar o contrato, ajustar aqui (e o tipo RotationEconomics).
- */
-export const lucroDaApi = (r: Rotation): number | null => r.economics?.profit_brl_per_ha ?? null
+/** Faturamento de referência da rotação em US$/ha (médias nacionais FAOSTAT, sem custos): bruto e com o desconto hídrico. */
+export const faturamentoDaApi = (r: RevenueFields): { bruto: number | null; ajustado: number | null } => ({
+  bruto: r.gross_revenue_usd_ha ?? null,
+  ajustado: r.water_adjusted_revenue_usd_ha ?? null,
+})
 
 /** Mesmas culturas, na mesma ordem (as datas não contam). */
 export const mesmasCulturas = (a: CustomCropInput[], b: CustomCropInput[]) =>
@@ -223,10 +226,10 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
     if (fim < 12) barras.push({ s: fim, e: 12, label: '' })
     rotacoes.push({
       id: idDe({ rot, salva }), safras: b ? [a, b] : [a], ct,
-      agua: (pb ?? pa)?.score.agua ?? 0, solo: 0,
+      solo: 0,
       barras, maisPragas: pb?.pragas.nivel === 'Maior risco',
       cor: ids.indexOf(idDe({ rot, salva })) % COR_ROT.length, scores: rot.scores, protecaoSolo: rot.soil_protection,
-      lucro: lucroDaApi(rot),
+      faturamento: faturamentoDaApi(rot),
       ...(salva?.historico ? { historico: true } : salva ? { salva: { id: salva.id, em: salva.em } } : {}),
     })
   }

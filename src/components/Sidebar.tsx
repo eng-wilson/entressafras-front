@@ -59,7 +59,7 @@ function infoDo(talhao: Talhao, clima: EstadoClima, api: SoilInfo | undefined): 
 // Mesmos nomes dos quadrantes do mapa de comparação (logic/aptidao)
 const PRIORITIES = [
   { k: 'risco' as const, label: NOME_EIXO.risco, icon: 'i-shield' },
-  { k: 'agua'  as const, label: NOME_EIXO.agua,  icon: 'i-drop'   },
+  { k: 'fat'   as const, label: NOME_EIXO.fat,   icon: 'm-coin'   },
   { k: 'solo'  as const, label: NOME_EIXO.solo,  icon: 'i-leaf'   },
   { k: 'prod'  as const, label: NOME_EIXO.prod,  icon: 'n-seed'   },
 ]
@@ -100,7 +100,7 @@ export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props
 
       <div className="sec">
         <h3>{t('O que importa')}</h3>
-        <p className="prh">{t('A ordem das rotações segue o que você marcar (calculada pela API). Economia de água ainda não entra na ordem.')}</p>
+        <p className="prh">{t('A ordem das rotações segue o que você marcar (calculada pela API). Faturamento é uma estimativa com médias nacionais (FAO), sem custos.')}</p>
         <div className="list">
           {PRIORITIES.map(({ k, label, icon }) => (
             <div key={k} className="item">

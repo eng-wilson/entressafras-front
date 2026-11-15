@@ -5,9 +5,9 @@ import { t } from '../i18n'
 import './barra-prioridade.css'
 
 /** Mesmos ícones da lateral esquerda ("O que importa"). */
-export const ICONE_EIXO: Record<Eixo, string> = { risco: 'i-shield', agua: 'i-drop', solo: 'i-leaf', prod: 'n-seed' }
-/** Economia de água ainda é ilustrativa: a API não calcula. */
-export const ILUSTRATIVO: Record<Eixo, boolean> = { risco: false, agua: true, solo: false, prod: false }
+export const ICONE_EIXO: Record<Eixo, string> = { risco: 'i-shield', fat: 'm-coin', solo: 'i-leaf', prod: 'n-seed' }
+/** Prioridade ilustrativa (a API não calcula): hoje nenhuma; as 4 vêm da API. */
+export const ILUSTRATIVO: Record<Eixo, boolean> = { risco: false, fat: false, solo: false, prod: false }
 
 /** Leitura completa para leitor de tela: "Resiliência climática: 70 de 100, ótima · ilustrativo". */
 export function leituraPrioridade(k: Eixo, nota: number | null, f: Faixa | null): string {

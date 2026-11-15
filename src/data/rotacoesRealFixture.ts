@@ -36,7 +36,8 @@ export const ROTACOES_REAL_FIXTURE: RotationRecommendations = {
   "priorities": {
     "productivity": 0,
     "water_security": 1,
-    "soil_protection": 1
+    "soil_protection": 1,
+    "revenue": 0
   },
   "rotations": [
     {

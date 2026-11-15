@@ -13,7 +13,7 @@ const data = (v: unknown): v is string => typeof v === 'string' && DATA.test(v)
 
 function scoresValidos(s: unknown) {
   return objeto(s) && numOuNulo(s.productivity) && numOuNulo(s.water_security) && finito(s.soil_protection)
-    && numOuNulo(s.overall)
+    && numOuNulo(s.overall) && (s.revenue === undefined || numOuNulo(s.revenue))
 }
 
 function sweepValido(s: unknown, n: number) {

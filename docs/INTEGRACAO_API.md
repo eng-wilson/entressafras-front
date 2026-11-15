@@ -34,7 +34,7 @@ Base: `VITE_API_URL` (padrão `https://entressafras-backend-production.up.railwa
 | `location` | Centro do talhão | — |
 | `soil_type` | Textura do cadastro | Só quando o agricultor informou; sem ela, a API estima o solo |
 | `crop_history` | Histórico do talhão | 3 últimas safras em códigos EcoCrop, mais antiga primeiro |
-| `priorities` | "O que importa" | Resiliência → `water_security`, Produtividade → `productivity`, Saúde do solo → `soil_protection` |
+| `priorities` | "O que importa" | Resiliência → `water_security`, Produtividade → `productivity`, Saúde do solo → `soil_protection`, Faturamento → `revenue`. Sempre as quatro chaves; padrão `{1, 1, 1, 0}` |
 | `custom_rotations` | Rotações salvas pelo agricultor (até 3, de 1 ou 2 culturas) | Simuladas e ranqueadas junto; voltam em `custom_rotations`. Se derrubarem o pedido (422), ele é refeito sem elas, com aviso. **Campo ainda não publicado** |
 
 A resposta é validada antes de entrar na tela: exige `soil`, `priorities` e, em cada rotação, `scores`, `soil_protection` e `calendar` por cultura. Trocar só as prioridades mantém a lista anterior até a nova ordem chegar; a seleção e a cor de cada rotação acompanham o `id`.
@@ -52,7 +52,7 @@ Legenda: **API** · **API (MOCK)**: marcado provisório pelo servidor até 15/11
 | Lateral | Solo | Cadastro ou **API** | Sem textura: "(estimado)", de `soil.texture_class` |
 | Lateral | Chuva no ano | Front/API | Soma dos 36 `chuva_media` |
 | Lateral | Local | Externo | Nominatim (OpenStreetMap) |
-| Lateral | Prioridades (exceto água) | **API** | Vão como `priorities`; a ordem é o `rank` |
+| Lateral | Prioridades | **API** | Vão como `priorities`; a ordem é o `rank` |
 | Cena | Chuva e temperatura do decêndio | **API** | `chuva_media`, `tmin_media`, `tmax_media` |
 | Cena | Classificação da temperatura | Front/API | Clima × limites EcoCrop da cultura |
 | Cena | Água para a cultura (ETa/ETc) | **API (MOCK)** | `risk.mean_isna` da fase do decêndio |
@@ -64,7 +64,7 @@ Legenda: **API** · **API (MOCK)**: marcado provisório pelo servidor até 15/11
 | Rotações | Tag "Atual" | Cadastro | Safra mais recente do histórico |
 | Rotações | Tag "Mais pragas" | Mock | `src/data/perfis.ts` |
 | Comparação | Mapa: resiliência, produtividade, saúde do solo | **API (MOCK)** | `scores.water_security`, `productivity`, `soil_protection` |
-| Comparação | Mapa: economia de água | Mock | `perfis.ts` (`score.agua`), relativo entre as rotações |
+| Comparação | Mapa: faturamento | **API** | `scores.revenue`; valor em US$/ha de `water_adjusted_revenue_usd_ha` |
 | Comparação | Umidade necessária | Front/API | Σ Kc × ET0 da safra |
 | Comparação | Risco de pragas, produção (sc/ha), receita | Mock | `perfis.ts` |
 | Painel direito | Selo da rotação, "Provisório", ordem | **API (MOCK)** | Risco da cultura mais arriscada; `warnings` |
@@ -86,7 +86,6 @@ Limiares de apresentação definidos no front (não são da API nem oficiais): r
 | 1 | Confirmar o pedido sem `soil_type` (falhava com 500 em 15/11 de manhã) | Talhão sem textura informada pode ficar sem rotações |
 | 2 | Nomes comuns em português no catálogo | Culturas novas dependem do catálogo local (`src/data/culturas.ts`); fora dele, nome científico |
 | 3 | Série por dia ou decêndio da resposta hídrica (ETa, ETc, água na zona das raízes) | Atendimento constante dentro de cada fase; veranicos curtos não aparecem |
-| 4 | Economia de água por rotação | Eixo e prioridade mock |
 | 5 | Produção (sc/ha) e preço por cultura e região | Tabela e receita mock |
 | 6 | Efeito da sequência de culturas nas pragas | Tag e texto mock |
 | 8 | Umidade do solo atual, previsão do tempo | Não exibidos |
@@ -125,12 +124,11 @@ Resumo: 16 reais em uso, 0 servidos sem uso no front, 0 MOCK no backend, 6 pende
 | Risco hídrico por cultura | ✅ Real, em uso | Selo de clima, período crítico, resiliência por safra | — |
 | Atendimento à demanda por fase (ISNA) | ✅ Real, em uso | Widget "Água para a cultura" e "Atenção no ciclo" | — |
 | Ky por estágio (sensibilidade ao déficit) | ✅ Real, em uso | Sensibilidade da fase em "Atenção no ciclo" | — |
-| Escalas 0–100 (segurança hídrica, produtividade, solo) | ✅ Real, em uso | Mapa de aptidão (3 dos 4 eixos) | — |
+| Escalas 0–100 (segurança hídrica, produtividade, solo, faturamento) | ✅ Real, em uso | Mapa de aptidão (4 eixos), notas do rascunho | — |
 | Proteção do solo planejada | ✅ Real, em uso | Saúde do solo: nota e texto (cobertura viva, troca de família) | — |
 | Solo usado na simulação (textura, água por metro) | ✅ Real, em uso | Lateral (solo estimado quando não informado), memória de cálculo | — |
 | Propriedades do solo superficial (SoilGrids) | ✅ Real, em uso | Memória de cálculo (só exibição) | — |
 | Atendimento à demanda dia a dia ou por decêndio | ⬜ Pendente no backend | Não há: dentro da fase o valor é constante | Série ETa, ETc e água na zona das raízes por dia ou decêndio, vinculada à rotação |
-| Economia de água da rotação | ⬜ Pendente no backend | Eixo "Economia de água" (`src/data/perfis.ts`, mock) | Indicador de consumo ou eficiência de água por rotação |
 | Produção (sc/ha) e preço por cultura | ⬜ Pendente no backend | Tabela de comparação e receita (`src/data/perfis.ts`, mock) | Produtividade e preço por cultura e região, com data |
 | Efeito da sequência nas pragas | ⬜ Pendente no backend | Selo "Mais pragas" e texto (`src/data/perfis.ts`, mock) | Efeito da sequência de culturas nas pragas |
 | Umidade do solo atual | ⬜ Pendente no backend | Não exibida (o widget mostra o atendimento à demanda) | Leitura atual com data, origem e unidade |

@@ -5,28 +5,32 @@ import type { RotacaoDef } from '../data/mock'
 import type { Priorities, RotationScores } from '../types'
 import { numero, ordinal, t } from '../i18n'
 
-type Escala = 'water_security' | 'soil_protection' | 'productivity'
+type Escala = 'water_security' | 'soil_protection' | 'productivity' | 'revenue'
 const NOME: Record<Escala, string> = {
   water_security: 'resiliência climática',
   soil_protection: 'saúde do solo',
   productivity: 'produtividade',
+  revenue: 'faturamento',
 }
-const ORDEM: Escala[] = ['water_security', 'soil_protection', 'productivity']
+const ORDEM: Escala[] = ['water_security', 'soil_protection', 'productivity', 'revenue']
 /** Diferença na média abaixo disso = empate técnico (a API avisa que riscos perto de zero ficam praticamente empatados). */
 export const EMPATE = 1
 
 const n1 = (v: number) => numero(v, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
-/** Escalas que entram na ordem: as prioridades ligadas; sem nenhuma ligada, as três. */
+/**
+ * Escalas que entram na ordem: as prioridades ligadas. Sem nenhuma ligada, a API ordena pelo pior risco hídrico
+ * individual, que é o que `water_security` mede (100 − risco da pior cultura).
+ */
 export function escalasDaOrdem(p: Priorities | undefined): Escala[] {
   const ligadas = ORDEM.filter(k => p?.[k] === 1)
-  return ligadas.length ? ligadas : ORDEM
+  return ligadas.length ? ligadas : ['water_security']
 }
 
 /** Média das escalas da ordem; null se alguma não veio da API. */
 export function notaDaOrdem(s: RotationScores | undefined, escalas: Escala[]): number | null {
   if (!s) return null
-  const v = escalas.map(k => s[k])
+  const v = escalas.map(k => s[k] ?? null)
   return v.every((x): x is number => x != null) ? v.reduce((a, b) => a + b, 0) / v.length : null
 }
 

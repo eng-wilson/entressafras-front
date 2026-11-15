@@ -28,10 +28,10 @@ test('envia solo, histórico e prioridades; ligar uma prioridade reordena pela A
 
   const nomes = page.locator('.rlist .nm-b')
   await expect(nomes.first()).toContainText('milheto')
-  // T-07: argiloso informado, histórico soja → milho; padrão da lateral: resiliência e solo ligados
+  // T-07: argiloso informado, histórico soja → milho; padrão da lateral = padrão da API (faturamento desligado)
   expect(pedidos[0]).toMatchObject({
     soil_type: 'clayey', crop_history: [1150, 2175],
-    priorities: { water_security: 1, productivity: 0, soil_protection: 1 },
+    priorities: { water_security: 1, productivity: 1, soil_protection: 1, revenue: 0 },
   })
 
   const sorgo = page.getByRole('button', { name: /^Soja depois sorgo\./ })
@@ -40,12 +40,15 @@ test('envia solo, histórico e prioridades; ligar uma prioridade reordena pela A
 
   await page.getByRole('switch', { name: 'Resiliência climática' }).click()
   await page.getByRole('switch', { name: 'Saúde do solo' }).click()
-  await page.getByRole('switch', { name: 'Produtividade' }).click()
   await expect(nomes.first()).toContainText('algodão')
-  expect(pedidos.at(-1)!.priorities).toEqual({ water_security: 0, productivity: 1, soil_protection: 0 })
+  // Sempre as quatro chaves: a API completaria uma ausente com o padrão
+  expect(pedidos.at(-1)!.priorities).toEqual({ water_security: 0, productivity: 1, soil_protection: 0, revenue: 0 })
   // A rotação selecionada continua a mesma, agora em outra posição
   await expect(page.locator('.insp h2')).toHaveText('Soja → sorgo')
   await expect(page.getByRole('button', { name: /^Soja depois sorgo\./ })).toHaveAttribute('aria-pressed', 'true')
+
+  await page.getByRole('switch', { name: 'Faturamento' }).click()
+  await expect.poll(() => pedidos.at(-1)!.priorities).toEqual({ water_security: 0, productivity: 1, soil_protection: 0, revenue: 1 })
 })
 
 test('sem textura informada, não manda solo e a lateral mostra o solo estimado pela API', async ({ page }) => {
@@ -64,7 +67,7 @@ test('sem textura informada, não manda solo e a lateral mostra o solo estimado 
   await expect(page.locator('.side')).toContainText('Argiloso (estimado)')
 })
 
-test('comparação: mesmas linhas do calendário, lucro da API no card, consumo no "Por safra" e solo superficial na memória', async ({ page }) => {
+test('comparação: mesmas linhas do calendário, faturamento da API no card, consumo no "Por safra" e solo superficial na memória', async ({ page }) => {
   await comTalhaoSalvo(page)
   await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ json: CLIMA_T07 }))
   await page.route(/\/api\/rotations\/recommendations/, r => {
@@ -74,7 +77,7 @@ test('comparação: mesmas linhas do calendário, lucro da API no card, consumo 
       sand_pct: 31.5, silt_pct: 16.5, clay_pct: 52, texture_class: 'clayey',
       sampled_location: { lat: -12.54, lon: -55.72 }, distance_km: 0.2,
     }
-    resp.rotations[0].economics = { profit_brl_per_ha: 1234.5 }
+    delete resp.rotations[1].water_adjusted_revenue_usd_ha
     return r.fulfill({ json: resp })
   })
   await page.goto('/')
@@ -82,11 +85,11 @@ test('comparação: mesmas linhas do calendário, lucro da API no card, consumo 
   // Sem tabela própria: as linhas são as do calendário, sem a faixa de meses
   await expect(page.locator('.rlist .row')).toHaveCount(4)
   await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveCount(0)
-  // Lucro estimado da API dentro de Produtividade, só no card de quem tem o dado
+  // Faturamento da API (US$/ha, com a perda hídrica) dentro do eixo Faturamento, só no card de quem tem o dado
   const cards = page.locator('.qm-card')
-  await expect(cards.first().locator('.qm-lucro')).toContainText('Lucro estimado')
-  await expect(cards.first().locator('.qm-lucro')).toContainText(/R\$\s?1\.235\/ha/)
-  await expect(cards.nth(1).locator('.qm-lucro')).toHaveCount(0)
+  await expect(cards.first().locator('.qm-fat')).toContainText('Faturamento com perda hídrica')
+  await expect(cards.first().locator('.qm-fat')).toContainText(/US\$\s?1\.300\/ha/)
+  await expect(cards.nth(1).locator('.qm-fat')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Por safra' }).first().click()
   await expect(page.getByRole('dialog').first()).toContainText(/~\d+ mm no ciclo/)

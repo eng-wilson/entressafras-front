@@ -8,7 +8,7 @@ import {
 } from './rotacoes'
 
 const ponto = { lat: -12.55, lon: -55.72 }
-const todas = { water_security: 1, productivity: 1, soil_protection: 1 } as const
+const todas = { water_security: 1, productivity: 1, soil_protection: 1, revenue: 0 } as const
 const pedido = (solo: 'sandy' | 'medium' | 'clayey' | null = 'medium', extra = {}) =>
   ({ ponto, solo, historico: [] as number[], prioridades: todas, ...extra })
 const resposta = (corpo: unknown, status = 200) =>
@@ -24,14 +24,14 @@ describe('recomendarRotacoes', () => {
   it('envia ponto, solo, histórico e prioridades por POST e valida a resposta', async () => {
     const f = resposta(ROTACOES_FIXTURE)
     vi.stubGlobal('fetch', f)
-    const r = await recomendarRotacoes(pedido('clayey', { historico: [1150, 2175], prioridades: { water_security: 1, productivity: 0, soil_protection: 1 } }))
+    const r = await recomendarRotacoes(pedido('clayey', { historico: [1150, 2175], prioridades: { water_security: 1, productivity: 0, soil_protection: 1, revenue: 1 } }))
     expect(r.rotations).toHaveLength(4)
     const [url, init] = f.mock.calls[0]
     expect(url).toMatch(/\/api\/rotations\/recommendations$/)
     expect(init.method).toBe('POST')
     expect(JSON.parse(init.body)).toEqual({
       location: ponto, soil_type: 'clayey', crop_history: [1150, 2175],
-      priorities: { water_security: 1, productivity: 0, soil_protection: 1 },
+      priorities: { water_security: 1, productivity: 0, soil_protection: 1, revenue: 1 },
     })
   })
 
@@ -68,6 +68,17 @@ describe('rotacoesValidas', () => {
       expect(rotacoesValidas(r)).toBe(false)
     }
   })
+  it('aceita nota de faturamento null ou ausente (cultura fora do catálogo, resposta antiga); recusa fora de 0–100', () => {
+    const nula = structuredClone(ROTACOES_FIXTURE)
+    nula.rotations[0].scores.revenue = null
+    expect(rotacoesValidas(nula)).toBe(true)
+    const ausente = structuredClone(ROTACOES_FIXTURE) as any
+    delete ausente.rotations[0].scores.revenue
+    expect(rotacoesValidas(ausente)).toBe(true)
+    const fora = structuredClone(ROTACOES_FIXTURE)
+    fora.rotations[0].scores.revenue = 140
+    expect(rotacoesValidas(fora)).toBe(false)
+  })
   it('aceita método de risco desconhecido (não só MOCK)', () => {
     const r = structuredClone(ROTACOES_FIXTURE)
     r.rotations[0].crops[0].crop.risk.method = 'FAO56_DAILY_KY'
@@ -90,6 +101,7 @@ describe('cache', () => {
     expect(chave).not.toBe(chaveRotacoes(pedido(null)))
     expect(chave).not.toBe(chaveRotacoes(pedido('medium', { historico: [1150] })))
     expect(chave).not.toBe(chaveRotacoes(pedido('medium', { prioridades: { ...todas, productivity: 0 } })))
+    expect(chave).not.toBe(chaveRotacoes(pedido('medium', { prioridades: { ...todas, revenue: 1 } })))
     guardarRotacoes(chave, ROTACOES_FIXTURE, 1000)
     limparMemoriaRotacoes()
     expect(lerRotacoes(chave, 1000 + TTL_ROTACOES - 1)).toEqual(ROTACOES_FIXTURE)

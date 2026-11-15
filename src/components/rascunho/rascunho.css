@@ -100,7 +100,7 @@
 .hint .zsw + .zsw{margin-left:-2px}
 .wic.ok{background:#E3F5E8;color:#1B7F3A}
 .wic.alerta{background:#FFE2B8;color:#9A5B00}
-.notas{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.notas{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}
 .nota{background:var(--side);border-radius:10px;padding:8px 10px;font-size:12px;color:var(--label2)}
 .nota b{display:block;font-size:17px;color:var(--ink);font-variant-numeric:tabular-nums}
 .rm-salva{margin-left:4px;font-size:12px;color:var(--label2);background:none;border:0;cursor:pointer;padding:4px 6px;border-radius:6px}
