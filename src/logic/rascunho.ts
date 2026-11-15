@@ -12,7 +12,7 @@ import { mesCurtoDe } from './periodo'
 import { ordinal, t } from '../i18n'
 
 export const N_DEC = 36
-/** A API simula rotações de exatamente 2 culturas (L1). */
+/** A API simula rotações de 1 cultura (seguida de pousio até 31/ago) ou 2 (L1). */
 export const MAX_CULTURAS = 2
 /** O ciclo enviado precisa ficar entre 50% e 150% do ciclo de referência da cultura (422 fora disso). */
 export const FAIXA_CICLO: [number, number] = [0.5, 1.5]
@@ -249,9 +249,9 @@ export const cheio = (r: Rascunho) =>
   r.culturas.length >= MAX_CULTURAS || (r.culturas.length > 0 && r.culturas[r.culturas.length - 1].e >= N_DEC)
 
 // ---------- Pedido e resposta ----------
-/** Culturas do pedido (datas exatas); null com menos de 2 (a API só simula 2). */
+/** Culturas do pedido (datas exatas); null sem nenhuma. Com 1, a API simula a cultura seguida de pousio. */
 export function pedidoCulturas(r: Rascunho, ano: number): CustomCropInput[] | null {
-  if (r.culturas.length !== MAX_CULTURAS) return null
+  if (r.culturas.length === 0 || r.culturas.length > MAX_CULTURAS) return null
   return r.culturas.map(c => {
     if (c.plantioLivre) return { code: c.code }
     const d = datasDe(c, ano)
@@ -359,7 +359,7 @@ export function piorClasse(cls: Classe[]): { cls: Classe; i: number } {
 export function pontoDoSweep(resp: RotationSimulationResponse | null, enviado: CustomCropInput[] | null): SweepPoint | null {
   if (!resp || !enviado || enviado.some(c => !c.planting_date || !c.harvest_date)) return null
   for (const sw of [resp.first_planting_sweep, resp.second_planting_sweep]) {
-    const p = sw?.points.find(pt => pt.crops.every((c, i) => c.code === enviado[i].code
+    const p = sw?.points.find(pt => pt.crops.length === enviado.length && pt.crops.every((c, i) => c.code === enviado[i].code
       && c.planting_date === enviado[i].planting_date && c.harvest_date === enviado[i].harvest_date))
     if (p) return p
   }
@@ -406,6 +406,12 @@ export function diasSemCobertura(r: Rascunho, ano: number): number {
     total += Math.max(0, diasEntre(datasDe(r.culturas[i - 1], ano).colheita, datasDe(r.culturas[i], ano).plantio) - 1)
   }
   return total
+}
+
+/** Dias de pousio entre a colheita da última cultura e o fim da safra (31/ago), em datas reais. */
+export function diasDePousio(r: Rascunho, ano: number): number {
+  const ultima = r.culturas.at(-1)
+  return ultima ? Math.max(0, diasEntre(datasDe(ultima, ano).colheita, fimDecendio(N_DEC - 1, ano))) : 0
 }
 
 // ---------- Textos da API em português (L4) ----------

@@ -12,14 +12,15 @@ export type RotacaoSalva = {
   ano: number
   /** Quando foi salva (ms): desempate entre salvas de mesmo rank, a mais antiga primeiro. */
   em: number
-  culturas: [Required<CustomCropInput>, Required<CustomCropInput>]
+  /** 1 cultura (seguida de pousio até 31/ago) ou 2. */
+  culturas: Required<CustomCropInput>[]
 }
 
 const DATA = /^\d{4}-\d{2}-\d{2}$/
 function valida(x: unknown): x is RotacaoSalva {
   const r = x as RotacaoSalva
   return !!r && typeof r.id === 'string' && Number.isInteger(r.ano) && Number.isFinite(r.em)
-    && Array.isArray(r.culturas) && r.culturas.length === 2
+    && Array.isArray(r.culturas) && r.culturas.length >= 1 && r.culturas.length <= 2
     && r.culturas.every(c => !!c && Number.isInteger(c.code) && DATA.test(c.planting_date) && DATA.test(c.harvest_date))
 }
 

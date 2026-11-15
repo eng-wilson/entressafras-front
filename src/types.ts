@@ -297,7 +297,8 @@ export type CustomRotation = {
   ranked_among: number
   /** rank dentro das 4 melhores. */
   would_be_recommended: boolean
-  crops: [SimulatedCrop, SimulatedCrop]
+  /** 1 cultura (seguida de pousio até 31/ago) ou 2. */
+  crops: [SimulatedCrop] | [SimulatedCrop, SimulatedCrop]
   soil_protection: SoilProtection
   scores: RotationScores
   /** Avisos agronômicos (em inglês, texto livre); vazio = passa nos filtros da recomendação. */
@@ -312,7 +313,8 @@ export type SweepCrop = {
   in_calendar: boolean
   temperature_ok: boolean
 }
-export type SweepPoint = { decendio_idx: number; label: string; crops: [SweepCrop, SweepCrop]; scores: RotationScores }
+/** `crops` tem o mesmo número de culturas da rotação simulada. */
+export type SweepPoint = { decendio_idx: number; label: string; crops: [SweepCrop] | [SweepCrop, SweepCrop]; scores: RotationScores }
 export type PlantingSweep = {
   /** first: as duas culturas andam juntas; second: só a 2ª. */
   moved_crop: 'first' | 'second'
@@ -326,6 +328,7 @@ export type RotationSimulationResponse = {
   priorities: Prioridades
   rotation: CustomRotation
   first_planting_sweep: PlantingSweep | null
+  /** Sempre null numa rotação de 1 cultura. */
   second_planting_sweep: PlantingSweep | null
   assumptions: Record<string, number>
   warnings: string[]

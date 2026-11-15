@@ -24,7 +24,7 @@ import { diagnostico, periodoDecisivo } from './logic/diagnostico'
 import { estagioEm, estagios } from './logic/estagios'
 import { atencaoCiclo } from './logic/atencaoCiclo'
 import { comDatas, diasEntre, faixaDoSweep, type Rascunho } from './logic/rascunho'
-import { guardarSalva, lerSalvas, MAX_SALVAS, proximoAnoAgricola, removerSalva, type RotacaoSalva } from './services/rotacoesSalvas'
+import { guardarSalva, lerSalvas, MAX_SALVAS, proximoAnoAgricola, removerSalva } from './services/rotacoesSalvas'
 import { useRascunho } from './hooks/useRascunho'
 import { useCulturasSimulaveis } from './hooks/useCulturasSimulaveis'
 import { DraftRow } from './components/rascunho/DraftRow'
@@ -61,7 +61,7 @@ function rascunhoDe(rot: ConjuntoRotacoes['rotacoes'][number], dados: RotationRe
       { code: c.crop.eco_port_code, s: 0, e: 1, refCiclo: null, colheitaLivre: !rot.salva },
       c.planting_date, diasEntre(c.planting_date, c.harvest_date) + 1, ano,
     )),
-    sel: 1,
+    sel: api.crops.length - 1,
   }
 }
 
@@ -242,7 +242,7 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
   const datasCompletas = !!enviado && enviado.every(c => c.planting_date && c.harvest_date)
   function salvarRascunho() {
     if (!talhao || !conj || editor.sim.status !== 'ok' || !enviado || !datasCompletas) return
-    const culturas = enviado.map(c => ({ code: c.code, planting_date: c.planting_date!, harvest_date: c.harvest_date! })) as RotacaoSalva['culturas']
+    const culturas = enviado.map(c => ({ code: c.code, planting_date: c.planting_date!, harvest_date: c.harvest_date! }))
     const salva = guardarSalva(talhao.id, conj.ano, culturas)
     if (!salva) { setAnuncio(addBloqueio ?? t('Não foi possível salvar a rotação.')); return }
     setSalvaPendente(salva.id)

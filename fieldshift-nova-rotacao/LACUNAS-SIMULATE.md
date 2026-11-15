@@ -63,7 +63,7 @@
 
 | # | Spec diz | API faz | Impacto | Decisão |
 |---|---|---|---|---|
-| L1 | De 0 a N culturas ("adicionar até encher a safra") | Exatamente **2** (`crops` mín. 2, máx. 2) | Com 0, 1 ou 3+ culturas não há simulação | **Decidido:** máximo de 2. Com 0 ou 1: "Adicione a 2ª cultura para simular", barra `.b.none` e Salvar desabilitado. Com 2: "+ Cultura" desabilitado ("Máximo de 2 culturas por rotação") |
+| L1 | De 0 a N culturas ("adicionar até encher a safra") | ~~Exatamente 2~~ **Desde o commit 8a258f1 do backend:** 1 ou 2 (`crops` mín. 1, máx. 2). Com 1, a safra é simulada como cultura + pousio até 31/ago, `second_planting_sweep` vem `null` e `soil_protection` cai pelo pousio | Com 0 ou 3+ culturas não há simulação (422) | **Decidido:** máximo de 2. Com 0: "Adicione uma cultura" e Salvar desabilitado. Com 1: simula; a trilha desenha o pousio até 31/ago, o painel mostra "Pousio" em Suas limitações e o rank explica que compara com rotações de 2 culturas. A salva de 1 cultura aparece na lista como "{cultura} depois pousio". Com 2: "+ Cultura" desabilitado ("Máximo de 2 culturas por rotação") |
 | L2 | Janelas boa/atenção do ZARC → Bom/Atenção/Risco | `risk_percentage`; `in_calendar` (±30 dias do GGCMI) e `temperature_ok` no sweep | O vocabulário do spec fica sem fonte | Status = `classeAnos(risk_percentage)`, como na tela principal; `null` → "Sem dado". Cor do decêndio = `classeDoRisco(risk_percentage)` do ponto do sweep, a mesma régua da barra, sempre o risco da própria cultura (cada sweep move só ela; a outra fica nas datas atuais); `temperature_ok=false` → risco. `in_calendar` (±30 dias do GGCMI) vira sublinhado "data usual da região". Contorno no `best_decendio_idx`. **Correção (15/11/2026):** a 1ª versão pintava de verde `in_calendar && temperature_ok`, que não mede risco, e divergia da barra (soja 1–20/set com 10–13% de risco fora do calendário; sorgo 11–20/abr com 33% dentro dele). Erro do front, não do backend. **2ª correção (15/11/2026):** com B14, a 1ª cultura deixou de levar a 2ª; a regra "pior das duas" deixava a faixa da 1ª toda vermelha quando a 2ª tinha risco alto (girassol tarde: 100% em todos os pontos) |
 | L3 | Ciclo mín./máx. fixo por cultura; catálogo com 7 culturas | 422 fora de 50–150% da referência, que **não é exposta**. ~~`GET /crops` não filtra culturas sem FAO-56~~ **Resolvido:** `GET /crops?simulable=true` (22 culturas) | O arrasto pode gerar 422 | Adicionar ou trocar envia a colheita **sem data**, e a resposta dá o ciclo de referência. Limites = `[⌈0,5·ref⌉, ⌊1,5·ref⌋]` dias. Um 422 de ciclo informa a referência, e o rascunho se corrige sozinho. O menu usa `simulable=true`, com nomes em PT locais (`src/data/nomesCulturas.ts`) porque a API devolve em inglês |
 | L3b | — | `calendar.cycle_days` é o ciclo **enviado** (soja com datas: 123; sem datas: 100) | Não serve como referência quando há datas | Registrar a referência só quando a cultura vai sem datas |
@@ -123,7 +123,7 @@
 | P1 | Vocabulário de status: Bom/Atenção/Risco × "Clima favorável/arriscado/desfavorável" (N de 10 anos) | spec §10.2, L2 |
 | P2 | Mover A leva B junto (proposta acima) | L10, spec §5.2 |
 | P3 | Texto do selo quando `rank > 4` | L6 |
-| P4 | Estado do rascunho com 1 cultura | L1 |
+| P4 | ~~Estado do rascunho com 1 cultura~~ **Resolvido:** simula cultura + pousio | L1 |
 | P5 | Consórcios como uma cultura só | spec §10.4 |
 | P6 | Cancelar: descartar com confirmação | spec §10.5 |
 
