@@ -55,6 +55,16 @@ export const DADOS = [
       if (!cs.length) return null
       return cs.some(c => c.risk?.method === 'MOCK') || temMock(a) ? 'mock' : 'real'
     }, precisa: 'Risco calculado (método diferente de MOCK)' },
+  { dado: 'Atendimento à demanda por fase (ISNA)', fonte: 'rotacoes', front: 'Widget "Água para a cultura" e "Atenção no ciclo"', emUso: true,
+    servido: a => {
+      const cs = culturasRot(a)
+      if (!cs.some(c => c.risk?.mean_isna)) return null
+      return cs.some(c => c.risk?.method === 'MOCK') || temMock(a) ? 'mock' : 'real'
+    }, precisa: 'Atendimento calculado (método diferente de MOCK)' },
+  { dado: 'Ky por estágio (sensibilidade ao déficit)', fonte: 'cultura', front: 'Sensibilidade da fase em "Atenção no ciclo"', emUso: true,
+    servido: a => (a.cultura?.water_requirements?.yield_response_factor ? 'real' : null), precisa: '—' },
+  { dado: 'Atendimento à demanda dia a dia ou por decêndio', fonte: null, front: 'Não há: dentro da fase o valor é constante', emUso: false,
+    servido: () => null, precisa: 'Série ETa, ETc e água na zona das raízes por dia ou decêndio, vinculada à rotação' },
   { dado: 'Escalas 0–100 (segurança hídrica, produtividade, solo)', fonte: 'rotacoes', front: 'Mapa de aptidão (3 dos 4 eixos)', emUso: true,
     servido: a => deRotacoes(a, x => rot0(x)?.scores), precisa: 'Escalas calculadas' },
   { dado: 'Proteção do solo planejada', fonte: 'rotacoes', front: 'Saúde do solo: nota e texto (cobertura viva, troca de família)', emUso: true,
@@ -69,7 +79,7 @@ export const DADOS = [
     servido: () => null, precisa: 'Produtividade e preço por cultura e região, com data' },
   { dado: 'Efeito da sequência nas pragas', fonte: null, front: 'Selo "Mais pragas" e texto (`src/data/perfis.ts`, mock)', emUso: false,
     servido: () => null, precisa: 'Efeito da sequência de culturas nas pragas' },
-  { dado: 'Umidade do solo atual', fonte: null, front: 'Mock no indicador de umidade da cena', emUso: false,
+  { dado: 'Umidade do solo atual', fonte: null, front: 'Não exibida (o widget mostra o atendimento à demanda)', emUso: false,
     servido: () => null, precisa: 'Leitura atual com data, origem e unidade' },
   { dado: 'Previsão do tempo', fonte: null, front: 'Fora do escopo atual', emUso: false,
     servido: () => null, precisa: 'Fonte de previsão com horizonte e data de emissão' },

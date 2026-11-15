@@ -49,7 +49,9 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
   const alerta = crit && { cls: crit.cls, rotulo: rotuloCritico(crit), texto: legendaCritico(crit) }
   const covered = cur.k === 'straw'
   const atendimento = quadrosAgua?.find(q => q.idx === idx)?.atendimento ?? null
-  const soil = useMemo(() => soilGauge(atendimento, !!cur.crop), [atendimento, cur.crop])
+  // Atendimento à demanda da fase, da API (logic/atencaoCiclo.ts); MOCK no servidor = provisório.
+  const provisorio = useConjunto().rotacoes[rot]?.safras.some(s => s.risco?.method === 'MOCK') ?? false
+  const soil = useMemo(() => soilGauge(atendimento, !!cur.crop, provisorio), [atendimento, cur.crop, provisorio])
   const temp = useMemo(() => tempGauge(cur.crop, cur.k, covered, {
     tmin: periodo.tmin, tmax: periodo.tmax,
     tminExtremo: clima.dados?.decendios[idx]?.tmin_extremo_medio ?? null,

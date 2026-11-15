@@ -36,7 +36,7 @@ test('envia solo, histórico e prioridades; ligar uma prioridade reordena pela A
 
   const sorgo = page.getByRole('button', { name: /^Soja depois sorgo\./ })
   await sorgo.click()
-  await expect(page.locator('.insp h2')).toHaveText('Soja depois sorgo')
+  await expect(page.locator('.insp h2')).toHaveText('Soja → sorgo')
 
   await page.getByRole('switch', { name: 'Resiliência climática' }).click()
   await page.getByRole('switch', { name: 'Saúde do solo' }).click()
@@ -44,7 +44,7 @@ test('envia solo, histórico e prioridades; ligar uma prioridade reordena pela A
   await expect(nomes.first()).toContainText('algodão')
   expect(pedidos.at(-1)!.priorities).toEqual({ water_security: 0, productivity: 1, soil_protection: 0 })
   // A rotação selecionada continua a mesma, agora em outra posição
-  await expect(page.locator('.insp h2')).toHaveText('Soja depois sorgo')
+  await expect(page.locator('.insp h2')).toHaveText('Soja → sorgo')
   await expect(page.getByRole('button', { name: /^Soja depois sorgo\./ })).toHaveAttribute('aria-pressed', 'true')
 })
 

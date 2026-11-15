@@ -38,6 +38,7 @@ A tela envia a `POST /api/rotations/recommendations` o centro do talhão, a text
 | Local | Externo | Nome da cidade pelo Nominatim (OpenStreetMap) |
 | "O que importa": Resiliência, Saúde do solo, Produtividade | **API** | Vão como `priorities`; a ordem da lista é o `rank` da resposta |
 | "O que importa": Economia de água | Mock | Não existe na API: só destaca o eixo no mapa, não muda a ordem |
+| Atenção no ciclo: fases com atendimento baixo | **API (MOCK)** | `risk.mean_isna` por fase, fase crítica (`critical_stage`) e sensibilidade pelo Ky da fase (`yield_response_factor`). Limiares de apresentação: 45% e 55%. Detalhes: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md) |
 
 ## Simulação do talhão (centro)
 
@@ -46,10 +47,11 @@ A tela envia a `POST /api/rotations/recommendations` o centro do talhão, a text
 | Chuva do decêndio | **API** | `chuva_media` |
 | Temperatura (mín. e máx.) | **API** | `tmin_media`, `tmax_media` |
 | Classificação da temperatura (Bom, Atenção, Risco) | Front sobre API | Clima comparado aos limites EcoCrop da cultura |
-| Umidade do solo | **Mock** | `WAT2`/`SOIL` em `src/data/mock.ts`. A API tem umidade histórica (`gwettop`/`gwetroot`), mas não a atual |
+| Água para a cultura (ETa/ETc) | **API (MOCK)** | `risk.mean_isna` da fase em que a cultura está (média histórica por fase). Substituiu o antigo "Umidade do solo", que lia tabelas fixas (`WAT2`/`SOIL`). Não é umidade do solo |
 | Cena isométrica (plantas, solo, palhada) | Front sobre API | Motor de simulação local (`simulacao/`), alimentado pelas normais do clima, pelas datas das rotações e pelo laudo |
 | Estágio no chip (Semeadura, Floração…) | Front sobre API | Estágios FAO-56 da cultura posicionados na janela da API |
 | "Período crítico" no chip | **API (MOCK)** | `critical_stage` da cultura |
+| Cena isométrica: plantas e solo desenhados | Front | O motor local continua só no desenho; nenhum indicador lê a série dele |
 
 ## Rotações (calendário)
 
@@ -87,7 +89,7 @@ A tela envia a `POST /api/rotations/recommendations` o centro do talhão, a text
 | Datas de plantio e colheita | **API** | |
 | Selo por safra e frase de risco | **API (MOCK)** | |
 | "Por que ficou em Nº": resiliência | **API (MOCK)** | |
-| "Por que ficou em Nº": saúde do solo | **API** | Proteção do solo planejada |
+| Saúde do solo | **API** | Proteção do solo planejada |
 | "Por que ficou em Nº": pragas | Mock | `perfis.ts` |
 | "O que você ganha" | Cadastro | Só na rotação atual do agricultor |
 
@@ -105,7 +107,7 @@ Tudo da API (EcoCrop e FAO-56): temperatura, chuva anual, pH, ciclo, requisitos 
 - Déficit de leitura de uma fase: consumo menos chuva (ano médio e ano seco).
 - Somas de chuva por mês e por ano.
 - Classificações em faixas: régua do ZARC para o risco, Ótima/Média/Fraca no mapa e Bom/Atenção/Risco na temperatura.
-- Estágios desenhados no talhão e simulação da cena.
+- Estágios desenhados no talhão e simulação da cena (só desenho: nenhum indicador lê a série do motor local).
 
 ## O que ainda é mock (e o que o backend precisaria entregar)
 
@@ -116,7 +118,8 @@ Tudo da API (EcoCrop e FAO-56): temperatura, chuva anual, pH, ciclo, requisitos 
 | Umidade necessária (faixa em mm) | `src/data/perfis.ts` | Consumo por ciclo da cultura (ou usar o Σ Kc × ET0 do front) |
 | Efeito nas pragas e tag "Mais pragas" | `src/data/perfis.ts` | Efeito da sequência de culturas nas pragas |
 | Nome exibido das culturas ("Milho safrinha") | `src/data/perfis.ts` | Nome comum em português e papel na rotação |
-| Umidade do solo atual | `src/data/mock.ts` | Leitura atual com data, origem e unidade |
+| Umidade do solo atual | Não exibida (as tabelas `WAT2`/`SOIL` saíram do widget) | Leitura atual com data, origem e unidade |
+| Atendimento à demanda dentro da fase | A API só entrega por fase: eventos curtos não aparecem | Série por dia ou decêndio (ETa, ETc, água na zona das raízes) |
 
 ## Situação do backend em 15/11/2026
 

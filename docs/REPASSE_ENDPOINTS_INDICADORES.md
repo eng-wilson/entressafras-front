@@ -43,3 +43,20 @@ O usuário informa que o backend já fornece dados capazes de substituir esses m
 - As orientações consideram a fase e as evidências disponíveis, sem prescrever irrigação ou quantificar melhora sem suporte do backend.
 
 Referência da implementação local e seus limites: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md). Testes relevantes: `src/logic/atencaoCiclo.test.ts`, `src/logic/soilGauge.test.ts` e `tests/atencao-ciclo.spec.ts`.
+
+## Resultado da verificação (15/11/2026, sessão de endpoints)
+
+Contrato conferido no OpenAPI de produção nesta data. `POST /api/rotations/recommendations` respondia 500 durante toda a verificação; o formato abaixo é o do contrato, e os testes usam a fixture montada por ele.
+
+1. **Resposta hídrica da cultura na rotação.** A API **não** entrega série por dia ou decêndio (ETa, ETc, água na zona das raízes, estresse). Entrega, por cultura, em `crops[].crop.risk`: `mean_isna` (ΣETr/ΣETc por estágio FAO-56: inicial, desenvolvimento, meio, fim, média das safras históricas do balanço diário da API), `mean_season_isna` (ciclo inteiro), `critical_stage`, `risk_percentage` e `estimated_yield_loss_pct`. O catálogo (`water_requirements.yield_response_factor`) traz o Ky por estágio.
+2. **Semântica.** `mean_isna` é atendimento à demanda (ETa/ETc), a mesma razão do widget, mas por fase e em média histórica. Não é umidade do solo. `GET /api/clima/diario` traz `gwettop`/`gwetroot`, umidade regional do NASA POWER, que não é o balanço da cultura e não substitui estes indicadores. O risco (% de safras com perda acima do limiar) é outra grandeza e segue separado.
+3. **Vínculo.** O panorama e o widget derivam da mesma resposta que a lista e o painel. A chave da consulta inclui ponto, solo, histórico e prioridades; trocar a rotação troca o panorama na hora. Sem resposta, nada é exibido no lugar.
+4. **Mesma fonte no widget e no panorama.** Feito. Os dois leem `mean_isna` da fase de cada decêndio. As fases são posicionadas pelos estágios FAO-56 da API nas datas da API. A análise sobre a corrida do worker saiu dos indicadores; o motor local continua só no desenho da cena.
+5. **Ciclo × eventos internos.** Preservado: rotação favorável no risco geral mostra as fases com atendimento baixo ("mesmo com o ciclo favorável no risco geral"). A fase de maior déficit da API vem marcada.
+6. **Método e MOCK.** O widget e o panorama mostram "provisório" quando o servidor marca o risco como MOCK. Origem e período estão no texto ("média das safras históricas da API").
+7. **Água, solo, pragas, produção e preços.** Saúde do solo e a nota de produtividade agora vêm da API (`scores`, `soil_protection`). Continuam mock: economia de água, umidade necessária (mm), pragas, produção (sc/ha) e preços. Mapa completo: [MOCK_E_DADOS_REAIS.md](MOCK_E_DADOS_REAIS.md).
+8. **Consultas diárias.** A decisão de adiar `GET /api/clima/diario` continua: o endpoint não entrega a resposta da cultura, então reativá-lo não resolveria estes indicadores.
+
+**Limite que fica:** com o atendimento por fase, eventos curtos dentro de uma fase (um veranico de dias) não aparecem; dentro da fase o valor é constante. Resolver isso exige uma série por dia ou decêndio no backend.
+
+Sensibilidade: passou a ser o Ky da fase da API (Ky ≥ 1, FAO-33), no lugar do canal de déficit do motor local (≥ 0,8).

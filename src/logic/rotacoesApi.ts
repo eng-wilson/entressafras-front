@@ -91,12 +91,14 @@ export function textoProtecaoSolo(p: SoilProtection): string {
 }
 
 /** Fases (I a IV) pela duração dos estágios FAO-56 e profundidade das raízes, quando o catálogo traz. */
-function estagiosDe(c: RotationCrop): Pick<SafraDef, 'fases' | 'raiz'> {
+function estagiosDe(c: RotationCrop): Pick<SafraDef, 'fases' | 'raiz' | 'ky'> {
   const w = c.crop.water_requirements
   if (!w) return {}
   const d = w.stage_length_days
   const soma = d.initial + d.development + d.mid_season + d.late_season
-  const out: Pick<SafraDef, 'fases' | 'raiz'> = {}
+  const out: Pick<SafraDef, 'fases' | 'raiz' | 'ky'> = {}
+  const y = w.yield_response_factor
+  if (y) out.ky = [y.initial ?? null, y.development ?? null, y.mid_season ?? null, y.late_season ?? null]
   if (soma > 0 && [d.initial, d.development, d.mid_season, d.late_season].every(x => x >= 0)) {
     out.fases = [d.initial / soma, d.development / soma, d.mid_season / soma, d.late_season / soma]
   }

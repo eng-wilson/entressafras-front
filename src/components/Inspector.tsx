@@ -108,12 +108,14 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onComparar, res, ro
       </details>
 
       <section key={`tradeoffs-${def.id}`} className="insp-section" aria-labelledby="insp-tradeoffs-title">
-        <h3 id="insp-tradeoffs-title">Solo e pragas <span className="insp-inline-note">· ilustrativos</span></h3>
+        <h3 id="insp-tradeoffs-title">Solo e pragas</h3>
         <div className="insp-group">
           <details className="insp-disclosure">
-            <summary><Icon name="i-leaf" /><span>{NOME_EIXO.solo}<small>{def.ct.soilWhy}</small></span></summary>
+            <summary><Icon name="i-leaf" /><span>{NOME_EIXO.solo}<small>{def.ct.soilWhy}{def.protecaoSolo ? ' · API' : ' · ilustrativo'}</small></span></summary>
             <div className="insp-disclosure-body">
-              <p>Avaliação ilustrativa: {minuscula(def.ct.soil)}.</p>
+              {def.protecaoSolo
+                ? <p>Proteção do solo planejada, da API: {Math.round(def.scores?.soil_protection ?? def.protecaoSolo.score)} de 100 ({minuscula(def.ct.soil)}). Índice de planejamento (cobertura viva e troca de família botânica), não medida da saúde do solo.</p>
+                : <p>Avaliação ilustrativa: {minuscula(def.ct.soil)}.</p>}
               <p><strong>O que avaliar:</strong> confira no calendário os intervalos entre culturas e discuta a cobertura do solo com seu agrônomo.</p>
             </div>
           </details>
@@ -144,7 +146,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onComparar, res, ro
             <p>{conj.origem === 'api' ? 'Rotações e datas: API Entressafras. A ordem é recebida da API; os motivos de cada posição não são fornecidos.' : 'Rotações e datas ilustrativas.'}{rankingTeste ? ' O ranking ainda é de teste.' : ''}</p>
             <p>{clima ? `Chuva e temperatura: ${clima.fonte}, média de ${clima.safras.length} safras${clima.safras.length ? ` (${clima.safras[0]} a ${clima.safras.at(-1)})` : ''}.` : 'Clima indisponível. Os dados de risco recebidos são exibidos sem estimativa adicional.'}</p>
             {clima?.aviso_resolucao && <p>{clima.aviso_resolucao}</p>}
-            <p>Requisitos das culturas: catálogo EcoCrop, quando disponível. Solo, pragas, produção e preços são ilustrativos. Receita bruta ilustrativa não representa lucro: os custos não foram considerados.</p>
+            <p>Requisitos das culturas: catálogo EcoCrop, quando disponível. Proteção do solo e atendimento à demanda de água por fase: API. Pragas, produção e preços são ilustrativos. Receita bruta ilustrativa não representa lucro: os custos não foram considerados.</p>
             <p>Use estas informações para comparar opções e validar o planejamento com seu agrônomo.</p>
           </div>
         </details>

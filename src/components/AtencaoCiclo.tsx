@@ -27,8 +27,8 @@ export function AtencaoCiclo({ panorama, estado, idx, nome, anosApi, provisorio,
         <span><strong>{m.estado === 'risk' ? 'Crítico' : 'Atenção'}{ativo === m ? ' · neste período' : ''}</strong><small>{periodoMomento(m)}</small></span>
       </summary>
       <div className="attention-body">
-        <p><strong>{m.cultura}</strong><br />Fase no modelo: {m.fase || 'sem informação'}</p>
-        <p>Menor atendimento: <strong>{Math.round(m.menorAtendimento * 100)}%</strong> da demanda, nos quadros deste intervalo.</p>
+        <p><strong>{m.cultura}</strong><br />Fase: {m.nomeFase}{m.critica ? ' · fase de maior déficit na API' : ''}</p>
+        <p>Atendimento à demanda: <strong>{Math.round(m.menorAtendimento * 100)}%</strong> da água necessária nesta fase, na média das safras históricas da API.</p>
         <p>{m.reacao}</p>
         <p><strong>O que conferir</strong><br />{m.acao}</p>
         <button type="button" className="attention-link" onClick={() => onVerPeriodo(m.de)}>Ver este momento<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></button>
@@ -39,13 +39,13 @@ export function AtencaoCiclo({ panorama, estado, idx, nome, anosApi, provisorio,
     <section className="sec attention-cycle" aria-label="Momentos de atenção da rotação">
       <h3>Atenção no ciclo</h3>
       <p className="attention-name">{nome}</p>
-      <p className="attention-overall">API: {clsApi ? faixaApi : 'sem risco completo'}{provisorio ? ' · provisório' : ''}</p>
-      {estado === 'carregando' && <p className="attention-note" role="status">Analisando os quadros da simulação…</p>}
-      {estado === 'erro' && <p className="attention-note" role="status">Não foi possível analisar a simulação. Sem avaliação dos momentos de atenção.</p>}
-      {estado === 'sem-clima' && <p className="attention-note">Clima indisponível. Os momentos do talhão não foram avaliados.</p>}
+      <p className="attention-overall">API: {clsApi ? faixaApi : 'sem risco completo'}{provisorio || panorama?.provisorio ? ' · provisório' : ''}</p>
+      {estado === 'carregando' && <p className="attention-note" role="status">Aguardando as rotações da API…</p>}
+      {estado === 'erro' && <p className="attention-note" role="status">As rotações da API não carregaram. Sem avaliação dos momentos de atenção.</p>}
+      {estado === 'sem-clima' && <p className="attention-note">Sem dados da API para avaliar os momentos.</p>}
       {estado === 'pronto' && panorama && <>
-        <p className="attention-note">{momentos.length ? `${momentos.length} ${momentos.length === 1 ? 'momento de atenção' : 'momentos de atenção'} no cenário sintético${clsApi === 'good' ? ', mesmo com o ciclo favorável na API' : ''}.` : avaliados ? 'Sem restrição de água nos quadros avaliados deste cenário sintético.' : 'Sem dados locais suficientes para avaliar estes quadros.'}</p>
-        <div className="attention-map" role="img" aria-label={`Água no ciclo: ${panorama.quadros.filter(q => q.estado === 'risk').length} quadros críticos e ${panorama.quadros.filter(q => q.estado === 'warn').length} em atenção. Cenário sintético, não frequência histórica.`}>
+        <p className="attention-note">{momentos.length ? `${momentos.length} ${momentos.length === 1 ? 'fase com atenção' : 'fases com atenção'} no atendimento de água da API${clsApi === 'good' ? ', mesmo com o ciclo favorável no risco geral' : ''}.` : avaliados ? 'Sem fase com restrição de água no atendimento da API.' : 'A API não trouxe o atendimento por fase desta rotação.'}</p>
+        <div className="attention-map" role="img" aria-label={`Água no ciclo: ${panorama.quadros.filter(q => q.estado === 'risk').length} decêndios críticos e ${panorama.quadros.filter(q => q.estado === 'warn').length} em atenção, pelo atendimento por fase da API (média histórica).`}>
           {panorama.quadros.map(q => <span key={q.idx} className={`attention-mark ${q.estado}${q.idx === idx ? ' current' : ''}`} aria-hidden="true" />)}
         </div>
         <div className="attention-months" aria-hidden="true"><span>Set</span><span>Dez</span><span>Mar</span><span>Jun</span></div>
@@ -56,10 +56,9 @@ export function AtencaoCiclo({ panorama, estado, idx, nome, anosApi, provisorio,
         </div>
         {momentos.length > 0 && <button className="attention-link" type="button" onClick={onComparar}>Comparar alternativas<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></button>}
         <details className="attention-method"><summary>Como ler estes momentos</summary>
-          <p>Simulação local com clima diário sintético gerado das médias mensais do talhão. Meses incompletos usam normais do Cerrado. Não é previsão, medição do solo nem o risco calculado pela API.</p>
-          <p>Um quadro representativo por decêndio, no mesmo dia do ciclo exibido na cena. O modelo é ajustado à janela visual da cultura; os intervalos não são médias de todos os dias reais. Culturas sem modelo próprio ficam sem avaliação, mesmo quando o desenho usa outra cultura como reserva.</p>
-          <p>Atendimento = água transpirada ÷ demanda (ETa/ETc). Crítico abaixo de 45%; atenção de 45% a menos de 55%. Estes são os limiares de apresentação do widget, não limites oficiais de manejo. Alta sensibilidade: pelo menos 0,8 no canal de déficit hídrico do modelo.</p>
-          <p>A classificação geral pode ser favorável e ainda conter restrições pontuais. Este panorama não explica o ranking da API e não calcula perda de produtividade ou lâmina de irrigação.</p>
+          <p>Atendimento = água que a cultura usou ÷ água de que precisava (ETa/ETc), por fase, na média das safras históricas do balanço hídrico da API (ISNA por estágio). A API não entrega valores dia a dia: dentro de uma fase, o valor é o mesmo em todos os decêndios.</p>
+          <p>Fases pelos estágios FAO-56 da cultura, posicionados nas datas de plantio e colheita da API. Crítico abaixo de 45%; atenção de 45% a menos de 55%. Estes são limiares de apresentação, não limites oficiais de manejo. Alta sensibilidade: Ky da fase igual ou acima de 1 (FAO-33), também da API.</p>
+          <p>A classificação geral pode ser favorável e ainda conter uma fase com atendimento baixo. Este panorama não explica o ranking da API e não calcula perda de produtividade ou lâmina de irrigação. Não é previsão do tempo nem medição do solo.</p>
           <a href="https://www.embrapa.br/en/web/agencia-de-informacao-tecnologica/cultivos/soja/pre-producao/caracteristicas-da-especie-e-relacoes-com-o-ambiente/exigencias-climaticas/agua/sintomas-de-falta-de-agua" target="_blank" rel="noreferrer">Referência: resposta da soja à falta de água</a>
         </details>
       </>}

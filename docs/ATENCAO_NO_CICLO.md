@@ -1,36 +1,34 @@
 # Atenção dentro de uma rotação favorável
 
-A barra esquerda mostra momentos de restrição hídrica do cenário local mesmo quando a classificação geral da API é favorável. Esse panorama não altera a ordem nem o risco da API e não pretende explicar os motivos do ranking, que não são fornecidos pelo backend.
+Revisão de 15/11/2026. A barra esquerda mostra as fases com atendimento baixo à demanda de água, mesmo quando o risco geral da API é favorável. O panorama não altera a ordem nem o risco e não explica o ranking, que a API não justifica.
 
-## Correção da origem do indicador
+## Origem dos números: só a API
 
-O widget antigo usava `WAT2` e `SOIL`, tabelas ilustrativas fixas por decêndio. O valor 0,44 da captura não era resultado da simulação daquela rotação. Agora o indicador “Água para a cultura” lê ETa/ETc da série usada pelo desenho. Não é umidade volumétrica medida no solo. Ausência de dados e entressafra são neutras, sem substituir por um valor fixo.
+O widget "Água para a cultura" e o panorama "Atenção no ciclo" leem a mesma fonte: o atendimento à demanda por fase que a API entrega (`risk.mean_isna`, ΣETr/ΣETc por estágio FAO-56, média das safras históricas do balanço diário da API). É a razão ETa/ETc; não é umidade do solo.
 
-O canvas e a análise compartilham a mesma corrida do worker. Não se executa uma simulação adicional nem se recalcula o risco da API. O resultado fica vinculado às entradas atuais; trocar rotação, talhão, solo ou clima invalida a leitura anterior.
+- Cada decêndio da safra recebe o valor da fase em que a cultura está. As fases vêm dos estágios FAO-56 da API (`stage_length_days`), posicionados nas datas de plantio e colheita da API.
+- A API não entrega valores dia a dia: dentro de uma fase, o valor é o mesmo em todos os decêndios. Eventos curtos dentro de uma fase não aparecem.
+- Sem risco na resposta, ou fora das safras: sem dado. Nada é estimado no lugar.
+- Valores que o servidor marca como MOCK aparecem como "provisório".
+
+Histórico: a versão anterior (sessão de 15/11, ver [REPASSE_ENDPOINTS_INDICADORES.md](REPASSE_ENDPOINTS_INDICADORES.md)) lia ETa/ETc da corrida do worker da cena, com clima diário sintético. Pela regra do projeto (o que a API resolve não é calculado no front), essa análise saiu dos indicadores. O motor local continua só no desenho da cena. Antes disso, o widget lia tabelas fixas (`WAT2`/`SOIL`), o erro que motivou a correção.
 
 ## Como os momentos são encontrados
 
-- A saída diária do motor contém ETa, ETc, nome da fase e sensibilidade da cultura ao déficit hídrico.
-- Em cada posição do calendário, lê-se o mesmo dia representativo mostrado pela cena: `round(fracaoDoCiclo × cicloDias)`. A janela visual estica o ciclo do modelo sobre as datas recebidas; portanto, não se anuncia uma média meteorológica real do decêndio.
-- Atendimento = ETa/ETc, limitado a 0–1. Sem demanda ou sem série: sem dado.
-- Conservam-se os limiares de apresentação do widget: crítico abaixo de 0,45, atenção de 0,45 a menos de 0,55. São limites internos de interface, não limiares agronômicos oficiais ou uma recomendação de irrigação.
-- Quadros adjacentes são agrupados quando coincidem cultura, fase, estado e faixa de sensibilidade. Alta sensibilidade é a referência de 0,8 já usada no motor para o canal de déficit hídrico. Não se misturam fases ou safras numa única explicação.
-- Cada momento mostra intervalo, cultura, fase no modelo, menor atendimento entre os quadros e o que conferir. Não se estima redução de rendimento nem dose de água por esse índice.
+Código: [`src/logic/atencaoCiclo.ts`](../src/logic/atencaoCiclo.ts).
+
+- Estado por fase, pelos limiares de apresentação do widget: crítico abaixo de 0,45; atenção de 0,45 a menos de 0,55. São limites de interface, não limiares agronômicos oficiais nem recomendação de irrigação.
+- Decêndios seguidos da mesma safra e da mesma fase formam um momento.
+- Sensibilidade: Ky da fase, da API (`yield_response_factor`). Ky ≥ 1 (FAO-33) indica fase em que a produção cai proporcionalmente mais que o déficit de água.
+- A fase de maior déficit apontada pela API (`critical_stage`) vem marcada.
+- Cada momento mostra intervalo, cultura, fase, atendimento da fase e o que conferir. Não estima redução de rendimento nem dose de água.
 
 ## Interpretação e ações
 
-A classificação global e o cenário pontual respondem perguntas diferentes. Uma opção favorável na API pode conter restrições locais no cenário sintético. O selo geral foi renomeado para “Favorável no risco geral da API”, evitando sugerir ausência de alertas em todo o ciclo.
+A classificação geral (risco) e o atendimento por fase respondem perguntas diferentes: uma rotação favorável pode ter uma fase com atendimento baixo. As ações são de verificação: conferir a água na zona das raízes e o estágio no campo; havendo irrigação, avaliar o manejo com assistência técnica. Na maturação, confirmar a maturidade antes de alterar o manejo. Não se prescreve irrigação com base só no índice.
 
-A resposta da cultura depende da fase e da sensibilidade do modelo. Uma restrição na maturação não recebe automaticamente a mesma orientação que uma restrição em fase de alta sensibilidade. As ações são de verificação: confirmar água na zona das raízes e estágio no campo; se houver irrigação, avaliar o manejo com assistência técnica. Na maturação, confirmar a maturidade antes de alterar o manejo. Não se prescreve irrigação com base só no índice.
-
-Referência agronômica para a distinção de fases da soja: [Embrapa — Sintomas de falta de água](https://www.embrapa.br/en/web/agencia-de-informacao-tecnologica/cultivos/soja/pre-producao/caracteristicas-da-especie-e-relacoes-com-o-ambiente/exigencias-climaticas/agua/sintomas-de-falta-de-agua). A sensibilidade exibida para cada cultura vem do motor local, não de uma extrapolação dessa referência para todas as culturas.
-
-## Limites que permanecem visíveis
-
-O modelo usa clima diário sintético gerado de normais mensais do talhão, com complemento de normais do Cerrado em meses incompletos. Não é previsão do tempo, observação no campo, série histórica real de perdas ou balanço hídrico calculado pelo backend. A seleção de um quadro por decêndio pode deixar de capturar eventos entre quadros. Sem clima, não se apresenta um panorama do talhão usando o fallback da cena.
-
-Quando o desenho usa uma cultura reserva por não haver modelo próprio para a cultura selecionada, a análise local permanece sem dado; não se apresenta a resposta do milho como se fosse a de outra espécie.
+Referência agronômica para a distinção de fases da soja: [Embrapa — Sintomas de falta de água](https://www.embrapa.br/en/web/agencia-de-informacao-tecnologica/cultivos/soja/pre-producao/caracteristicas-da-especie-e-relacoes-com-o-ambiente/exigencias-climaticas/agua/sintomas-de-falta-de-agua).
 
 ## Validação
 
-Testes unitários cobrem risco geral favorável com restrições locais, agrupamento, sensibilidade por fase, dia alinhado à cena, troca de cultura e ausência de série/demanda. Testes de navegador usam um cenário seco com risco MOCK favorável para verificar os momentos, as ações, o vínculo com o widget e a neutralidade quando o clima falha.
+Testes unitários (`src/logic/atencaoCiclo.test.ts`, `src/logic/soilGauge.test.ts`): leitura do ISNA da fase em cada decêndio, fase baixa em rotação favorável, agrupamento por fase, fase crítica, sensibilidade pelo Ky, ausência de risco sem estimativa, marca de provisório. Testes de navegador (`tests/atencao-ciclo.spec.ts`): momento, ação e o mesmo estado no widget; resposta sem risco; falha do clima sem apagar o que veio da API.

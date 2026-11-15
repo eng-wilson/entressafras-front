@@ -126,6 +126,15 @@ Mapa completo do que é API e do que é mock, elemento por elemento: [MOCK_E_DAD
 
 **Pendência:** durante toda a integração (15/11/2026, cerca de 30 tentativas) o endpoint respondeu 500. A fixture de testes foi montada pelo contrato (ver o cabeçalho de `src/data/rotacoesFixture.ts`) e a tabela de cobertura abaixo ainda é a de antes do contrato novo. Quando o endpoint voltar: trocar a fixture pela resposta real, rodar `npm run dados:status` e conferir se o risco deixou de ser MOCK.
 
+## Fase 7: atendimento à demanda por fase (widget e "Atenção no ciclo")
+
+Origem: diagnóstico em [REPASSE_ENDPOINTS_INDICADORES.md](REPASSE_ENDPOINTS_INDICADORES.md). O widget de umidade lia tabelas fixas por decêndio (`WAT2`/`SOIL`); uma sessão anterior o trocou por ETa/ETc da simulação local e criou o panorama "Atenção no ciclo" sobre a mesma corrida.
+
+- **Verificação do contrato (15/11/2026):** a API não entrega série por dia ou decêndio da resposta hídrica da cultura. Entrega `risk.mean_isna` (ΣETr/ΣETc por estágio FAO-56, média das safras históricas), `mean_season_isna`, `critical_stage` e, no catálogo, o Ky por estágio.
+- **Integração:** pela regra do projeto, o widget "Água para a cultura" e o panorama passaram a ler `mean_isna` da fase de cada decêndio; a sensibilidade passou a ser o Ky da API (≥ 1). A análise sobre a simulação local saiu desses indicadores (o motor segue só no desenho). Detalhes: [ATENCAO_NO_CICLO.md](ATENCAO_NO_CICLO.md).
+- **`GET /api/clima/diario` continua adiado:** traz umidade regional (`gwettop`/`gwetroot`), não o balanço da cultura; não resolveria estes indicadores.
+- **Limite:** dentro de uma fase o valor é constante; veranicos curtos não aparecem. Pendência para o backend: série por dia ou decêndio (ETa, ETc, água na zona das raízes) vinculada à rotação.
+
 ## Cobertura dos dados pelo backend
 
 <!-- dados-backend:inicio -->

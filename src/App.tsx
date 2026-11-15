@@ -1,6 +1,6 @@
 import { useClimaDecendios } from './hooks/useClimaDecendios'
 import { AvisoClima } from './components/AvisoClima'
-import { useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import type { AppState, DadosTalhao, EstadoTalhoes, Historico, Talhao } from './types'
 import { Sidebar, type AcaoTalhao } from './components/Sidebar'
 import { SoloModal } from './components/SoloModal'
@@ -23,7 +23,6 @@ import { resiliencia } from './logic/resiliencia'
 import { diagnostico, periodoDecisivo } from './logic/diagnostico'
 import { estagioEm, estagios } from './logic/estagios'
 import { atencaoCiclo } from './logic/atencaoCiclo'
-import type { ResultadoRotacao } from './sim/api'
 
 const DEFAULT: AppState = {
   idx: 10,
@@ -100,17 +99,12 @@ export default function App() {
     [clima.dados, textura, conj],
   )
   const diags = useMemo(() => res?.rotacoes.map(diagnostico) ?? null, [res])
-  // O resultado pertence às entradas atuais, nunca ao talhão/rotação anterior.
-  // É a mesma corrida já calculada pelo worker para desenhar a cena.
-  const contextoSim = useMemo(() => ({ conj, rot: state.rot, talhao, clima: clima.dados }), [conj, state.rot, talhao, clima.dados])
-  const [corrida, setCorrida] = useState<{ contexto: object; resultado: ResultadoRotacao | null } | null>(null)
-  const receberResultado = useCallback((resultado: ResultadoRotacao) => {
-    setCorrida(c => c?.contexto === contextoSim && c.resultado === resultado ? c : { contexto: contextoSim, resultado })
-  }, [contextoSim])
-  const erroSimulacao = useCallback(() => setCorrida({ contexto: contextoSim, resultado: null }), [contextoSim])
-  const resultadoAtual = corrida?.contexto === contextoSim ? corrida.resultado : null
-  const panorama = useMemo(() => resultadoAtual && conj && rotOk ? atencaoCiclo(resultadoAtual, conj.rotacoes[state.rot].safras) : null, [resultadoAtual, conj, rotOk, state.rot])
-  const estadoPanorama = clima.status === 'erro' ? 'sem-clima' : corrida?.contexto === contextoSim ? corrida.resultado ? 'pronto' : 'erro' : 'carregando'
+  // Atendimento à demanda por fase, da API (risk.mean_isna), para o widget e o panorama de atenção. Deriva da mesma
+  // resposta que a lista e o painel: trocar talhão, solo, histórico, prioridades ou rotação troca o panorama junto.
+  const panorama = useMemo(
+    () => (conj && rotOk ? atencaoCiclo(res?.rotacoes[state.rot] ?? null, conj.rotacoes[state.rot].safras) : null),
+    [res, conj, rotOk, state.rot],
+  )
   // Selecionar uma rotação já leva a simulação ao período que mais pesa no selo dela; `idx` explícito = clique numa marca.
   const selecionar = (rot: number, idx?: number) =>
     setState(s => ({ ...s, rot, idx: idx ?? periodoDecisivo(diags?.[rot] ?? null) ?? s.idx }))
@@ -221,7 +215,7 @@ export default function App() {
         </button>
       </header>
       <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')}
-        atencao={pronto ? { panorama: clima.status === 'ok' ? panorama : null, estado: estadoPanorama, idx: state.idx, nome: conj.rotacoes[state.rot].safras.map(s => s.nome).join(' → '), anosApi: res?.rotacoes[state.rot]?.anos ?? null, provisorio: conj.rotacoes[state.rot].safras.some(s => s.risco?.method === 'MOCK'), onVerPeriodo: verPeriodo, onComparar: compararAlternativas } : undefined} />
+        atencao={pronto ? { panorama, estado: 'pronto', idx: state.idx, nome: conj.rotacoes[state.rot].safras.map(s => s.nome).join(' → '), anosApi: res?.rotacoes[state.rot]?.anos ?? null, provisorio: conj.rotacoes[state.rot].safras.some(s => s.risco?.method === 'MOCK'), onVerPeriodo: verPeriodo, onComparar: compararAlternativas } : undefined} />
       <main className="main" id="rotation-workspace" tabIndex={-1}>
         {pronto && <a className="inspector-jump" href="#rotation-inspector">Entender esta rotação e os próximos passos<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></a>}
         {clima.status === 'erro' && <AvisoClima onRecarregar={clima.recarregar} />}
@@ -240,7 +234,7 @@ export default function App() {
         {conj && conj.rotacoes.length === 0 && <p className="aviso" role="status">Nenhuma rotação recomendada para este talhão.</p>}
         {pronto && <>
         <Simulation idx={idxCena} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={cmpCena}
-          quadrosAgua={clima.status === 'ok' ? panorama?.quadros : undefined} onResultado={receberResultado} onErroSimulacao={erroSimulacao} />
+          quadrosAgua={panorama?.quadros} />
         <Rotations
           idx={state.idx} mode={state.mode} sel={cmpSel} onToggleSel={toggleCmp} res={res}
           rot={state.rot} onRot={selecionar} diags={diags}

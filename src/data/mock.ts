@@ -71,6 +71,8 @@ export type SafraDef = {
   risco?: CropRisk
   /** De onde vieram a data de plantio e o ciclo (calendário regional GGCMI ou referência FAO-56). */
   calendario?: CropCalendarInfo
+  /** Ky por fase (I a IV), da API: resposta da produção ao déficit hídrico (FAO-33). null = não informado. */
+  ky?: [number | null, number | null, number | null, number | null]
 }
 
 /** Barra do calendário, em meses desde 1º de setembro (0–12); sem rótulo = pousio. */
