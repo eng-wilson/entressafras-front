@@ -80,11 +80,12 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
           <span className="trio-t">{periodLabel}</span>
         </div>
       )}
-      {/* Palco de altura fixa: a cena fica montada (pausada) na Comparação e o mapa entra por cima, no mesmo
-          espaço. Nada abaixo muda de lugar e a volta não recria a simulação. */}
-      <div className={`trio-g palco${cmp ? ' com-cmp' : ''}`}>
-        {/* A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela */}
-        <section className="field cena" aria-label="Seu talhão" aria-hidden={cmp ? true : undefined} inert={!!cmp}>
+      <div className="trio-g">
+        {/* O mapa vem antes da cena: assim não herda o border-left de `.trio-g > * + *` */}
+        {cmp && <QuadMap sel={cmp.sel} pr={cmp.pr} res={cmp.res} />}
+        {/* A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela.
+            No modo Comparação ela só fica escondida: desmontar destruiria o canvas, o cache de sprites e o zoom. */}
+        <section className="field cena" aria-label="Seu talhão" hidden={!!cmp}>
           <IsoField
             sim={sim}
             pausado={!!cmp}
@@ -108,7 +109,6 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
             </div>
           </div>
         </section>
-        {cmp && <div className="palco-cmp"><QuadMap sel={cmp.sel} pr={cmp.pr} res={cmp.res} /></div>}
       </div>
     </section>
   )

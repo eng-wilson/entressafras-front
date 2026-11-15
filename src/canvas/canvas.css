@@ -657,6 +657,7 @@
 /* Cena do talhão (Simulation.tsx): a simulação ocupa o campo inteiro; chuva e umidade flutuam à esquerda,
    temperatura à direita, em cartões verticais. */
 .trio-g .field.cena { position: relative; padding: 0; margin: 4px 0 0; border-radius: 16px; overflow: hidden; }
+.trio-g .field.cena[hidden] { display: none; }
 .trio-g .cena .isow { padding-top: 0; max-width: none; margin: 0; }
 .cena .iso-sim { margin: 0; border-radius: 16px; height: var(--cena-altura, 500px); }
 .cena .isow .fpill { top: 12px; z-index: 3; }
@@ -704,17 +705,4 @@
   .cena-esq, .cena-dir { position: static; width: auto; flex-direction: row; flex-wrap: wrap; padding: 8px 0 0; }
   .cena-card { flex: 1 1 170px; }
   .cena { --cena-altura: 380px; }
-}
-
-/* Palco da simulação e da comparação (Simulation.tsx): mesma altura nos dois modos. A comparação entra por
-   cima da cena com um fade curto; a cena fica escondida e pausada, sem desmontar. */
-.trio-g.palco { position: relative; min-height: var(--cena-altura, 500px); }
-.palco .cena { transition: opacity .18s ease, visibility 0s linear 0s; }
-.palco.com-cmp .cena { opacity: 0; visibility: hidden; transition: opacity .18s ease, visibility 0s linear .18s; }
-.palco-cmp { position: absolute; inset: 0; overflow: auto; border-radius: 16px; background: var(--group, #fff); animation: palco-entra .18s ease; }
-.palco-cmp > .qmap { margin: 0; min-height: 100%; }
-@keyframes palco-entra { from { opacity: 0; } to { opacity: 1; } }
-@media (prefers-reduced-motion: reduce) {
-  .palco .cena, .palco.com-cmp .cena { transition: none; }
-  .palco-cmp { animation: none; }
 }

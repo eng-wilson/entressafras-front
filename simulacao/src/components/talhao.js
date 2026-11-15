@@ -141,7 +141,8 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
     function quadro() {
         if (destruido) return;
         quadroId = requestAnimationFrame(quadro);
-        if (!atual || !larg || pausado) return;
+        // Escondido (display:none num ancestral): não desenha à toa; o ResizeObserver reajusta ao reaparecer.
+        if (!atual || !larg || !canvas.getClientRects().length) return;
         if (sujo) { sujo = false; aplicar(); } else atual.cena.lavoura.processarFila(8);
         const d = cam.dpr;
         ctx.setTransform(d, 0, 0, d, 0, 0);
