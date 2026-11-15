@@ -1,16 +1,13 @@
 // Rotações recomendadas para o talhão ativo: cache primeiro, depois a API; "Tentar de novo" ignora o cache.
 // Trocar só as prioridades mantém as rotações anteriores na tela enquanto a nova ordem chega (`atualizando`).
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { Ponto, Priorities, RotationRecommendations, SoilType } from '../types'
+import type { CustomCropInput, Ponto, Priorities, RotationRecommendations, SoilType } from '../types'
 import {
   ErroRotacoes, apagarRotacoes, chaveRotacoes, guardarRotacoes, lerRotacoes, recomendarRotacoes,
 } from '../services/rotacoes'
 
-/**
- * A API simula cada candidata com balanço hídrico diário e pode estimar o solo pelo local: a resposta demora mais
- * que a do clima. Depois disso vira erro de rede com "Tentar de novo".
- */
-const TEMPO_LIMITE_MS = 90_000
+/** Cobre a primeira carga de um local novo (POWER + SoilGrids + SMAP levam 1–3 min); depois disso vira erro de rede com "Tentar de novo". */
+const TEMPO_LIMITE_MS = 180_000
 
 export type EstadoRotacoes =
   | { status: 'carregando'; dados: null }
@@ -19,9 +16,12 @@ export type EstadoRotacoes =
 
 const CARREGANDO: EstadoRotacoes = { status: 'carregando', dados: null }
 
-type Entrada = { ponto: Ponto | null; solo: SoilType | null; historico: number[]; prioridades: Priorities }
+/** Rotações salvas pelo agricultor, enviadas em custom_rotations com o ano agrícola das datas delas. */
+export type SalvasDoPedido = { ano: number; custom: CustomCropInput[][] } | null
 
-export function useRotacoes({ ponto, solo, historico, prioridades }: Entrada): EstadoRotacoes & {
+type Entrada = { ponto: Ponto | null; solo: SoilType | null; historico: number[]; prioridades: Priorities; salvas?: SalvasDoPedido }
+
+export function useRotacoes({ ponto, solo, historico, prioridades, salvas = null }: Entrada): EstadoRotacoes & {
   recarregar: () => void
   /** Resposta anterior do mesmo talhão (outras prioridades), exibida enquanto a nova carrega; null se não há. */
   anterior: RotationRecommendations | null
@@ -29,12 +29,17 @@ export function useRotacoes({ ponto, solo, historico, prioridades }: Entrada): E
   const lat = ponto?.lat, lon = ponto?.lon
   const hist = historico.join('-')
   const { water_security: ws, productivity: pd, soil_protection: sp } = prioridades
+  // Sem salvas, o pedido fica como antes (ano padrão da API, mesma chave de cache).
+  const extraJson = JSON.stringify(salvas?.custom.length ? { ano: salvas.ano, custom: salvas.custom } : {})
   const pedido = lat !== undefined && lon !== undefined
-    ? { ponto: { lat, lon }, solo, historico: hist ? hist.split('-').map(Number) : [], prioridades: { water_security: ws, productivity: pd, soil_protection: sp } }
+    ? {
+        ponto: { lat, lon }, solo, historico: hist ? hist.split('-').map(Number) : [],
+        prioridades: { water_security: ws, productivity: pd, soil_protection: sp }, ...JSON.parse(extraJson),
+      }
     : null
   const chave = pedido ? chaveRotacoes(pedido) : null
-  // Mesmo talhão, solo e histórico: a resposta anterior ainda descreve as mesmas rotações candidatas.
-  const base = pedido ? `${pedido.ponto.lat.toFixed(2)},${pedido.ponto.lon.toFixed(2)},${solo ?? 'auto'},${hist}` : null
+  // Mesmo talhão, solo, histórico e salvas: a resposta anterior ainda descreve as mesmas rotações candidatas.
+  const base = pedido ? `${pedido.ponto.lat.toFixed(2)},${pedido.ponto.lon.toFixed(2)},${solo ?? 'auto'},${hist},${extraJson}` : null
 
   const [tentativa, setTentativa] = useState(0)
   const [resposta, setResposta] = useState<{ chave: string | null; estado: EstadoRotacoes }>(() => {
@@ -67,7 +72,7 @@ export function useRotacoes({ ponto, solo, historico, prioridades }: Entrada): E
       })
       .finally(() => clearTimeout(timer))
     return () => { ativo = false; clearTimeout(timer); ac.abort() }
-    // `pedido` é derivado de `chave` (que já inclui ponto, solo, histórico e prioridades).
+    // `pedido` é derivado de `chave` (que já inclui ponto, solo, histórico, prioridades e salvas).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chave, tentativa])
 

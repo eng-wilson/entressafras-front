@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import { rankRotations } from '../logic/rank'
 import { classeAnos, rotationStatus } from '../logic/status'
 import type { Resiliencia } from '../logic/resiliencia'
@@ -17,6 +17,10 @@ type Props = {
   diags: Diagnostico[] | null
   /** Decêndio simulado: cursor na linha selecionada. */
   idx: number
+  /** Linha de rascunho "Nova rotação", acima das rotações. */
+  rascunho?: ReactNode
+  /** Remove uma rotação salva pelo agricultor (tag "Nova"). */
+  onRemoverSalva?: (id: string) => void
 }
 
 /** Trecho da barra (em % da largura dela) ocupado pelo período crítico, pela janela real da safra em decêndios. */
@@ -25,7 +29,7 @@ function trecho(p: PeriodoCritico, de: number, ate: number) {
   return { left: `${((p.de - de) / n * 100).toFixed(2)}%`, width: `${((p.ate - p.de + 1) / n * 100).toFixed(2)}%` }
 }
 
-export function CalendarRows({ res, sel, onSel, diags, idx }: Props) {
+export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverSalva }: Props) {
   const { rotacoes: ROTATIONS } = useConjunto()
   const rpos = useMemo(() => rankRotations(ROTATIONS), [ROTATIONS])
   const statuses = useMemo(
@@ -44,6 +48,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx }: Props) {
 
   return (
     <>
+    {rascunho}
     <div className="rlist" role="list" aria-label="Rotações de cultura">
       {sorted.map(rot => {
         const ri = ROTATIONS.indexOf(rot)
@@ -57,7 +62,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx }: Props) {
         return (
           <div
             key={rot.id}
-            className={`row rsel${ri === sel ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
+            className={`row rsel${rot.salva ? ' saved' : ''}${ri === sel ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
             role="listitem"
             onClick={() => onSel(ri)}
           >
@@ -73,6 +78,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx }: Props) {
                 {nome} <span className="then">depois</span> {depois}
               </button>
               {rot.ct.atual && <span className="tag">Atual</span>}
+              {rot.salva && <span className="tag">Nova</span>}
               {rot.maisPragas && (
                 <span className="pest">
                   <svg className="ic" aria-hidden="true">
@@ -100,6 +106,12 @@ export function CalendarRows({ res, sel, onSel, diags, idx }: Props) {
                   <span>{st.text}</span>
                 </span>
               </span>
+              )}
+              {rot.salva && onRemoverSalva && (
+                <button type="button" className="rm-salva" aria-label={`Remover a rotação salva ${nome} depois ${depois}`}
+                  onClick={e => { e.stopPropagation(); onRemoverSalva(rot.salva!.id) }}>
+                  Remover
+                </button>
               )}
             </div>
 

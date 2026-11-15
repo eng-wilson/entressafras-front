@@ -6,14 +6,17 @@ import { chuvaMeses, climaDoPeriodo } from '../logic/clima'
 import { periodoLabel, mesDe, decendioDoMes } from '../logic/periodo'
 import { inteiro } from '../logic/formato'
 import type { Diagnostico } from '../logic/diagnostico'
+import { ROTULO_CLASSE, type FaixaCalendario } from '../logic/rascunho'
 
 type Props = {
   idx: number; decendios: Decendio[] | null; onIdx: (i: number) => void
   /** Diagnóstico da rotação selecionada: marca os decêndios críticos e a zona que mais pesa. */
   diag?: Diagnostico | null
+  /** Rascunho aberto: cor de risco de plantar a cultura selecionada em cada decêndio (sweep da API). */
+  faixa?: FaixaCalendario | null
 }
 
-export function MonthStrip({ idx, onIdx, decendios, diag = null }: Props) {
+export function MonthStrip({ idx, onIdx, decendios, diag = null, faixa = null }: Props) {
   const zona = diag?.decisivo ?? null
   const naZonaIdx = !!zona && idx >= zona.de && idx <= zona.ate
   /**
@@ -21,8 +24,19 @@ export function MonthStrip({ idx, onIdx, decendios, diag = null }: Props) {
    * divisória dos meses. Pontas arredondadas (zs/ze); o decêndio simulado fica sólido (zcur).
    */
   const marca = (i: number) => {
+    if (faixa) {
+      const p = faixa.pontos[i]
+      return p ? `z ${p.cls}${p.regional ? ' reg' : ''}${i === faixa.melhor ? ' zm' : ''}` : ''
+    }
     if (!zona || i < zona.de || i > zona.ate) return ''
     return `zc ${zona.cls}${i === zona.de ? ' zs' : ''}${i === zona.ate ? ' ze' : ''}${i === idx ? ' zcur' : ''}`
+  }
+  /** Dica do decêndio colorido: "Plantio em 1 a 10 de setembro: favorável; fora da data usual da região". */
+  const tituloFaixa = (i: number) => {
+    const p = faixa?.pontos[i]
+    if (!p) return undefined
+    const temp = p.temperaturaOk ? '' : ', temperatura fora dos limites da cultura'
+    return `Plantio em ${periodoLabel(i)}: ${ROTULO_CLASSE[p.cls].toLowerCase()}${temp}; ${p.regional ? 'dentro' : 'fora'} da data usual da região`
   }
   const activeM = mesDe(idx)
   const decInM = decendioDoMes(idx)
@@ -77,7 +91,7 @@ export function MonthStrip({ idx, onIdx, decendios, diag = null }: Props) {
                 </svg>}
               </span>
               <span className="dec" aria-hidden="true">
-                {[0, 1, 2].map(d => <i key={d} className={marca(mi * 3 + d) || undefined}>{d + 1}</i>)}
+                {[0, 1, 2].map(d => <i key={d} className={marca(mi * 3 + d) || undefined} title={tituloFaixa(mi * 3 + d)}>{d + 1}</i>)}
               </span>
             </button>
           )

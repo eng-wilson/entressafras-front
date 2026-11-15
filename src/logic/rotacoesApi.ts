@@ -6,8 +6,9 @@ import type { BarDef, ConjuntoRotacoes, CTRow, RotacaoDef, SafraDef } from '../d
 import { LEN } from '../data/mock'
 import { PERFIS, type PerfilCultura } from '../data/perfis'
 import { CULTURAS, REFERENCIAS_CULTURAS } from '../data/culturas'
+import { NOMES_PT } from '../data/nomesCulturas'
 import { faixa } from './aptidao'
-import type { Historico, Priorities, Priority, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
+import type { Historico, Priorities, Priority, Rotation, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
 
 const data = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
@@ -53,10 +54,10 @@ function doCatalogo(codigo: number, especie: string): string | null {
 function safra(c: RotationCrop, n: 0 | 1, ano: number): SafraDef {
   const perfil = PERFIS[c.crop.eco_port_code]
   const kc = kcDe(c)
-  // Sem perfil local: o nome em português do catálogo local; sem ele, o nome científico (os nomes comuns do EcoCrop
-  // vêm em inglês).
+  // Sem perfil local: o nome em português do catálogo local, depois o de NOMES_PT; sem eles, o nome científico (os
+  // nomes comuns do EcoCrop vêm em inglês).
   const catalogo = perfil ? null : doCatalogo(c.crop.eco_port_code, c.crop.scientific_name)
-  const nomeSem = catalogo ? CULTURAS[catalogo].nome : c.crop.scientific_name
+  const nomeSem = catalogo ? CULTURAS[catalogo].nome : NOMES_PT[c.crop.eco_port_code] ?? c.crop.scientific_name
   return {
     nome: perfil ? (n === 1 && perfil.nome2 ? perfil.nome2 : perfil.nome) : nomeSem,
     ref: perfil?.id ?? catalogo ?? `eco:${c.crop.eco_port_code}`,
@@ -140,17 +141,27 @@ function linha(a: SafraDef, b: SafraDef, pa: PerfilCultura | undefined, pb: Perf
   }
 }
 
+/** Rotação salva no navegador que foi em custom_rotations (mesma ordem do pedido). */
+export type SalvaMeta = { id: string; em: number }
+
 /**
- * Converte a resposta da API, na ordem do rank dela (é a ordem da tela).
+ * Converte a resposta da API, na ordem do rank dela (é a ordem da tela). As rotações do agricultor
+ * (custom_rotations) entram pela posição que a API deu. O rank delas é a posição que ocupariam entre as
+ * recomendadas (1 = melhor que todas), então ficam antes da recomendada de mesmo rank; entre elas, a salva mais
+ * antiga primeiro (L14).
  */
-export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico | null): ConjuntoRotacoes {
+export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico | null, salvas: SalvaMeta[] = []): ConjuntoRotacoes {
   const ano = r.agricultural_year
   const avisos = [...r.warnings]
   const atual = ultimaRotacao(historico)
   const rotacoes: RotacaoDef[] = []
+  const custom = (r.custom_rotations ?? []).flatMap((c, i) => (salvas[i] ? [{ rot: c as Rotation, salva: salvas[i] as SalvaMeta | undefined }] : []))
+  const todas = [...r.rotations.map(rot => ({ rot, salva: undefined as SalvaMeta | undefined })), ...custom]
+    .sort((a, b) => a.rot.rank - b.rot.rank || Number(!!b.salva) - Number(!!a.salva) || (a.salva?.em ?? 0) - (b.salva?.em ?? 0))
   // Cor pela ordem alfabética dos ids: trocar as prioridades reordena a lista, mas cada rotação mantém a cor.
-  const ids = r.rotations.map(x => x.id).sort()
-  for (const rot of [...r.rotations].sort((a, b) => a.rank - b.rank)) {
+  const idDe = (x: { rot: Rotation; salva?: SalvaMeta }) => (x.salva ? `salva-${x.salva.id}` : x.rot.id)
+  const ids = todas.map(idDe).sort()
+  for (const { rot, salva } of todas) {
     const [ca, cb] = rot.crops
     const a = safra(ca, 0, ano), b = safra(cb, 1, ano)
     const pa = PERFIS[ca.crop.eco_port_code], pb = PERFIS[cb.crop.eco_port_code]
@@ -166,10 +177,11 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
     const fim = barras[1].e
     if (fim < 12) barras.push({ s: fim, e: 12, label: '' })
     rotacoes.push({
-      id: rot.id, safras: [a, b], ct,
+      id: idDe({ rot, salva }), safras: [a, b], ct,
       agua: pb?.score.agua ?? 0, solo: 0,
       barras, maisPragas: pb?.pragas.nivel === 'Maior risco',
-      cor: ids.indexOf(rot.id) % 4, scores: rot.scores, protecaoSolo: rot.soil_protection,
+      cor: ids.indexOf(idDe({ rot, salva })) % 4, scores: rot.scores, protecaoSolo: rot.soil_protection,
+      ...(salva ? { salva } : {}),
     })
   }
   return {

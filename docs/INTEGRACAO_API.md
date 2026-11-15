@@ -19,6 +19,8 @@ Base: `VITE_API_URL` (padrão `https://entressafras-backend-production.up.railwa
 | `GET /api/clima/decendios?lat&lon` | OK | Chuva, ET0 e temperatura por decêndio (NASA POWER) | 7 dias, 20 pontos, `entressafras.clima.decendios.v1` |
 | `GET /api/crops`, `/api/crops/{code}` | OK | Requisitos EcoCrop; Kc, estágios, raízes e Ky (FAO-56) | 7 dias, 20 culturas, `entressafras.culturas.v2` |
 | `POST /api/rotations/recommendations` | OK (≈25 s) | Rotações, ordem, risco, escalas 0–100, proteção do solo, solo usado, calendário | 1 dia, 20 pedidos, `entressafras.rotacoes.v2` |
+| `POST /api/rotations/simulate` | **Ainda não publicado** (só no backend local) | Rascunho "Nova rotação": risco, rank, checks, notas e faixa por decêndio (`sweep`) | — |
+| `GET /api/crops?simulable=true` | Ainda não publicado | Menu de culturas do rascunho (as culturas com dados FAO-56) | — |
 | `GET /api/clima/diario` | Não usado | — | — |
 
 **Recomendações de volta (15/11, à tarde):** 200 em cerca de 25 s, com risco calculado (`FAO56_SIMPLIFIED_KY`, 30 safras), sem MOCK. Antes, de manhã, respondia 500. Ainda não confirmado: o pedido **sem** `soil_type` (solo estimado pelo SoilGrids), que falhava na hora. O front espera até 90 s.
@@ -33,8 +35,13 @@ Base: `VITE_API_URL` (padrão `https://entressafras-backend-production.up.railwa
 | `soil_type` | Textura do cadastro | Só quando o agricultor informou; sem ela, a API estima o solo |
 | `crop_history` | Histórico do talhão | 3 últimas safras em códigos EcoCrop, mais antiga primeiro |
 | `priorities` | "O que importa" | Resiliência → `water_security`, Produtividade → `productivity`, Saúde do solo → `soil_protection` |
+| `custom_rotations` | Rotações salvas pelo agricultor (até 3) | Simuladas e ranqueadas junto; voltam em `custom_rotations`. Se derrubarem o pedido (422), ele é refeito sem elas, com aviso. **Campo ainda não publicado** |
 
 A resposta é validada antes de entrar na tela: exige `soil`, `priorities` e, em cada rotação, `scores`, `soil_protection` e `calendar` por cultura. Trocar só as prioridades mantém a lista anterior até a nova ordem chegar; a seleção e a cor de cada rotação acompanham o `id`.
+
+### Nova rotação (rascunho do agricultor)
+
+O botão `+` abre um rascunho de 2 culturas, simulado em `POST /api/rotations/simulate` enquanto o agricultor troca culturas e datas; ao salvar, a rotação fica no navegador e vai às recomendações em `custom_rotations`. Status, ranking, janela de plantio, checks e notas vêm só da API. Lacunas e decisões: `fieldshift-nova-rotacao/LACUNAS-SIMULATE.md`. **Depende de endpoint e campo que ainda não estão em produção.**
 
 ## Origem de cada dado na tela
 

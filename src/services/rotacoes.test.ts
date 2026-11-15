@@ -2,7 +2,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
 import {
-  CHAVE_CACHE_ROTACOES, ErroRotacoes, TTL_ROTACOES, apagarRotacoes, chaveRotacoes, guardarRotacoes, lerRotacoes,
+  AVISO_SALVAS_INVALIDAS, CHAVE_CACHE_ROTACOES, ErroRotacoes, TTL_ROTACOES, apagarRotacoes, chaveRotacoes, guardarRotacoes, lerRotacoes,
   limparMemoriaRotacoes, recomendarRotacoes, rotacoesValidas, soloDaTextura,
 } from './rotacoes'
 
@@ -106,5 +106,26 @@ describe('cache', () => {
   it('textura sem informação não vira solo nenhum (a API estima)', () => {
     expect(soloDaTextura(null)).toBeNull()
     expect(soloDaTextura('arenoso')).toBe('sandy')
+  })
+})
+
+describe('rotações do agricultor em custom_rotations', () => {
+  const custom = [[{ code: 1150, planting_date: '2027-10-21', harvest_date: '2028-02-20' }, { code: 48747, planting_date: '2028-02-21', harvest_date: '2028-06-10' }]]
+  it('manda as salvas com o ano delas e muda a chave do cache', async () => {
+    const f = resposta(ROTACOES_FIXTURE)
+    vi.stubGlobal('fetch', f)
+    await recomendarRotacoes({ ...pedido('medium'), ano: 2027, custom })
+    expect(JSON.parse(f.mock.calls[0][1].body)).toMatchObject({ agricultural_year: 2027, custom_rotations: [{ crops: custom[0] }] })
+    expect(chaveRotacoes({ ...pedido('medium'), ano: 2027, custom })).not.toBe(chaveRotacoes({ ...pedido('medium'), ano: 2027 }))
+  })
+  it('422 por causa das salvas: repete sem elas e avisa', async () => {
+    const f = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: 'custom rotation: unknown crop 1' }), { status: 422 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(ROTACOES_FIXTURE), { status: 200 }))
+    vi.stubGlobal('fetch', f)
+    const r = await recomendarRotacoes({ ...pedido('medium'), ano: 2027, custom })
+    expect(JSON.parse(f.mock.calls[1][1].body).custom_rotations).toBeUndefined()
+    expect(r.custom_rotations).toEqual([])
+    expect(r.warnings).toContain(AVISO_SALVAS_INVALIDAS)
   })
 })

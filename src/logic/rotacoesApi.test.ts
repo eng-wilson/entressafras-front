@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
+import { SIMULACAO_FIXTURE } from '../data/simulacaoFixture'
 import { climaDeMock } from '../data/climaFixture'
 import { conjuntoDaApi, decendioDaData, historicoEcoCrop, mesDaData, nomeRotacao, prioridadesApi, textoProtecaoSolo } from './rotacoesApi'
 import { resiliencia } from './resiliencia'
@@ -134,5 +135,20 @@ describe('contrato de 15/11/2026: prioridades, histórico, scores e proteção d
     r.rotations[0].scores = { ...r.rotations[0].scores, water_security: null, productivity: null }
     const c = conjuntoDaApi(r)
     expect(aptidao(0, null, c.rotacoes)).toMatchObject({ risco: null, prod: null })
+  })
+})
+
+describe('rotações salvas (custom_rotations)', () => {
+  const custom = (rank: number) => ({ ...SIMULACAO_FIXTURE.rotation, rank })
+  it('entram pelo rank da API, antes da recomendada de mesmo rank, com a mais antiga primeiro', () => {
+    const r: RotationRecommendations = { ...ROTACOES_FIXTURE, custom_rotations: [custom(2), custom(2), custom(9)] }
+    const c = conjuntoDaApi(r, null, [{ id: 'b', em: 20 }, { id: 'a', em: 10 }, { id: 'z', em: 5 }])
+    expect(c.rotacoes).toHaveLength(7)
+    expect(c.rotacoes.map(x => x.salva?.id ?? '-')).toEqual(['-', 'a', 'b', '-', '-', '-', 'z'])
+    expect(c.rotacoes[1].id).toBe('salva-a')
+  })
+  it('sem a salva correspondente, a custom fica de fora', () => {
+    const c = conjuntoDaApi({ ...ROTACOES_FIXTURE, custom_rotations: [custom(1)] }, null, [])
+    expect(c.rotacoes).toHaveLength(4)
   })
 })

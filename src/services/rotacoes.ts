@@ -1,7 +1,7 @@
 // Rotações recomendadas pela API Entressafras (POST /api/rotations/recommendations), com cache em memória e no
 // navegador. Como em clima.ts, o erro é lançado: a tela distingue "carregando", "falhou, tentar de novo" e "ok".
-// O backend avisa em `warnings` que o ranking e o risco ainda são MOCK; o contrato é final.
-import type { Ponto, Priorities, RotationRecommendations, SoilType, Textura } from '../types'
+// Se o servidor marcar valores como MOCK em `warnings` ou em `risk.method`, a tela os mostra como provisórios.
+import type { CustomCropInput, Ponto, Priorities, RotationRecommendations, SoilType, Textura } from '../types'
 import { API_URL } from './clima'
 
 export type MotivoErroRotacoes = 'rede' | 'http' | 'parametros' | 'resposta_invalida'
@@ -36,7 +36,7 @@ function kcValido(w: unknown): boolean {
     && finito(w.stage_length_days.total)
 }
 
-function culturaValida(c: unknown): boolean {
+export function culturaValida(c: unknown): boolean {
   if (!objeto(c) || !Number.isInteger(c.eco_port_code) || typeof c.scientific_name !== 'string') return false
   if (!Array.isArray(c.common_names) || !kcValido(c.water_requirements ?? null)) return false
   const r = c.risk
@@ -68,25 +68,56 @@ export function rotacoesValidas(x: unknown): x is RotationRecommendations {
   if (!objeto(x.soil) || !SOLOS.includes(x.soil.texture_class as string) || !finito(x.soil.available_water_mm_per_m)) return false
   if (!objeto(x.priorities)) return false
   if (x.rotations.length < 1 || x.rotations.length > 4) return false
-  return x.rotations.every(rotacaoValida)
+  return x.rotations.every(rotacaoValida) && customValidas(x.custom_rotations)
+}
+
+/** custom_rotations da resposta: ausente ou rotações de 2 culturas com rank. */
+function customValidas(v: unknown): boolean {
+  if (v === undefined) return true
+  return Array.isArray(v) && v.every(r => objeto(r) && typeof r.id === 'string' && Number.isInteger(r.rank)
+    && Array.isArray(r.crops) && r.crops.length === 2
+    && r.crops.every(c => objeto(c) && culturaValida(c.crop) && typeof c.planting_date === 'string' && DATA.test(c.planting_date)
+      && typeof c.harvest_date === 'string' && DATA.test(c.harvest_date)))
 }
 
 const ehAbort = (e: unknown) => e instanceof Error && e.name === 'AbortError'
 
 /**
  * O que a tela envia: o ponto, a textura só quando o agricultor a informou (senão a API estima), o histórico em
- * códigos EcoCrop (mais antigo primeiro) e as prioridades da lateral.
+ * códigos EcoCrop (mais antigo primeiro), as prioridades da lateral e as rotações salvas pelo agricultor.
  */
-export type PedidoRotacoes = { ponto: Ponto; solo: SoilType | null; historico: number[]; prioridades: Priorities; ano?: number }
+export type PedidoRotacoes = {
+  ponto: Ponto; solo: SoilType | null; historico: number[]; prioridades: Priorities; ano?: number
+  /** Rotações do agricultor (até 3), simuladas e ranqueadas junto; voltam em `custom_rotations`. */
+  custom?: CustomCropInput[][]
+}
 
-/** Rotações recomendadas para o ponto e o solo. Lança ErroRotacoes; se cancelado, repassa o AbortError. */
+/** Aviso quando as rotações salvas não passam mais na API (ex.: catálogo mudou): a recomendação sai sem elas. */
+export const AVISO_SALVAS_INVALIDAS = 'As rotações salvas não puderam ser simuladas de novo e ficaram fora do ranking.'
+
+/**
+ * Rotações recomendadas para o ponto e o solo. Lança ErroRotacoes; se cancelado, repassa o AbortError.
+ * Se as rotações salvas derrubarem o pedido (422), repete sem elas e avisa: a recomendação não pode sumir por causa delas.
+ */
 export async function recomendarRotacoes(p: PedidoRotacoes, signal?: AbortSignal): Promise<RotationRecommendations> {
+  if (!p.custom?.length) return pedirRotacoes(p, signal)
+  try {
+    return await pedirRotacoes(p, signal)
+  } catch (e) {
+    if (!(e instanceof ErroRotacoes) || e.motivo !== 'parametros') throw e
+    const dados = await pedirRotacoes({ ...p, custom: [] }, signal)
+    return { ...dados, custom_rotations: [], warnings: [...dados.warnings, AVISO_SALVAS_INVALIDAS] }
+  }
+}
+
+async function pedirRotacoes(p: PedidoRotacoes, signal?: AbortSignal): Promise<RotationRecommendations> {
   const corpo = {
     location: { lat: p.ponto.lat, lon: p.ponto.lon },
     ...(p.solo ? { soil_type: p.solo } : {}),
     ...(p.historico.length ? { crop_history: p.historico } : {}),
     priorities: p.prioridades,
     ...(p.ano ? { agricultural_year: p.ano } : {}),
+    ...(p.custom?.length ? { custom_rotations: p.custom.map(crops => ({ crops })) } : {}),
   }
   let r: Response
   try {
@@ -113,7 +144,7 @@ export async function recomendarRotacoes(p: PedidoRotacoes, signal?: AbortSignal
 }
 
 // ---------- Cache ----------
-// O "ano que vem" muda e o backend ainda evolui: um dia basta. Chave: ponto, solo, histórico e prioridades.
+// O "ano que vem" muda e o backend ainda evolui: um dia basta. Chave: ponto, solo, histórico, prioridades e salvas.
 // v2: formato com scores, proteção do solo, solo do SoilGrids e calendário.
 export const CHAVE_CACHE_ROTACOES = 'entressafras.rotacoes.v2'
 export const TTL_ROTACOES = 24 * 60 * 60 * 1000
@@ -124,7 +155,8 @@ const memoria = new Map<string, Entrada>()
 
 const bits = (q: Priorities) => `${q.water_security}${q.productivity}${q.soil_protection}`
 export const chaveRotacoes = (p: PedidoRotacoes) =>
-  `${p.ponto.lat.toFixed(2)},${p.ponto.lon.toFixed(2)},${p.solo ?? 'auto'},${p.historico.join('-')},${bits(p.prioridades)},${p.ano ?? ''}`
+  `${p.ponto.lat.toFixed(2)},${p.ponto.lon.toFixed(2)},${p.solo ?? 'auto'},${p.historico.join('-')},${bits(p.prioridades)},${p.ano ?? ''}` +
+  (p.custom?.length ? `,${JSON.stringify(p.custom)}` : '')
 
 function tabela(): Record<string, Entrada> {
   try {

@@ -208,13 +208,14 @@ export type SoilProtection = {
   living_cover_days: number
   season_days: number
   cover_fraction: number
-  family_change_fraction: number
-  transitions: number
-  family_changes: number
+  /** Os campos abaixo vêm na recomendação; a simulação (/simulate) pode omitir alguns. */
+  family_change_fraction?: number
+  transitions?: number
+  family_changes?: number
   botanical_families: string[]
-  includes_history: boolean
-  weights: { cover: number; diversity: number }
-  method: string
+  includes_history?: boolean
+  weights?: { cover: number; diversity: number }
+  method?: string
   validated?: boolean
 }
 /** Escalas absolutas 0–100 (100 = melhor possível), independentes das prioridades. null = risco desconhecido. */
@@ -263,9 +264,62 @@ export type RotationRecommendations = {
   soil_properties?: SoilProperties | null
   priorities: Priorities
   rotations: Rotation[]
+  /** As rotações do agricultor enviadas em custom_rotations, simuladas e ranqueadas, na ordem do pedido. */
+  custom_rotations?: CustomRotation[]
   assumptions: {
     loss_threshold_pct: number; initial_soil_water_fraction: number; spinup_days: number; planting_gap_days: number
     planting_tolerance_days?: number
   }
   warnings: string[]
 }
+
+// ---------- Simulação de rotação do agricultor (POST /api/rotations/simulate) ----------
+/** Mesmo formato das prioridades da recomendação. */
+export type Prioridades = Priorities
+export type SimulatedCrop = RotationCrop & {
+  crop: CropWithRisk & { family?: string | null; crop_cycle?: { min_days: number | null; max_days: number | null } }
+  calendar: CropCalendarInfo
+}
+export type CustomRotation = {
+  id: string
+  /** Posição entre os candidatos da recomendação (1 = melhor que todos). */
+  rank: number
+  /** Rotações comparadas, esta incluída (todos os candidatos, não só as 4 recomendadas). */
+  ranked_among: number
+  /** rank dentro das 4 melhores. */
+  would_be_recommended: boolean
+  crops: [SimulatedCrop, SimulatedCrop]
+  soil_protection: SoilProtection
+  scores: RotationScores
+  /** Avisos agronômicos (em inglês, texto livre); vazio = passa nos filtros da recomendação. */
+  checks: string[]
+}
+export type SweepCrop = {
+  code: number
+  planting_date: string
+  harvest_date: string
+  risk_percentage: number | null
+  estimated_yield_loss_pct: number | null
+  in_calendar: boolean
+  temperature_ok: boolean
+}
+export type SweepPoint = { decendio_idx: number; label: string; crops: [SweepCrop, SweepCrop]; scores: RotationScores }
+export type PlantingSweep = {
+  /** first: as duas culturas andam juntas; second: só a 2ª. */
+  moved_crop: 'first' | 'second'
+  points: SweepPoint[]
+  best_decendio_idx: number | null
+  worst_decendio_idx: number | null
+}
+export type RotationSimulationResponse = {
+  agricultural_year: number
+  soil_type: SoilType
+  priorities: Prioridades
+  rotation: CustomRotation
+  first_planting_sweep: PlantingSweep | null
+  second_planting_sweep: PlantingSweep | null
+  assumptions: Record<string, number>
+  warnings: string[]
+}
+/** Uma cultura enviada para simular: sem datas, a API usa o calendário regional. */
+export type CustomCropInput = { code: number; planting_date?: string; harvest_date?: string }
