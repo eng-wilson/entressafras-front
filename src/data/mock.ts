@@ -105,6 +105,8 @@ export type RotacaoDef = {
   cor: number
   /** Escalas 0–100 da API (produtividade preservada, segurança hídrica, proteção do solo, média). */
   scores?: RotationScores
+  /** Lucro estimado da rotação em R$/ha, da API; ausente enquanto o backend não envia. */
+  lucro?: number | null
   /** Índice de proteção do solo planejada, da API. */
   protecaoSolo?: SoilProtection
   /** Rotação criada pelo agricultor ("Nova"), ranqueada pela API em custom_rotations; id da salva no navegador. */

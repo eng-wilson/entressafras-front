@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
 import { SIMULACAO_FIXTURE } from '../data/simulacaoFixture'
 import { climaDeMock } from '../data/climaFixture'
-import { conjuntoDaApi, decendioDaData, historicoEcoCrop, mesDaData, mesmasCulturas, nomeRotacao, prioridadesApi, rotacaoAtualEcoCrop, textoProtecaoSolo } from './rotacoesApi'
+import { conjuntoDaApi, decendioDaData, historicoEcoCrop, lucroDaApi, mesDaData, mesmasCulturas, nomeRotacao, prioridadesApi, rotacaoAtualEcoCrop, textoProtecaoSolo } from './rotacoesApi'
 import { resiliencia } from './resiliencia'
 import { diagnostico } from './diagnostico'
 import { aptidao } from './aptidao'
@@ -189,5 +189,16 @@ describe('rotação atual do talhão (última safra do histórico) na comparaç�
     expect(c.rotacoes).toHaveLength(4)
     expect(c.rotacoes.some(x => x.historico)).toBe(false)
     expect(c.rotacoes[2].ct.atual).toBe(true)
+  })
+})
+
+describe('lucro estimado (contrato provisório)', () => {
+  it('vem da API quando enviado; sem o campo, fica ausente (nada estimado no front)', () => {
+    const r = structuredClone(ROTACOES_FIXTURE)
+    r.rotations[0].economics = { profit_brl_per_ha: 1234.5 }
+    expect(lucroDaApi(r.rotations[0])).toBe(1234.5)
+    const c = conjuntoDaApi(r)
+    expect(c.rotacoes[0].lucro).toBe(1234.5)
+    expect(c.rotacoes[1].lucro).toBeNull()
   })
 })

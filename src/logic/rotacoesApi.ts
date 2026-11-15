@@ -137,6 +137,12 @@ export function rotacaoAtualEcoCrop(h: Historico | null | undefined): CustomCrop
   return codigos && codigos.every((c): c is number => c != null) ? codigos.map(code => ({ code })) : null
 }
 
+/**
+ * Lucro estimado da rotação em R$/ha, quando a API enviar. Único ponto que conhece o nome do campo: quando o
+ * backend publicar o contrato, ajustar aqui (e o tipo RotationEconomics).
+ */
+export const lucroDaApi = (r: Rotation): number | null => r.economics?.profit_brl_per_ha ?? null
+
 /** Mesmas culturas, na mesma ordem (as datas não contam). */
 export const mesmasCulturas = (a: CustomCropInput[], b: CustomCropInput[]) =>
   a.length === b.length && a.every((c, i) => c.code === b[i].code)
@@ -207,6 +213,7 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
       agua: pb?.score.agua ?? 0, solo: 0,
       barras, maisPragas: pb?.pragas.nivel === 'Maior risco',
       cor: ids.indexOf(idDe({ rot, salva })) % COR_ROT.length, scores: rot.scores, protecaoSolo: rot.soil_protection,
+      lucro: lucroDaApi(rot),
       ...(salva?.historico ? { historico: true } : salva ? { salva: { id: salva.id, em: salva.em } } : {}),
     })
   }

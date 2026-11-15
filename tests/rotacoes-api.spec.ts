@@ -64,7 +64,7 @@ test('sem textura informada, não manda solo e a lateral mostra o solo estimado 
   await expect(page.locator('.side')).toContainText('Argiloso (estimado)')
 })
 
-test('comparação: mesmas linhas do calendário, consumo no "Por safra" e solo superficial na memória', async ({ page }) => {
+test('comparação: mesmas linhas do calendário, lucro da API no card, consumo no "Por safra" e solo superficial na memória', async ({ page }) => {
   await comTalhaoSalvo(page)
   await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ json: CLIMA_T07 }))
   await page.route(/\/api\/rotations\/recommendations/, r => {
@@ -74,6 +74,7 @@ test('comparação: mesmas linhas do calendário, consumo no "Por safra" e solo 
       sand_pct: 31.5, silt_pct: 16.5, clay_pct: 52, texture_class: 'clayey',
       sampled_location: { lat: -12.54, lon: -55.72 }, distance_km: 0.2,
     }
+    resp.rotations[0].economics = { profit_brl_per_ha: 1234.5 }
     return r.fulfill({ json: resp })
   })
   await page.goto('/')
@@ -81,6 +82,11 @@ test('comparação: mesmas linhas do calendário, consumo no "Por safra" e solo 
   // Sem tabela própria: as linhas são as do calendário, sem a faixa de meses
   await expect(page.locator('.rlist .row')).toHaveCount(4)
   await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveCount(0)
+  // Lucro estimado da API dentro de Produtividade, só no card de quem tem o dado
+  const cards = page.locator('.qm-card')
+  await expect(cards.first().locator('.qm-lucro')).toContainText('Lucro estimado')
+  await expect(cards.first().locator('.qm-lucro')).toContainText(/R\$\s?1\.235\/ha/)
+  await expect(cards.nth(1).locator('.qm-lucro')).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Por safra' }).first().click()
   await expect(page.getByRole('dialog').first()).toContainText(/~\d+ mm no ciclo/)

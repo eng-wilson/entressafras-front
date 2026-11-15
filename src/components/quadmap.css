@@ -61,6 +61,10 @@
 .qm-eixos li { display: flex; align-items: center; gap: 6px; min-height: 26px; padding: 0 12px; }
 .qm-en { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qm-eixos li.on .qm-en { color: var(--qm-on); font-weight: 600; }
+/* Lucro estimado: sub-linha de Produtividade, recuada e menor */
+.qm-eixos li.qm-lucro { min-height: 22px; padding-left: 24px; font-size: 12px; color: var(--qm-secondary); }
+.qm-lucro-v { font-weight: 600; color: var(--qm-label); font-variant-numeric: tabular-nums; }
+.qm-lucro-v.neg { color: var(--qm-risk); }
 .qm-dots { display: inline-flex; align-items: center; gap: 3px; }
 .qm-dots i { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; }
 .qm-dots i.f { background: currentColor; }

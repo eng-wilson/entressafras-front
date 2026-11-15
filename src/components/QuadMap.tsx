@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties } from 'react'
+import { Fragment, useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import './quadmap.css'
 import type { RotacaoDef } from '../data/mock'
@@ -32,6 +32,7 @@ const ponto = (k: Eixo, v: number): [number, number] => {
 }
 
 const SEM_DADO = { nivel: 0, rotulo: 'Sem dado', cls: 'nd' } as const
+const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })
 /** Resiliência usa os níveis de risco do ZARC; os demais eixos, a nota 0–100. */
 const faixaOu = (k: Eixo, v: number | null, rot: ResRotacao | null): Faixa | typeof SEM_DADO =>
   v == null ? SEM_DADO : k === 'risco' && rot?.anos != null ? faixaAnos(rot.anos) : faixa(v)
@@ -248,12 +249,22 @@ export function QuadMap({ sel, pr, res }: Props) {
                       const m = motivo(rots[i], k, rot)
                       const d = motivoDetalhe(k, rot)
                       const dica = [m, d].filter(Boolean).join('\n')
+                      const lucro = k === 'prod' ? rots[i].lucro : null
                       return (
-                        <li key={k} className={pr[k] ? 'on' : undefined} title={dica || undefined}>
-                          <span className="qm-en">{NOME[k]}</span>
-                          <Nota f={faixaOu(k, a[k], rot)} />
-                          <span className="qm-v">{a[k] ?? '—'}</span>
-                        </li>
+                        <Fragment key={k}>
+                          <li className={pr[k] ? 'on' : undefined} title={dica || undefined}>
+                            <span className="qm-en">{NOME[k]}</span>
+                            <Nota f={faixaOu(k, a[k], rot)} />
+                            <span className="qm-v">{a[k] ?? '—'}</span>
+                          </li>
+                          {/* Lucro estimado da API, dentro de Produtividade; só aparece quando o backend envia */}
+                          {lucro != null && (
+                            <li className="qm-lucro">
+                              <span className="qm-en">Lucro estimado</span>
+                              <span className={`qm-lucro-v${lucro < 0 ? ' neg' : ''}`}>{brl.format(lucro)}/ha</span>
+                            </li>
+                          )}
+                        </Fragment>
                       )
                     })}
                   </ul>
