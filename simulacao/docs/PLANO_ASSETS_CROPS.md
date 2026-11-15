@@ -67,7 +67,7 @@ tela.y = origem.y + (x + z) · sin30° · escala − y · escala
 
 - Câmera olha de `+x +z`: faces visíveis são **+X** (frente direita) e **+Z** (frente esquerda).
 - Pan arrastando, zoom com roda ou pinça. Projeção é transformação afim: topo e faces são texturas comuns desenhadas com `setTransform`.
-- Rotação em passos de 90° fica para depois. Atlas de raízes já tem 4 paredes; girar troca quais duas faces são pintadas.
+- Vista fixa na interface, conforme solicitado. O renderizador conserva suporte interno aos quatro ângulos e atlas de raízes nas quatro paredes.
 
 ### 3.2 Ordem de desenho
 
@@ -388,7 +388,7 @@ Acidez, fertilidade e temperatura sem assinatura visual direta no solo. Aparecem
 Safra inteira roda uma vez por cenário, guarda retrato por dia. Slider de dias só escolhe qual retrato mostrar.
 
 0. **Solo:** chuva, infiltração (reduzida por crosta e compactação), escoamento para células baixas e rastros, drenagem (impedida pela compactação), lençol na baixada, evaporação e transpiração (Kc), crosta, rachaduras, nitrogênio (lixiviação, desnitrificação, mineralização, cobertura no dia 30).
-1. **Fase:** por dias do ciclo (graus-dia pendente).
+1. **Fase:** por soma térmica didática; modo por dias disponível para comparação histórica.
 2. **Raiz:** frente avança por dia até teto da fase. Taxa = temperatura × pior fator de solo na ponta (umidade; resistência à penetração, que sobe com solo seco; acidez). Encharcamento mata raiz da camada e frente recua; depois volta a crescer devagar. Densidade por camada pesa absorção de água.
 3. **Água:** balanço na zona de raiz. Raiz rasa = déficit chega antes.
 4. **Estresse agudo** de cada canal = ambiente × sensibilidade da cultura naquela fase.
@@ -472,13 +472,19 @@ Feito:
   - `node scripts/preparar-arroz.mjs` reproduz recortes e verifica: carregamento, as 117 combinações, todas as plantas saudáveis em todas as fases, sintomas de N, S, K e déficit hídrico. Salva galeria e cena em `scratch/arroz/`.
   - Prompts e limites da entrega: `assets/sprites/arroz/GERACAO.md`.
 
+- **Arte das coberturas (etapas 7 e 8, 15/11/2026):** Marandu, Piatã, Paiaguás, ruziziensis e as três crotalárias têm pranchas pintadas, cinco pares de recortes/máscaras por cultura e manifestos para todas as fases. Posturas e estados reprodutivos continuam usando a adaptação da arte existente. Reprodução, especificações dos prompts e limites: [COBERTURAS_GERACAO.md](../assets/sprites/COBERTURAS_GERACAO.md). Preparação e validação: `node simulacao/scripts/preparar-coberturas.mjs` na raiz do repositório.
+- **Etapa 9 — motor multissafra existente, validado para as sete coberturas (15/11/2026):** `simulation/rotacao.js` encadeia safras e `simulation/solo/entressafra.js` transfere palhada, N, compactação, matéria orgânica e biologia. `node simulacao/test/sim-coberturas.mjs` verifica resíduos, descompactação restrita às camadas colonizadas, crédito de N das leguminosas, decomposição conforme intervalo/umidade e preservação do estado anterior. Também roda dois ciclos cobertura → soja para cada cobertura, verificando os estados herdados. `node simulacao/test/sim-impacto.mjs` mantém as nove verificações de impacto e comparação pareada. Os coeficientes didáticos existentes foram preservados; não se afirma aumento universal de produtividade.
+
 Pendente:
 
-- Fase por dias do ciclo, não por graus-dia.
-- Sem erosão (espessura do horizonte A não muda durante safra).
+- **Etapa 10, vista do talhão:** opção de rotação retirada da interface a pedido do usuário, incluindo botões, indicador de ângulo e atalhos. Zoom e deslocamento permanecem disponíveis. O suporte interno do renderizador aos quatro ângulos é preservado; `node simulacao/test/vista-rotacao.mjs` valida projeções/inversas, raízes e cliques. Graus-dia e erosão descritos abaixo permanecem implementados.
+- **Etapa 10, graus-dia e erosão (15/11/2026):** a safra calcula soma térmica desde o plantio, com base por cultura (`termica.baseC`, fallback `limites.tFrio`), teto de temperatura média e alvo térmico. `termica.grausDiaCiclo` permite alvo específico; sem calibração, usa `(24,5 − base) × cicloDias`, explicitamente didático. Crescimento, demanda, sensibilidade, sprites e raízes usam o mesmo progresso. O horizonte de simulação e as datas de plantio continuam definidos por `cicloDias`; frio pode terminar esse intervalo sem maturidade térmica. Não se recalcula o calendário regional da API com esses coeficientes.
+- **Erosão e transporte didáticos:** a enxurrada desprende horizonte A desprotegido e carrega uma fração dos sete índices de nutrientes. O material deposita parcialmente e segue para a célula vizinha mais baixa (`relevo` maior nesta malha); depressões retêm e bordas exportam. Cada dia move uma etapa, com entradas simultâneas. Nutrientes depositados voltam ao estoque disponível até sua capacidade; o excedente permanece em reserva. Espessura, sedimento móvel, reservas e exportações acumuladas são herdados pela safra seguinte. Série diária expõe erosão, deposição, sedimento móvel/exportado e nutrientes exportados. São unidades do diorama/índices de fertilidade, não toneladas ou kg/ha. Não há rede hidrodinâmica nem reordenação das camadas. `node simulacao/test/erosao-transporte.mjs` verifica conservação de sedimentos e sete nutrientes ao longo de 60 dias, deposição, exportação e proteção.
+- **Pinturas de danos:** atlas de seis tecidos pintados, aplicado às folhas das 15 culturas conforme água, N, K, calor e perdas por percevejo/nematoide já calculadas. Sem penalidade duplicada de produtividade; posturas geométricas continuam existentes. Prompt, origem e limites em [danos/GERACAO.md](../assets/sprites/danos/GERACAO.md). `node simulacao/test/danos-pintados.mjs` valida 105 combinações e gera galeria.
+- Validação da etapa 10: `node simulacao/test/sim-etapa10.mjs`. Os hashes históricos permanecem preservados em `sim-referencia.json`; `sim-referencia.mjs` roda explicitamente com modo por dias e erosão desligada para verificar compatibilidade. O padrão novo usa graus-dia e erosão ativa, testados separadamente.
 - Salinidade existe no estado, mas nenhum cenário usa.
 - Valores calibrados para visualização, não para previsão agronômica.
 - Clima e solo ainda sintéticos. Troca por dados reais (NASA POWER, Open-Meteo, SoilGrids, laudo) em [INTEGRACAO_DADOS_EXTERNOS.md](INTEGRACAO_DADOS_EXTERNOS.md).
-- Milho, soja, feijão, trigo, arroz, sorgo, milheto e algodão já têm arte aplicada por manifesto, com pares `cor` + `dados`. Pendente: completar combinações do arroz e recortes finais das demais culturas de cobertura (braquiárias e crotalárias), que continuam vindo do pintor procedural.
-- Exportador dos sprites procedurais para PNG (base para artista pintar por cima).
+- Refinar máscaras anatômicas e substituir adaptações geométricas por pinturas específicas quando necessário; a arte por manifesto já cobre também as braquiárias e crotalárias. As limitações do arroz estão descritas em `assets/sprites/arroz/GERACAO.md`.
+- Exportador procedural disponível em `scripts/exportar-base-sprites.mjs`; recortes pintados das coberturas são preparados separadamente por `scripts/preparar-coberturas.mjs`.
 - Troca de dia leva ~150 ms no Edge headless sem GPU (pintura do topo e das faces). Imagens com sintomas e sprites novos calculados aos poucos, a cada quadro.

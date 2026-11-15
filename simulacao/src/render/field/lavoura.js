@@ -61,7 +61,7 @@ export function createLavoura(crop, { width, depth }) {
 
     // modo: 'real' | 'mapa' (estresse da planta em falsa-cor) | 'cinza' (mapa do solo: plantas neutras).
     function atualizar(t, reg, opcoes = {}) {
-        const { ganho = 1, modo = 'real', canalMapa = -1, clima = null } = opcoes;
+        const { ganho = 1, modo = 'real', canalMapa = -1, clima = null, pragas = null } = opcoes;
         ultimo = [t, reg, opcoes];
         const k = faseDe(t);
         fila.clear();
@@ -86,6 +86,7 @@ export function createLavoura(crop, { width, depth }) {
             }
             const est = {
                 modo, ag, cr, ganho,
+                pragas: pragas ? { percevejo: pragas.percevejo * smoothstep(.05, .6, t), nematoide: pragas.nematoide * smoothstep(.05, .6, t) } : null,
                 senesc: reg[o + P.SENESC],
                 valorMapa: canalMapa >= 0 ? Math.max(ag[canalMapa], cr[canalMapa]) : 0
             };

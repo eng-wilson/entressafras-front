@@ -122,6 +122,8 @@ export function simulateRotacao({
         const resumo = { ...sim.impacto.resumo, perdas: { ...sim.impacto.resumo.perdas } };
         const hosp = hospedeiroCombinado(agro, agroComp);
         const fr = perdaPorPragas(pressao, agro, hosp, params);
+        // Intensidade visual derivada das mesmas frações de perda, sem somar nova penalidade.
+        sim.pragasVisuais = Object.fromEntries(Object.entries(fr).map(([k, v]) => [k, Math.min(1, v * 5)]));
         const somaFr = Object.values(fr).reduce((a, b) => a + b, 0);
         const escala = somaFr > PERDA_PRAGAS_MAX ? PERDA_PRAGAS_MAX / somaFr : 1;
         const Y0 = resumo.produtividade;

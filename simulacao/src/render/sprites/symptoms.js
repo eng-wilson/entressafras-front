@@ -6,6 +6,7 @@ import { vnoise } from '../../utils/noise.js';
 import { rampa } from '../../utils/ramp.js';
 import { IDX, NCANAIS } from '../../domain/channels.js';
 import { ORGAO } from './mask.js';
+import { carregarDanos, versaoDanos, pintarDanos } from './painted-damage.js';
 
 const CHLOR = [214, 199, 77], PALE = [158, 178, 87], NECRO = [117, 82, 41];
 const BLEACH = [219, 214, 179], PURPLE = [97, 36, 87], DROUGHT = [77, 102, 97];
@@ -31,13 +32,15 @@ export function chaveEstresse(est) {
     k += [IDX.agua_deficit, IDX.frio, IDX.calor, IDX.agua_excesso].map(c => q(intensidade(est.ag[c] * g))).join(',');
     for (let i = 0; i < NCANAIS - 1; i++) k += ',' + q(intensidade(est.cr[i] * g));
     k += ',' + q(est.senesc * 4);
+    if (est.pragas && (est.pragas.percevejo > 0 || est.pragas.nematoide > 0)) k += '|p' + q(est.pragas.percevejo ?? 0) + ',' + q(est.pragas.nematoide ?? 0);
     return k;
 }
 
 export function createCompositor({ max = 260 } = {}) {
+    carregarDanos();
     const cache = new Map();
 
-    const chaveDe = (sprite, est) => sprite.chave + '|' + chaveEstresse(est);
+    const chaveDe = (sprite, est) => sprite.chave + '|' + chaveEstresse(est) + '|atlas' + versaoDanos();
 
     // Imagem já pronta no cache (ou null). Não calcula nada.
     function emCache(chave) {
@@ -60,6 +63,7 @@ export function createCompositor({ max = 260 } = {}) {
             img.data.set(sprite.corPx);
             if (est.modo === 'real') sintomas(img.data, sprite, est);
             else falsaCor(img.data, sprite, est);
+            pintarDanos(img.data, sprite, est);
             ctx.putImageData(img, 0, 0);
         }
         cache.set(chave, cv);
