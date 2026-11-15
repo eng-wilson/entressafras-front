@@ -143,5 +143,6 @@ export function motivoDetalhe(k: Eixo, rot: ResRotacao | null): string | null {
 
 // Cor fixa por rotação (RotacaoDef.cor), usada no mapa e na caixa de seleção da tabela.
 // A rotação atual é desenhada tracejada.
-export const COR_ROT = ['#0A64D6', '#1B9E3E', '#E07A00', '#3A3A3C']
+// Seis cores: com a rotação atual e as salvas, a lista pode passar de 4 sem repetir cor tão cedo.
+export const COR_ROT = ['#0A64D6', '#1B9E3E', '#E07A00', '#3A3A3C', '#7A4FD0', '#00838F']
 export const nomeRot = (r: RotacaoDef) => `${r.ct.c1} → ${r.ct.c2}`

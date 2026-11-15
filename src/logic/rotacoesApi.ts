@@ -7,8 +7,8 @@ import { LEN } from '../data/mock'
 import { PERFIS, type PerfilCultura } from '../data/perfis'
 import { CULTURAS, REFERENCIAS_CULTURAS } from '../data/culturas'
 import { NOMES_PT } from '../data/nomesCulturas'
-import { faixa } from './aptidao'
-import type { Historico, Priorities, Priority, Rotation, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
+import { COR_ROT, faixa } from './aptidao'
+import type { CustomCropInput, Historico, Priorities, Priority, Rotation, RotationCrop, RotationRecommendations, SoilProtection } from '../types'
 
 const data = (iso: string) => {
   const [y, m, d] = iso.split('-').map(Number)
@@ -127,6 +127,20 @@ function ultimaRotacao(h: Historico | null | undefined): [string, string] | null
   return r?.c1 && r?.c2 ? [r.c1, r.c2] : null
 }
 
+/**
+ * A rotação atual do talhão (safra mais recente do histórico) para custom_rotations: as duas culturas em código
+ * EcoCrop, sem datas (a API usa o calendário regional). null se faltar uma das duas ou se não houver código.
+ */
+export function rotacaoAtualEcoCrop(h: Historico | null | undefined): CustomCropInput[] | null {
+  const r = ultimaRotacao(h)
+  const codigos = r?.map(id => REFERENCIAS_CULTURAS[id]?.codigo)
+  return codigos && codigos.every((c): c is number => c != null) ? codigos.map(code => ({ code })) : null
+}
+
+/** Mesmas culturas, na mesma ordem (as datas não contam). */
+export const mesmasCulturas = (a: CustomCropInput[], b: CustomCropInput[]) =>
+  a.length === b.length && a.every((c, i) => c.code === b[i].code)
+
 function linha(a: SafraDef, b: SafraDef, pa: PerfilCultura | undefined, pb: PerfilCultura | undefined): CTRow {
   const sem = 'Sem dado'
   return {
@@ -142,8 +156,11 @@ function linha(a: SafraDef, b: SafraDef, pa: PerfilCultura | undefined, pb: Perf
   }
 }
 
-/** Rotação salva no navegador que foi em custom_rotations (mesma ordem do pedido). */
-export type SalvaMeta = { id: string; em: number }
+/**
+ * Rotação extra que foi em custom_rotations (mesma ordem do pedido): uma salva no navegador ou, com `historico`,
+ * a rotação atual do talhão.
+ */
+export type SalvaMeta = { id: string; em: number; historico?: boolean }
 
 /**
  * Converte a resposta da API, na ordem do rank dela (é a ordem da tela). As rotações do agricultor
@@ -156,11 +173,18 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
   const avisos = [...r.warnings]
   const atual = ultimaRotacao(historico)
   const rotacoes: RotacaoDef[] = []
-  const custom = (r.custom_rotations ?? []).flatMap((c, i) => (salvas[i] ? [{ rot: c as Rotation, salva: salvas[i] as SalvaMeta | undefined }] : []))
+  // A rotação atual só entra se nenhuma recomendada tiver as mesmas culturas (aí a recomendada já é marcada "Atual").
+  const chave = (x: Rotation) => x.crops.map(c => c.crop.eco_port_code).join('-')
+  const recomendadas = new Set(r.rotations.map(chave))
+  const custom = (r.custom_rotations ?? []).flatMap((c, i) => {
+    const meta = salvas[i]
+    if (!meta || (meta.historico && recomendadas.has(chave(c as Rotation)))) return []
+    return [{ rot: c as Rotation, salva: meta as SalvaMeta | undefined }]
+  })
   const todas = [...r.rotations.map(rot => ({ rot, salva: undefined as SalvaMeta | undefined })), ...custom]
     .sort((a, b) => a.rot.rank - b.rot.rank || Number(!!b.salva) - Number(!!a.salva) || (a.salva?.em ?? 0) - (b.salva?.em ?? 0))
   // Cor pela ordem alfabética dos ids: trocar as prioridades reordena a lista, mas cada rotação mantém a cor.
-  const idDe = (x: { rot: Rotation; salva?: SalvaMeta }) => (x.salva ? `salva-${x.salva.id}` : x.rot.id)
+  const idDe = (x: { rot: Rotation; salva?: SalvaMeta }) => (x.salva?.historico ? 'historico' : x.salva ? `salva-${x.salva.id}` : x.rot.id)
   const ids = todas.map(idDe).sort()
   for (const { rot, salva } of todas) {
     const [ca, cb] = rot.crops
@@ -170,7 +194,8 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
     // Saúde do solo vem da API: o índice de proteção planejada (cobertura viva e troca de família).
     ct.soil = faixa(rot.scores.soil_protection).rotulo
     ct.soilWhy = textoProtecaoSolo(rot.soil_protection)
-    if (atual && pa?.id === atual[0] && pb?.id === atual[1]) ct.atual = true
+    // Pela cultura do catálogo (não pelo perfil mock): girassol e feijão-caupi também têm de ser reconhecidos.
+    if (salva?.historico || (atual && a.ref === atual[0] && b.ref === atual[1])) ct.atual = true
     const barras: BarDef[] = [
       { s: mesDaData(ca.planting_date, ano), e: mesDaData(ca.harvest_date, ano, true), label: a.nome },
       { s: mesDaData(cb.planting_date, ano), e: mesDaData(cb.harvest_date, ano, true), label: b.nome },
@@ -181,8 +206,8 @@ export function conjuntoDaApi(r: RotationRecommendations, historico?: Historico 
       id: idDe({ rot, salva }), safras: [a, b], ct,
       agua: pb?.score.agua ?? 0, solo: 0,
       barras, maisPragas: pb?.pragas.nivel === 'Maior risco',
-      cor: ids.indexOf(idDe({ rot, salva })) % 4, scores: rot.scores, protecaoSolo: rot.soil_protection,
-      ...(salva ? { salva } : {}),
+      cor: ids.indexOf(idDe({ rot, salva })) % COR_ROT.length, scores: rot.scores, protecaoSolo: rot.soil_protection,
+      ...(salva?.historico ? { historico: true } : salva ? { salva: { id: salva.id, em: salva.em } } : {}),
     })
   }
   return {

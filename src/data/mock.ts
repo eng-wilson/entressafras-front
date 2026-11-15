@@ -109,6 +109,8 @@ export type RotacaoDef = {
   protecaoSolo?: SoilProtection
   /** Rotação criada pelo agricultor ("Nova"), ranqueada pela API em custom_rotations; id da salva no navegador. */
   salva?: { id: string; em: number }
+  /** Rotação atual do talhão (a última safra do histórico), simulada pela API em custom_rotations para comparar. */
+  historico?: boolean
 }
 
 /** Rotações da tela: da API (POST /api/rotations/recommendations) ou o conjunto local dos testes. */

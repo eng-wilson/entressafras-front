@@ -36,9 +36,11 @@ const SEM_DADO = { nivel: 0, rotulo: 'Sem dado', cls: 'nd' } as const
 const faixaOu = (k: Eixo, v: number | null, rot: ResRotacao | null): Faixa | typeof SEM_DADO =>
   v == null ? SEM_DADO : k === 'risco' && rot?.anos != null ? faixaAnos(rot.anos) : faixa(v)
 
-/** Rótulo de origem: posição na recomendação da API, ou rotação salva pelo agricultor. */
+/** Rótulo de origem: a rotação atual do talhão, uma salva pelo agricultor ou a posição na recomendação da API. */
 const origem = (rots: RotacaoDef[], i: number) =>
-  rots[i].salva ? 'Salva' : `Recomendada · ${rots.slice(0, i + 1).filter(x => !x.salva).length}ª`
+  rots[i].historico ? 'Sua rotação atual (histórico)'
+    : rots[i].salva ? 'Salva'
+      : `Recomendada · ${rots.slice(0, i + 1).filter(x => !x.salva && !x.historico).length}ª`
 
 /** Eixo de maior nota: o número da rotação fica nesse vértice, para não depender só da cor. */
 const melhorEixo = (a: Record<Eixo, number | null>) =>

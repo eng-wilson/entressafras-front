@@ -14,7 +14,7 @@ import { reverso } from './services/geocoding'
 import { classeDaTextura } from './logic/solo'
 import type { ConjuntoRotacoes } from './data/mock'
 import { useRotacoes } from './hooks/useRotacoes'
-import { conjuntoDaApi, historicoEcoCrop, prioridadesApi } from './logic/rotacoesApi'
+import { conjuntoDaApi, historicoEcoCrop, mesmasCulturas, prioridadesApi, rotacaoAtualEcoCrop, type SalvaMeta } from './logic/rotacoesApi'
 import { soloDaTextura } from './services/rotacoes'
 import { ConjuntoContext } from './state/conjunto'
 import { useCultura } from './hooks/useCultura'
@@ -48,10 +48,10 @@ const inicial = (c: ConjuntoRotacoes) => Math.max(0, c.rotacoes.findIndex(r => r
  * Rascunho inicial a partir de uma rotação da lista (a atual do talhão, senão a selecionada): mesmas culturas e
  * plantios. Nas recomendadas a colheita vai sem data para a API devolver o ciclo de referência (limites do arrasto).
  */
-function rascunhoDe(rot: ConjuntoRotacoes['rotacoes'][number], dados: RotationRecommendations, salvas: RotacaoSalva[], ano: number): Rascunho {
-  const api = rot.salva
-    ? dados.custom_rotations?.[salvas.findIndex(s => s.id === rot.salva!.id)]
-    : dados.rotations.find(r => r.id === rot.id)
+function rascunhoDe(rot: ConjuntoRotacoes['rotacoes'][number], dados: RotationRecommendations, extras: SalvaMeta[], ano: number): Rascunho {
+  // Salvas e a rotação atual voltam em custom_rotations, na ordem do pedido (extras).
+  const i = rot.salva ? extras.findIndex(m => m.id === rot.salva!.id) : rot.historico ? extras.findIndex(m => m.historico) : -1
+  const api = i >= 0 ? dados.custom_rotations?.[i] : dados.rotations.find(r => r.id === rot.id)
   if (!api) return { culturas: [], sel: null }
   return {
     // Datas exatas da API: soltar a cultura num decêndio colorido gera o mesmo pedido do ponto do sweep.
@@ -93,10 +93,18 @@ export default function App() {
   const talhaoId = talhao?.id ?? null
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const salvas = useMemo(() => (talhaoId ? lerSalvas(talhaoId, anoAgricola) : []), [talhaoId, anoAgricola, versaoSalvas])
-  const pedidoSalvas = useMemo(
-    () => (salvas.length ? { ano: anoAgricola, custom: salvas.map(s => s.culturas) } : null),
-    [salvas, anoAgricola],
+  // A rotação atual do talhão (última safra do histórico) vai junto para ser comparada com as sugestões. Ela ocupa
+  // uma das 3 vagas de custom_rotations; fica de fora se as vagas já estiverem cheias ou se for igual a uma salva.
+  const atualCustom = useMemo(() => rotacaoAtualEcoCrop(historico), [historico])
+  const comAtual = !!atualCustom && salvas.length < MAX_SALVAS && !salvas.some(s => mesmasCulturas(s.culturas, atualCustom))
+  const extras = useMemo<SalvaMeta[]>(
+    () => [...(comAtual ? [{ id: 'historico', em: 0, historico: true }] : []), ...salvas.map(s => ({ id: s.id, em: s.em }))],
+    [comAtual, salvas],
   )
+  const pedidoSalvas = useMemo(() => {
+    const custom = [...(comAtual && atualCustom ? [atualCustom] : []), ...salvas.map(s => s.culturas)]
+    return custom.length ? { ano: anoAgricola, custom } : null
+  }, [comAtual, atualCustom, salvas, anoAgricola])
   // Textura só vai à API quando o agricultor a informou; sem ela, a API estima o solo pelo local (SoilGrids).
   const recomendadas = useRotacoes({
     ponto: talhao?.centro ?? null,
@@ -108,8 +116,8 @@ export default function App() {
   // Trocando só as prioridades, a resposta anterior segue na tela até a nova ordem chegar (useRotacoes).
   const resposta = recomendadas.dados ?? recomendadas.anterior
   const conjNovo = useMemo(
-    () => (resposta ? conjuntoDaApi(resposta, historico, salvas.map(s => ({ id: s.id, em: s.em }))) : null),
-    [resposta, historico, salvas],
+    () => (resposta ? conjuntoDaApi(resposta, historico, extras) : null),
+    [resposta, historico, extras],
   )
   // Ao salvar ou remover uma rotação, a lista é pedida de novo: a anterior fica na tela até a nova chegar.
   const [ultimo, setUltimo] = useState<{ talhao: string | null; conj: ConjuntoRotacoes; dados: RotationRecommendations } | null>(null)
@@ -206,7 +214,11 @@ export default function App() {
     () => (editor.aberto && editor.rascunho.sel != null && !editor.alca ? faixaDoSweep(editor.sim.sweeps[editor.rascunho.sel] ?? null, editor.rascunho.sel) : null),
     [editor.aberto, editor.rascunho.sel, editor.alca, editor.sim.sweeps],
   )
-  const addBloqueio = salvas.length >= MAX_SALVAS ? `Você já tem ${MAX_SALVAS} rotações salvas. Remova uma para criar outra.` : null
+  // A rotação atual do talhão ocupa uma das vagas da API para rotações extras.
+  const vagasSalvas = MAX_SALVAS - (atualCustom ? 1 : 0)
+  const addBloqueio = salvas.length >= vagasSalvas
+    ? `Você já tem ${salvas.length} ${salvas.length === 1 ? 'rotação salva' : 'rotações salvas'}${atualCustom ? ' (a rotação atual do talhão ocupa uma vaga da comparação)' : ''}. Remova uma para criar outra.`
+    : null
   function abrirRascunho() {
     if (editor.aberto) {
       document.querySelector<HTMLElement>('.row.draft .nm')?.focus()
@@ -214,7 +226,7 @@ export default function App() {
     }
     if (!conj || !dadosRec) return
     const base = conj.rotacoes.find(r => r.ct.atual) ?? conj.rotacoes[state.rot]
-    editor.abrir(base ? rascunhoDe(base, dadosRec, salvas, conj.ano) : undefined)
+    editor.abrir(base ? rascunhoDe(base, dadosRec, extras, conj.ano) : undefined)
     setMode('cal')
     setAnuncio('')
   }
