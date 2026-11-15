@@ -113,13 +113,7 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
         if (botao.dataset.zoom === 'reset') restaurarZoom();
         else ajustarZoom(cam.zoom * (botao.dataset.zoom === 'in' ? PASSO_ZOOM : 1 / PASSO_ZOOM));
     });
-    ouvir(canvas, 'wheel', e => {
-        if (!atual || !e.deltaY) return;
-        e.preventDefault();
-        const r = canvas.getBoundingClientRect();
-        const delta = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? alt : 1);
-        ajustarZoom(cam.zoom * Math.exp(-Math.max(-240, Math.min(240, delta)) * 0.002), { x: e.clientX - r.left, y: e.clientY - r.top });
-    }, { passive: false });
+    // Sem zoom pela roda do mouse: ela rola a página. Zoom pelos botões − / + e pelas teclas +, − e 0.
     ouvir(canvas, 'keydown', e => {
         if (!['+', '=', '-', '0'].includes(e.key)) return;
         e.preventDefault();
