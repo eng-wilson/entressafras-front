@@ -17,6 +17,12 @@
 
   .bar{grid-column:1 / -1;display:flex;align-items:center;gap:16px;padding:0 20px;border-bottom:1px solid var(--sep)}
   .app-name{font-weight:600;font-size:14px}
+  /* Cabeçalho à direita: seletor de idioma (PT | EN, segmentado como o Calendário/Comparação) e "Como funciona" */
+  .bar-dir{margin-left:auto;display:flex;align-items:center;gap:12px}
+  .idioma{display:inline-flex;padding:2px;border-radius:9px;background:#E9E9EE}
+  .idioma button{min-width:36px;height:26px;padding:0 8px;border:0;border-radius:7px;background:transparent;font:inherit;font-size:12px;font-weight:600;color:#3A3A3C;cursor:pointer}
+  .idioma button.on{background:#fff;color:#1D1D1F;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  .idioma button:focus-visible{outline:2px solid #0066cc;outline-offset:1px}
   .tbtn{margin-left:auto;height:30px;padding:0 12px;border-radius:8px;font-weight:500;color:var(--tint);display:flex;align-items:center;gap:6px}
 
   /* sidebar */

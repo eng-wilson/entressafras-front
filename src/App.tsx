@@ -30,6 +30,8 @@ import { useCulturasSimulaveis } from './hooks/useCulturasSimulaveis'
 import { DraftRow } from './components/rascunho/DraftRow'
 import { DraftInspector } from './components/rascunho/DraftInspector'
 import type { RotationRecommendations } from './types'
+import { SeletorIdioma } from './components/SeletorIdioma'
+import { t, type Idioma } from './i18n'
 
 const DEFAULT: AppState = {
   idx: 10,
@@ -66,7 +68,7 @@ function rascunhoDe(rot: ConjuntoRotacoes['rotacoes'][number], dados: RotationRe
 const novoId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}`)
 const mesmoContorno = (a: Talhao['contorno'], b: Talhao['contorno']) => JSON.stringify(a) === JSON.stringify(b)
 
-export default function App() {
+export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {}) {
   const [state, setState] = useState<AppState>(DEFAULT)
   const [campos, setCampos] = useState<EstadoTalhoes>(carregar)
   const [edicao, setEdicao] = useState<Exclude<ModoOnboarding, 'novo'> | null>(null)
@@ -320,12 +322,15 @@ export default function App() {
     <div className="app">
       <header className="bar">
         <div className="app-name">Field Shift</div>
-        <button className="tbtn" type="button">
-          <svg className="ic" aria-hidden="true">
-            <use href="/canvas-icons.svg#i-info" />
-          </svg>
-          Como funciona
-        </button>
+        <div className="bar-dir">
+          {onIdioma && <SeletorIdioma onTrocar={onIdioma} />}
+          <button className="tbtn" type="button">
+            <svg className="ic" aria-hidden="true">
+              <use href="/canvas-icons.svg#i-info" />
+            </svg>
+            {t('Como funciona')}
+          </button>
+        </div>
       </header>
       <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')} />
       <main className="main" id="rotation-workspace" tabIndex={-1}>

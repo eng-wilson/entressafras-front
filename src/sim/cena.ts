@@ -4,6 +4,7 @@
 // @import no build); o criarSimulacao original aponta um <link> que o bundle não consegue seguir.
 import css from '../../simulacao/styles/componente.css?inline'
 import { createTalhao, type Talhao } from './api.js'
+import { t } from '../i18n'
 
 export type Cena = Pick<Talhao, 'mostrar' | 'dia' | 'colhido' | 'restaurar' | 'pausar' | 'preparar' | 'destruir'>
 
@@ -28,11 +29,11 @@ export function montarCena(container: HTMLElement): Cena {
   molde.innerHTML = `
     <div class="fgrid">
       <div class="isow">
-        <canvas id="talhao" role="img" tabindex="0" aria-label="Simulação do talhão. Arraste para mover, use mais e menos para zoom e zero para restaurar."></canvas>
-        <div class="talhao-zoom" role="group" aria-label="Zoom da simulação">
-          <button type="button" data-zoom="out" aria-label="Afastar">−</button>
-          <button type="button" data-zoom="reset" aria-label="Restaurar enquadramento">100%</button>
-          <button type="button" data-zoom="in" aria-label="Aproximar">+</button>
+        <canvas id="talhao" role="img" tabindex="0" aria-label="${t('Simulação do talhão. Arraste para mover, use mais e menos para zoom e zero para restaurar.')}"></canvas>
+        <div class="talhao-zoom" role="group" aria-label="${t('Zoom da simulação')}">
+          <button type="button" data-zoom="out" aria-label="${t('Afastar')}">−</button>
+          <button type="button" data-zoom="reset" aria-label="${t('Restaurar enquadramento')}">100%</button>
+          <button type="button" data-zoom="in" aria-label="${t('Aproximar')}">+</button>
         </div>
       </div>
     </div>`
@@ -41,7 +42,7 @@ export function montarCena(container: HTMLElement): Cena {
   let talhao: Talhao
   try {
     // A etiqueta do estágio do app ocupa o topo: a etiqueta de clima do canvas ficaria atrás dela.
-    talhao = createTalhao(raiz.querySelector('canvas')!, { rotuloClima: false, resolucao: 512 })
+    talhao = createTalhao(raiz.querySelector('canvas')!, { rotuloClima: false, resolucao: 512, t })
   } catch (e) {
     host.remove()
     throw e
