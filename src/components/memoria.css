@@ -1,0 +1,14 @@
+/* "De onde vêm estes números": só campos da API, com o caminho de cada um para a conferência dos devs. */
+.mc-acoes { display: flex; align-items: center; gap: 14px; flex: none; }
+.mc-dev { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #636368; cursor: pointer; }
+.mc-bloco { margin-top: 18px; }
+.mc-bloco h3 { margin: 0 0 6px; font-size: 15px; }
+.mc-origem { margin: 0 0 6px; }
+.mc-origem code, .mc-campo code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11.5px; color: #3a3a3c; background: #f5f5f7; border-radius: 5px; padding: 1px 5px; overflow-wrap: anywhere; }
+.mc-campos { width: 100%; border-collapse: collapse; font-size: 13px; }
+.mc-campos th, .mc-campos td { padding: 6px 8px; border-bottom: 1px solid #e5e5ea; text-align: left; vertical-align: top; }
+.mc-campos th { font-weight: 500; color: #3a3a3c; width: 42%; }
+.mc-campos td { font-variant-numeric: tabular-nums; font-weight: 600; }
+.mc-campos td.nv { color: #8e8e93; font-weight: 400; font-style: italic; }
+.mc-campos td.mc-campo { font-weight: 400; width: 1%; white-space: nowrap; }
+@media (max-width: 640px) { .mc-campos td.mc-campo { white-space: normal; } }

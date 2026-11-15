@@ -1,70 +1,83 @@
-// "De onde vêm estes números" de uma safra: mostra os dados que a API entrega (risco hídrico, fase crítica,
-// ISNA médio, estágios, Kc) e o clima por decêndio. O front não calcula risco: só exibe o que veio.
-import { useEffect, useRef } from 'react'
+// "De onde vêm estes números" de uma safra: SÓ os valores que a API entregou, como vieram (mesmo quando o servidor
+// marca MOCK). Nenhuma conta do front, nenhuma régua local, nenhum valor de reserva: o que a API não trouxe aparece
+// como "não veio". Cada linha diz o campo de origem, para a conferência dos devs ("Campos da API").
+import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { SEM_CRITERIO, detalheApi, faixaAnos } from '../logic/aptidao'
-import type { Resiliencia, ResSafra } from '../logic/resiliencia'
-import { FONTE_FASES, FONTE_FASES_API, FONTE_KC_API, NOME_FASE, type Fonte } from '../data/zarc'
+import './memoria.css'
+import { NOME_FASE } from '../data/zarc'
 import { janelaLabel } from '../logic/periodo'
 import { useConjunto } from '../state/conjunto'
-import type { CropCalendarInfo, SoilInfo, SoilProperties } from '../types'
+import type { ResSafra } from '../logic/resiliencia'
+import type { EstagioFao, RotationCrop } from '../types'
 
+const ESTAGIOS: EstagioFao[] = ['initial', 'development', 'mid_season', 'late_season']
 const ROMANO = ['I', 'II', 'III', 'IV'] as const
+const NOME_ESTAGIO = Object.fromEntries(ESTAGIOS.map((e, i) => [e, `${ROMANO[i]} · ${NOME_FASE[i].toLowerCase()}`])) as Record<EstagioFao, string>
+const TEXTURA = { sandy: 'arenoso', medium: 'médio', clayey: 'argiloso' } as const
 
-const n0 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 0 })
-const n2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-const mm = (v: number | null) => (v == null ? '—' : `${n0.format(v)} mm`)
-const pct = (v: number | null) => (v == null ? '—' : `${n0.format(v * 100)}%`)
-
-const TEXTURA_API = { sandy: 'arenoso', medium: 'médio', clayey: 'argiloso' } as const
 const n1 = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 })
+const n2 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 const dataBr = (iso: string) => iso.split('-').reverse().join('/')
+const NAO_VEIO = 'não veio'
 
-/** "Calendário regional GGCMI (Brazil CONAB), plantio de referência 15/10/2027; ciclo de 85 dias." */
-function textoCalendario(c: CropCalendarInfo): string {
-  const fonte = c.source === 'GGCMI_PHASE3_V1_01'
-    ? `calendário regional de plantio GGCMI${c.data_source ? ` (${c.data_source})` : ''}`
-    : c.source === 'FAO56_REFERENCE' ? 'referência FAO-56 (sem calendário regional para o local)' : c.source
-  const ref = c.reference_planting_date ? `, plantio de referência em ${dataBr(c.reference_planting_date)}` : ''
-  return `Datas: ${fonte}${ref}; ciclo de ${c.cycle_days} dias.`
+/** Os devs veem os campos ao abrir em desenvolvimento ou com ?dev na URL; o agricultor pode ligar no botão. */
+const devPorPadrao = () => {
+  try { return import.meta.env.DEV || new URLSearchParams(window.location.search).has('dev') } catch { return false }
 }
 
-/** "Argiloso, 140 mm de água por metro de raiz, estimado pelo local (SoilGrids, ponto a 0,3 km)." */
-function textoSolo(s: SoilInfo): string {
-  const origem = s.source === 'REQUEST_TEXTURE_CLASS' ? 'pela textura que você informou'
-    : s.source === 'SOILGRIDS_SAXTON_RAWLS_2006' ? `estimado pelo local (mapas SoilGrids e equações de Saxton & Rawls)${s.distance_km != null ? `, ponto a ${n1.format(s.distance_km)} km` : ''}`
-      : s.source
-  const gran = s.clay_pct != null && s.sand_pct != null ? ` Argila ${n1.format(s.clay_pct)}%, areia ${n1.format(s.sand_pct)}%.` : ''
-  return `Solo ${TEXTURA_API[s.texture_class]}, com ${n1.format(s.available_water_mm_per_m)} mm de água disponível por metro de raiz, ${origem}.${gran}`
+type Linha = { rotulo: string; valor: string; campo: string; bruto: unknown }
+
+function Bloco({ titulo, origem, linhas, dev }: { titulo: string; origem: string; linhas: Linha[]; dev: boolean }) {
+  return (
+    <section className="mc-bloco">
+      <h3>{titulo}</h3>
+      {dev && <p className="mc-origem"><code>{origem}</code></p>}
+      <table className="mc-campos">
+        <tbody>
+          {linhas.map(l => (
+            <tr key={l.campo}>
+              <th scope="row">{l.rotulo}</th>
+              <td className={l.valor === NAO_VEIO ? 'nv' : undefined}>{l.valor}</td>
+              {dev && <td className="mc-campo"><code>{l.campo} = {JSON.stringify(l.bruto ?? null)}</code></td>}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
+  )
 }
 
-/** "Solo superficial (0–30 cm), SoilGrids: argila 52%, …; carbono orgânico 14 g/kg; ponto a 0,2 km." Só exibição. */
-function textoPropriedades(p: SoilProperties): string {
-  const prof = p.depth ? ` (${p.depth})` : ''
-  return `Solo superficial${prof} estimado pelo local (SoilGrids, ponto a ${n1.format(p.distance_km)} km): ` +
-    `argila ${n1.format(p.clay_pct)}%, areia ${n1.format(p.sand_pct)}%, silte ${n1.format(p.silt_pct)}%, ` +
-    `carbono orgânico ${n1.format(p.organic_carbon_g_per_kg)} g/kg. Mapas de 250 m; não substituem a análise de laboratório.`
+const L = (rotulo: string, campo: string, bruto: unknown, fmt: (v: never) => string): Linha => ({
+  rotulo, campo, bruto, valor: bruto == null ? NAO_VEIO : fmt(bruto as never),
+})
+const pctNum = (v: number) => `${n1.format(v)}%`
+const pctFrac = (v: number) => `${n1.format(v * 100)}%`
+
+type Props = {
+  s: ResSafra
+  n: 0 | 1
+  rotacao: string
+  /** Id da rotação na resposta (rotations[].id), para o caminho dos campos. */
+  rotId: string
+  /** A cultura como veio da API; ausente = conjunto local, sem dado da API. */
+  api?: RotationCrop
+  onFechar: () => void
 }
 
-function Link({ f }: { f: Fonte }) {
-  return <a href={f.url} target="_blank" rel="noreferrer">{f.titulo}</a>
-}
-
-type Props = { s: ResSafra; n: 0 | 1; rotacao: string; res: Resiliencia; onFechar: () => void }
-
-export function MemoriaCalculo({ s, n, rotacao, res, onFechar }: Props) {
+export function MemoriaCalculo({ s, n, rotacao, rotId, api, onFechar }: Props) {
   const dialogo = useRef<HTMLDialogElement>(null)
+  const [dev, setDev] = useState(devPorPadrao)
   useEffect(() => {
     const el = dialogo.current!
     el.showModal()
     return () => el.close()
   }, [])
-
-  const { kc, fases, fonteFases, decendios, calendario } = s.calc
   const conj = useConjunto()
-  const r = s.risco
-  const f = s.anos != null ? faixaAnos(s.anos) : null
   const papel = n === 0 ? '1ª safra' : s.cobertura ? '2ª safra (cobertura)' : '2ª safra'
+  const base = `rotations[id=${rotId}].crops[${n}]`
+  const risk = api?.crop.risk
+  const wr = api?.crop.water_requirements
+  const mock = risk?.method === 'MOCK'
 
   return createPortal(
     <dialog className="culturas-dialog mc" ref={dialogo} aria-labelledby="mc-titulo" onClose={e => { if (!e.currentTarget.open) onFechar() }}>
@@ -73,112 +86,79 @@ export function MemoriaCalculo({ s, n, rotacao, res, onFechar }: Props) {
           <h2 id="mc-titulo">De onde vêm os números: {s.nome}</h2>
           <p className="mc-sub">{papel} de {rotacao} · {janelaLabel(s.de, s.ate)}</p>
         </div>
-        <button className="tbtn" type="button" onClick={onFechar}>Fechar</button>
+        <div className="mc-acoes">
+          <label className="mc-dev">
+            <input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} /> Campos da API
+          </label>
+          <button className="tbtn" type="button" onClick={onFechar}>Fechar</button>
+        </div>
       </header>
 
-      {r && f ? (
-        <p className={`mc-res ${f.cls}`}>
-          <b>Risco hídrico: {r.pct}%</b> ({f.rotulo.toLowerCase()} em resiliência climática). {detalheApi(s)}
-        </p>
-      ) : (
-        <p className="mc-res nd"><b>Risco hídrico: sem dado.</b> {SEM_CRITERIO}</p>
-      )}
       <p className="mc-mock">
-        O risco, a fase crítica, o ISNA, os estágios e o Kc vêm da API Entressafras; a tela não faz conta própria de risco.
-        {r?.metodo === 'MOCK' && ' Hoje o servidor marca o risco como MOCK: são valores provisórios, iguais para qualquer talhão.'}
+        Só valores recebidos da API Entressafras, como vieram: a tela não faz conta nem completa o que falta.
+        {mock && <> <b>O servidor marca este risco como MOCK</b>: valores provisórios, não calculados para este talhão.</>}
+        {' '}Consumo de água, chuva e receita não estão aqui porque não vêm prontos da API.
       </p>
 
-      <ol className="mc-passos">
-        {r && (
-          <li>
-            <h3>Risco calculado pela API</h3>
-            <p>
-              Método: {r.metodo === 'MOCK' ? 'MOCK (provisório)' : 'FAO-56 simplificado com Ky (FAO-33)'}. Safras históricas usadas: {r.anosValidos}.
-              {' '}Uma safra conta como crítica quando a perda por falta de água passa de {r.limiar}%.
-              {r.perda != null && <> Perda média estimada: {r.perda}%.</>}
-              {r.fase != null && <> Fase com o maior déficit: <b>{ROMANO[r.fase]} · {NOME_FASE[r.fase].toLowerCase()}</b>.</>}
-              {r.isnaCiclo != null && <> ISNA do ciclo inteiro: {pct(r.isnaCiclo)}.</>}
-            </p>
-            {conj.solo && <p>{textoSolo(conj.solo)}</p>}
-            {conj.propriedadesSolo && <p className="mc-nota">{textoPropriedades(conj.propriedadesSolo)}</p>}
-            <div className="mc-tab">
-              <table>
-                <thead>
-                  <tr>{NOME_FASE.map((_, i) => <th key={i} scope="col">ISNA médio · fase {ROMANO[i]}</th>)}</tr>
-                </thead>
-                <tbody>
-                  <tr>{r.isna.map((v, i) => <td key={i} className={i === r.fase ? 'abaixo' : undefined}>{pct(v)}</td>)}</tr>
-                </tbody>
-              </table>
-            </div>
-            <p className="mc-nota">ISNA = água que a cultura usou ÷ água de que precisava, na média das safras históricas.</p>
-          </li>
-        )}
+      {!api ? (
+        <p className="mc-res nd"><b>Sem dados da API para esta safra.</b></p>
+      ) : (
+        <>
+          <Bloco dev={dev} titulo="Risco hídrico" origem={`POST /api/rotations/recommendations → ${base}.crop.risk`} linhas={[
+            L('Método', 'method', risk?.method, (v: string) => (v === 'MOCK' ? 'MOCK (provisório)' : v)),
+            L('Validado', 'validated', risk?.validated, (v: boolean) => (v ? 'sim' : 'não')),
+            L('Risco hídrico', 'risk_percentage', risk?.risk_percentage, pctNum),
+            L('Limiar de perda de uma safra crítica', 'loss_threshold_pct', risk?.loss_threshold_pct, pctNum),
+            L('Perda média estimada', 'estimated_yield_loss_pct', risk?.estimated_yield_loss_pct, pctNum),
+            L('Safras históricas usadas', 'valid_years', risk?.valid_years, (v: number) => String(v)),
+            L('Fase de maior déficit', 'critical_stage', risk?.critical_stage, (v: EstagioFao) => NOME_ESTAGIO[v] ?? v),
+            ...ESTAGIOS.map(e => L(`ISNA médio · fase ${NOME_ESTAGIO[e]}`, `mean_isna.${e}`, risk?.mean_isna?.[e], pctFrac)),
+            L('ISNA do ciclo inteiro', 'mean_season_isna', risk?.mean_season_isna, pctFrac),
+          ]} />
+          {dev && <p className="mc-nota">ISNA = água que a cultura usou ÷ água de que precisava (0 a 1); exibido em %.</p>}
 
-        <li>
-          <h3>Fases no calendário</h3>
-          <p>
-            {janelaLabel(s.de, s.ate)}: {decendios.length} decêndios, com as datas de plantio e colheita da rotação recomendada.
-            {calendario && <> {textoCalendario(calendario)}</>}
-            {' '}Fases: {NOME_FASE.map((nm, i) => `${ROMANO[i]} ${nm.toLowerCase()} (${pct(fases[i])})`).join(', ')}.
-            {' '}{fonteFases === 'api'
-              ? <>Proporção dos estágios FAO-56 da cultura. Fonte: <Link f={FONTE_FASES_API} />.</>
-              : <>A API não trouxe os estágios desta cultura; proporção padrão da <Link f={FONTE_FASES} />.</>}
-          </p>
-        </li>
+          <Bloco dev={dev} titulo="Datas e calendário" origem={`POST /api/rotations/recommendations → ${base}`} linhas={[
+            L('Plantio', 'planting_date', api.planting_date, dataBr),
+            L('Colheita', 'harvest_date', api.harvest_date, dataBr),
+            L('Fonte do calendário', 'calendar.source', api.calendar?.source, (v: string) => v),
+            L('Base do calendário', 'calendar.data_source', api.calendar?.data_source, (v: string) => v),
+            L('Plantio de referência', 'calendar.reference_planting_date', api.calendar?.reference_planting_date, dataBr),
+            L('Ciclo', 'calendar.cycle_days', api.calendar?.cycle_days, (v: number) => `${v} dias`),
+          ]} />
 
-        <li>
-          <h3>Consumo de água no ciclo</h3>
-          <p>
-            Em cada decêndio, consumo = <b>Kc × ET0</b>, os dois da API.
-            {kc
-              ? <> Kc de {n2.format(kc[0])} na fase I, sobe na II até {n2.format(kc[1])} na III e desce até {n2.format(kc[2])} no fim. Fonte: <Link f={FONTE_KC_API} />.</>
-              : ' A API não trouxe o Kc desta cultura: o consumo fica sem dado.'}
-            {res.fonte ? ` Clima: ${res.fonte}, média de ${res.nSafras} safras (${res.periodo}).` : ' O clima do talhão ainda não carregou.'}
-          </p>
-          <div className="mc-tab">
-            <table>
-              <thead>
-                <tr>
-                  <th scope="col">Decêndio</th>
-                  <th scope="col">Fase</th>
-                  <th scope="col">Chuva média</th>
-                  <th scope="col">Chuva em ano seco*</th>
-                  <th scope="col">ET0</th>
-                  <th scope="col">Kc</th>
-                  <th scope="col">Consumo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {decendios.map(d => (
-                  <tr key={d.idx} className={r?.fase === d.fase ? 'crit' : undefined}>
-                    <th scope="row">{d.rotulo}</th>
-                    <td>{ROMANO[d.fase]}</td>
-                    <td>{mm(d.chuvaMedia)}</td>
-                    <td>{mm(d.chuvaP20)}</td>
-                    <td>{mm(d.et0)}</td>
-                    <td>{d.kc == null ? '—' : n2.format(d.kc)}</td>
-                    <td>{mm(d.consumo)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr>
-                  <th scope="row">Total</th>
-                  <td />
-                  <td>{mm(s.chuva)}</td>
-                  <td />
-                  <td />
-                  <td />
-                  <td>{mm(s.consumo)}</td>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-          <p className="mc-nota">* Chuva superada em 8 de cada 10 anos. Linhas destacadas: a fase crítica apontada pela API.</p>
-          {res.aviso && <p className="mc-nota">{res.aviso}</p>}
-        </li>
-      </ol>
+          <Bloco dev={dev} titulo="Necessidade de água da cultura (FAO-56)" origem={`POST /api/rotations/recommendations → ${base}.crop.water_requirements`} linhas={wr ? [
+            L('Perfil', 'profile_name', wr.profile_name, (v: string) => v),
+            L('Kc inicial', 'crop_coefficient.initial', wr.crop_coefficient?.initial, (v: number) => n2.format(v)),
+            L('Kc no meio do ciclo', 'crop_coefficient.mid_season', wr.crop_coefficient?.mid_season, (v: number) => n2.format(v)),
+            L('Kc no fim', 'crop_coefficient.late_season', wr.crop_coefficient?.late_season, (v: number) => n2.format(v)),
+            ...ESTAGIOS.map(e => L(`Duração · fase ${NOME_ESTAGIO[e]}`, `stage_length_days.${e}`, wr.stage_length_days?.[e], (v: number) => `${v} dias`)),
+            L('Duração total', 'stage_length_days.total', wr.stage_length_days?.total, (v: number) => `${v} dias`),
+            L('Raiz no plantio', 'root_depth_m.initial', wr.root_depth_m?.initial, (v: number) => `${n2.format(v)} m`),
+            L('Raiz máxima', 'root_depth_m.max', wr.root_depth_m?.max, (v: number) => `${n2.format(v)} m`),
+            ...[...ESTAGIOS, 'season' as const].map(e => L(
+              e === 'season' ? 'Ky do ciclo' : `Ky · fase ${NOME_ESTAGIO[e]}`, `yield_response_factor.${e}`, wr.yield_response_factor?.[e], (v: number) => n2.format(v))),
+          ] : [L('Necessidade de água', 'water_requirements', null, String)]} />
+
+          <Bloco dev={dev} titulo="Solo usado no cálculo" origem="POST /api/rotations/recommendations → soil" linhas={conj.solo ? [
+            L('Origem', 'source', conj.solo.source, (v: string) => (v === 'REQUEST_TEXTURE_CLASS' ? 'textura informada no cadastro' : v === 'SOILGRIDS_SAXTON_RAWLS_2006' ? 'estimado pelo local (SoilGrids + Saxton & Rawls)' : v)),
+            L('Textura', 'texture_class', conj.solo.texture_class, (v: keyof typeof TEXTURA) => TEXTURA[v] ?? v),
+            L('Água disponível', 'available_water_mm_per_m', conj.solo.available_water_mm_per_m, (v: number) => `${n1.format(v)} mm por metro de raiz`),
+            L('Distância do ponto amostrado', 'distance_km', conj.solo.distance_km, (v: number) => `${n1.format(v)} km`),
+          ] : [L('Solo', 'soil', null, String)]} />
+
+          {conj.propriedadesSolo && (
+            <Bloco dev={dev} titulo="Solo superficial (só exibição)" origem="POST /api/rotations/recommendations → soil_properties" linhas={[
+              L('Fonte', 'source', conj.propriedadesSolo.source, (v: string) => v),
+              L('Profundidade', 'depth', conj.propriedadesSolo.depth, (v: string) => v),
+              L('Argila', 'clay_pct', conj.propriedadesSolo.clay_pct, pctNum),
+              L('Areia', 'sand_pct', conj.propriedadesSolo.sand_pct, pctNum),
+              L('Silte', 'silt_pct', conj.propriedadesSolo.silt_pct, pctNum),
+              L('Carbono orgânico', 'organic_carbon_g_per_kg', conj.propriedadesSolo.organic_carbon_g_per_kg, (v: number) => `${n1.format(v)} g/kg`),
+              L('Distância do ponto amostrado', 'distance_km', conj.propriedadesSolo.distance_km, (v: number) => `${n1.format(v)} km`),
+            ]} />
+          )}
+        </>
+      )}
     </dialog>,
     document.body,
   )

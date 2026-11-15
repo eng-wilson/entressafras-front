@@ -69,6 +69,7 @@ function safra(c: RotationCrop, n: 0 | 1, ano: number): SafraDef {
     ...estagiosDe(c),
     risco: c.crop.risk,
     calendario: c.calendar,
+    api: c,
   }
 }
 

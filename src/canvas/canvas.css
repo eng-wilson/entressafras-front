@@ -531,25 +531,9 @@
 .mc-sub { margin: 4px 0 0; color: #6E6E73; font-size: 13px; }
 .mc-res { margin: 0 0 16px; padding: 12px 14px; border-radius: 10px; background: #F5F5F7; }
 .mc-res.good { background: #E3F5E8; } .mc-res.warn { background: #FFF1DB; } .mc-res.risk { background: #FDE2E4; }
-.mc-passos { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 18px; }
-.mc-passos > li::marker { font-weight: 700; color: #6E6E73; }
-.mc-passos h3 { margin: 0 0 4px; font-size: 15px; }
-.mc-passos p { margin: 0 0 8px; }
-.mc-passos ul { margin: 0; padding-left: 18px; }
 .mc-nota { color: #6E6E73; font-size: 12px; }
 .mc-mock { margin: -8px 0 16px; padding: 8px 12px; border-radius: 8px; background: #F5F5F7; color: #3A3A3C; font-size: 12px; }
 .mc a { color: #0A64D6; }
-.mc-tab tr.crit td, .mc-tab tr.crit th { background: #F2F7FE; }
-.mc-tab td.abaixo { color: #C4000F; font-weight: 600; }
-.mc-tab { overflow-x: auto; margin: 8px 0; }
-.mc-tab table { width: 100%; border-collapse: collapse; font-size: 12px; font-variant-numeric: tabular-nums; }
-.mc-tab th, .mc-tab td { padding: 5px 8px; text-align: right; border-bottom: 1px solid #E5E5EA; white-space: nowrap; }
-.mc-tab th:first-child { text-align: left; }
-.mc-tab thead th { font-weight: 600; color: #6E6E73; vertical-align: bottom; white-space: normal; }
-.mc-tab tbody th { font-weight: 500; }
-.mc-tab tfoot th, .mc-tab tfoot td { font-weight: 700; border-bottom: 0; }
-.mc-tab tr.ok td:last-child { color: #1B7F3A; font-weight: 600; }
-.mc-tab tr.no td:last-child { color: #C4000F; font-weight: 600; }
 
 /* mapa de aptidão (modo Comparação): ocupa o lugar do talhão */
 .qmap .fh { flex-wrap: wrap; }

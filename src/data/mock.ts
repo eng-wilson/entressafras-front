@@ -1,5 +1,5 @@
 import type { CulturaRef, ZarcId } from './zarc'
-import type { CropCalendarInfo, CropRisk, Priorities, RotationScores, SoilInfo, SoilProperties, SoilProtection } from '../types'
+import type { CropCalendarInfo, CropRisk, Priorities, RotationScores, SoilInfo, SoilProperties, SoilProtection, RotationCrop } from '../types'
 
 // TMIN, TMAX e THIS_RAIN alimentam apenas testes e a fixture de clima.
 // Temperaturas mínimas por décimo (setembro décimo 0 → agosto décimo 35)
@@ -73,6 +73,8 @@ export type SafraDef = {
   calendario?: CropCalendarInfo
   /** Ky por fase (I a IV), da API: resposta da produção ao déficit hídrico (FAO-33). null = não informado. */
   ky?: [number | null, number | null, number | null, number | null]
+  /** A cultura como veio da API (rotations[].crops[n]), sem nenhuma conta: base de "De onde vêm estes números". */
+  api?: RotationCrop
 }
 
 /** Barra do calendário, em meses desde 1º de setembro (0–12); sem rótulo = pousio. */

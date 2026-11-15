@@ -46,7 +46,7 @@ function Nota({ f }: { f: Faixa | typeof SEM_DADO }) {
 }
 
 /** Uma safra da rotação: resiliência (do clima), consumo de água e receita. */
-function Safra({ r, n, s, res }: { r: RotacaoDef; n: 0 | 1; s: ResSafra; res: Resiliencia }) {
+function Safra({ r, n, s }: { r: RotacaoDef; n: 0 | 1; s: ResSafra }) {
   const receita = receitaSafra(r.ct, n)
   const [memoria, setMemoria] = useState(false)
   return (
@@ -82,7 +82,7 @@ function Safra({ r, n, s, res }: { r: RotacaoDef; n: 0 | 1; s: ResSafra; res: Re
       <button type="button" className="qm-more" onClick={() => setMemoria(true)}>De onde vêm estes números</button>
       {memoria && (
         <MemoriaCalculo
-          s={s} n={n} rotacao={nomeRot(r)} res={res}
+          s={s} n={n} rotacao={nomeRot(r)} rotId={r.id} api={r.safras[n]?.api}
           onFechar={() => setMemoria(false)}
         />
       )}
@@ -216,7 +216,7 @@ ${d}` : ''}`}>
                 {aberta && (
                   <div id={`qm-sf-${i}`}>
                     <ul className="qm-sfs">
-                      {rot.safras.map((s, n) => <Safra key={n} r={rots[i]} n={n as 0 | 1} s={s} res={res!} />)}
+                      {rot.safras.map((s, n) => <Safra key={n} r={rots[i]} n={n as 0 | 1} s={s} />)}
                     </ul>
                     <p className="qm-sfn">Economia de água e saúde do solo valem para o ciclo inteiro: dependem de como as duas safras se combinam.</p>
                   </div>
