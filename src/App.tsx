@@ -24,12 +24,14 @@ import { diagnostico, periodoDecisivo } from './logic/diagnostico'
 import { estagioEm, estagios } from './logic/estagios'
 import { atencaoCiclo } from './logic/atencaoCiclo'
 import { comDatas, diasEntre, faixaDoSweep, type Rascunho } from './logic/rascunho'
-import { guardarSalva, lerSalvas, MAX_SALVAS, proximoAnoAgricola, removerSalva, type RotacaoSalva } from './services/rotacoesSalvas'
+import { guardarSalva, lerSalvas, MAX_SALVAS, proximoAnoAgricola, removerSalva } from './services/rotacoesSalvas'
 import { useRascunho } from './hooks/useRascunho'
 import { useCulturasSimulaveis } from './hooks/useCulturasSimulaveis'
 import { DraftRow } from './components/rascunho/DraftRow'
 import { DraftInspector } from './components/rascunho/DraftInspector'
 import type { RotationRecommendations } from './types'
+import { SeletorIdioma } from './components/SeletorIdioma'
+import { ordinal, t, type Idioma } from './i18n'
 
 const DEFAULT: AppState = {
   idx: 10,
@@ -59,14 +61,14 @@ function rascunhoDe(rot: ConjuntoRotacoes['rotacoes'][number], dados: RotationRe
       { code: c.crop.eco_port_code, s: 0, e: 1, refCiclo: null, colheitaLivre: !rot.salva },
       c.planting_date, diasEntre(c.planting_date, c.harvest_date) + 1, ano,
     )),
-    sel: 1,
+    sel: api.crops.length - 1,
   }
 }
 
 const novoId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `t${Date.now()}`)
 const mesmoContorno = (a: Talhao['contorno'], b: Talhao['contorno']) => JSON.stringify(a) === JSON.stringify(b)
 
-export default function App() {
+export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {}) {
   const [state, setState] = useState<AppState>(DEFAULT)
   const [campos, setCampos] = useState<EstadoTalhoes>(carregar)
   const [edicao, setEdicao] = useState<Exclude<ModoOnboarding, 'novo'> | null>(null)
@@ -141,7 +143,7 @@ export default function App() {
       const i = nova >= 0 ? nova : mesma >= 0 ? mesma : inicial(conj)
       if (nova >= 0) {
         setSalvaPendente(null)
-        setAnuncio(`Rotação salva. Ficou em ${nova + 1}º de ${conj.rotacoes.length}.`)
+        setAnuncio(t('Rotação salva. Ficou em {posicao} de {total}.', { posicao: ordinal(nova + 1, 'm'), total: conj.rotacoes.length }))
       }
       setState(s => ({ ...s, rot: i }))
       const marcadas = cmpSel.map(idDe).map(id => ids.indexOf(id ?? '')).filter(x => x >= 0)
@@ -217,7 +219,13 @@ export default function App() {
   // A rotação atual do talhão ocupa uma das vagas da API para rotações extras.
   const vagasSalvas = MAX_SALVAS - (atualCustom ? 1 : 0)
   const addBloqueio = salvas.length >= vagasSalvas
-    ? `Você já tem ${salvas.length} ${salvas.length === 1 ? 'rotação salva' : 'rotações salvas'}${atualCustom ? ' (a rotação atual do talhão ocupa uma vaga da comparação)' : ''}. Remova uma para criar outra.`
+    ? salvas.length === 1
+      ? (atualCustom
+        ? t('Você já tem {n} rotação salva (a rotação atual do talhão ocupa uma vaga da comparação). Remova uma para criar outra.', { n: salvas.length })
+        : t('Você já tem {n} rotação salva. Remova uma para criar outra.', { n: salvas.length }))
+      : (atualCustom
+        ? t('Você já tem {n} rotações salvas (a rotação atual do talhão ocupa uma vaga da comparação). Remova uma para criar outra.', { n: salvas.length })
+        : t('Você já tem {n} rotações salvas. Remova uma para criar outra.', { n: salvas.length }))
     : null
   function abrirRascunho() {
     if (editor.aberto) {
@@ -234,11 +242,11 @@ export default function App() {
   const datasCompletas = !!enviado && enviado.every(c => c.planting_date && c.harvest_date)
   function salvarRascunho() {
     if (!talhao || !conj || editor.sim.status !== 'ok' || !enviado || !datasCompletas) return
-    const culturas = enviado.map(c => ({ code: c.code, planting_date: c.planting_date!, harvest_date: c.harvest_date! })) as RotacaoSalva['culturas']
+    const culturas = enviado.map(c => ({ code: c.code, planting_date: c.planting_date!, harvest_date: c.harvest_date! }))
     const salva = guardarSalva(talhao.id, conj.ano, culturas)
-    if (!salva) { setAnuncio(addBloqueio ?? 'Não foi possível salvar a rotação.'); return }
+    if (!salva) { setAnuncio(addBloqueio ?? t('Não foi possível salvar a rotação.')); return }
     setSalvaPendente(salva.id)
-    setAnuncio('Rotação salva. Atualizando o ranking…')
+    setAnuncio(t('Rotação salva. Atualizando o ranking…'))
     editor.fechar()
     setVersaoSalvas(v => v + 1)
   }
@@ -246,7 +254,7 @@ export default function App() {
     if (!talhao) return
     removerSalva(talhao.id, id)
     setVersaoSalvas(v => v + 1)
-    setAnuncio('Rotação removida.')
+    setAnuncio(t('Rotação removida.'))
   }
 
   // Nome da cidade do talhão: uma consulta quando o contorno é novo ou mudou.
@@ -310,6 +318,7 @@ export default function App() {
         onCancelar={talhao ? () => setEdicao(null) : undefined}
         talhoes={campos.talhoes}
         onEscolher={escolher}
+        onIdioma={onIdioma}
       />
     )
   }
@@ -320,31 +329,34 @@ export default function App() {
     <div className="app">
       <header className="bar">
         <div className="app-name">Field Shift</div>
-        <button className="tbtn" type="button">
-          <svg className="ic" aria-hidden="true">
-            <use href="/canvas-icons.svg#i-info" />
-          </svg>
-          Como funciona
-        </button>
+        <div className="bar-dir">
+          {onIdioma && <SeletorIdioma onTrocar={onIdioma} />}
+          <button className="tbtn" type="button">
+            <svg className="ic" aria-hidden="true">
+              <use href="/canvas-icons.svg#i-info" />
+            </svg>
+            {t('Como funciona')}
+          </button>
+        </div>
       </header>
       <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')} />
       <main className="main" id="rotation-workspace" tabIndex={-1}>
-        {pronto && <a className="inspector-jump" href="#rotation-inspector">Entender esta rotação e os próximos passos<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></a>}
+        {pronto && <a className="inspector-jump" href="#rotation-inspector">{t('Entender esta rotação e os próximos passos')}<svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg></a>}
         {clima.status === 'erro' && <AvisoClima onRecarregar={clima.recarregar} />}
-        {cultura.status === 'erro' && <div className="aviso" role="alert">Os requisitos da cultura não carregaram. <button className="link" type="button" onClick={cultura.recarregar}>Tentar de novo</button></div>}
+        {cultura.status === 'erro' && <div className="aviso" role="alert">{t('Os requisitos da cultura não carregaram.')} <button className="link" type="button" onClick={cultura.recarregar}>{t('Tentar de novo')}</button></div>}
         {recomendadas.status === 'erro' && !atualizando && (
           <div className="aviso" role="alert">
-            As rotações recomendadas não carregaram.
-            <button className="link" type="button" onClick={recomendadas.recarregar}>Tentar de novo</button>
+            {t('As rotações recomendadas não carregaram.')}
+            <button className="link" type="button" onClick={recomendadas.recarregar}>{t('Tentar de novo')}</button>
           </div>
         )}
         {recomendadas.status === 'carregando' && !atualizando && (
           <p className="aviso" role="status">
-            {recomendadas.anterior ? 'Reordenando as rotações pelas prioridades marcadas…' : 'Buscando as rotações recomendadas para o talhão… a primeira consulta de um local pode levar alguns minutos.'}
+            {recomendadas.anterior ? t('Reordenando as rotações pelas prioridades marcadas…') : t('Buscando as rotações recomendadas para o talhão… a primeira consulta de um local pode levar alguns minutos.')}
           </p>
         )}
-        {atualizando && <p className="aviso" role="status">Atualizando o ranking com as suas rotações…</p>}
-        {conj && conj.rotacoes.length === 0 && <p className="aviso" role="status">Nenhuma rotação recomendada para este talhão.</p>}
+        {atualizando && <p className="aviso" role="status">{t('Atualizando o ranking com as suas rotações…')}</p>}
+        {conj && conj.rotacoes.length === 0 && <p className="aviso" role="status">{t('Nenhuma rotação recomendada para este talhão.')}</p>}
         {pronto && <>
         <Simulation idx={idxCena} rot={state.rot} talhao={talhao} fases={fases} diag={diags?.[state.rot] ?? null} clima={clima} cultura={cultura} cmp={cmpCena}
           quadrosAgua={panorama?.quadros} />
@@ -356,7 +368,7 @@ export default function App() {
           faixa={faixa} onRemoverSalva={removerRotacaoSalva}
           rascunho={editor.aberto ? (
             <DraftRow editor={editor} catalogo={catalogo} onSalvar={salvarRascunho}
-              bloqueioSalvar={addBloqueio ?? (editor.sim.status === 'ok' && !datasCompletas ? 'Aguarde a simulação' : null)} />
+              bloqueioSalvar={addBloqueio ?? (editor.sim.status === 'ok' && !datasCompletas ? t('Aguarde a simulação') : null)} />
           ) : null}
         />
         </>}

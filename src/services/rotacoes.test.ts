@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
+import { SIMULACAO_1_CULTURA } from '../data/simulacaoFixture1'
 import {
   AVISO_SALVAS_INVALIDAS, CHAVE_CACHE_ROTACOES, ErroRotacoes, TTL_ROTACOES, apagarRotacoes, chaveRotacoes, guardarRotacoes, lerRotacoes,
   limparMemoriaRotacoes, recomendarRotacoes, rotacoesValidas, soloDaTextura,
@@ -117,6 +118,14 @@ describe('rotações do agricultor em custom_rotations', () => {
     await recomendarRotacoes({ ...pedido('medium'), ano: 2027, custom })
     expect(JSON.parse(f.mock.calls[0][1].body)).toMatchObject({ agricultural_year: 2027, custom_rotations: [{ crops: custom[0] }] })
     expect(chaveRotacoes({ ...pedido('medium'), ano: 2027, custom })).not.toBe(chaveRotacoes({ ...pedido('medium'), ano: 2027 }))
+  })
+  it('aceita uma salva de 1 cultura (seguida de pousio) no pedido e na resposta', async () => {
+    const uma = [[{ code: 1150, planting_date: '2027-10-31', harvest_date: '2028-02-07' }]]
+    const f = resposta({ ...ROTACOES_FIXTURE, custom_rotations: [SIMULACAO_1_CULTURA.rotation] })
+    vi.stubGlobal('fetch', f)
+    const r = await recomendarRotacoes({ ...pedido('medium'), ano: 2027, custom: uma })
+    expect(JSON.parse(f.mock.calls[0][1].body).custom_rotations).toEqual([{ crops: uma[0] }])
+    expect(r.custom_rotations?.[0].crops).toHaveLength(1)
   })
   it('422 por causa das salvas: repete sem elas e avisa', async () => {
     const f = vi.fn()

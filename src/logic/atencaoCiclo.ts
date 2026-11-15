@@ -5,9 +5,10 @@
 // diária da simulação local (clima sintético); ela saiu destes indicadores e segue só no desenho da cena.
 // A API não entrega série diária nem por decêndio: dentro de uma fase, o valor é o mesmo em todos os decêndios.
 import type { SafraDef } from '../data/mock'
-import { NOME_FASE } from '../data/zarc'
+import { NOME_FASE } from '../data/fases'
 import type { Fase, ResRotacao } from './resiliencia'
 import { janelaLabel } from './periodo'
+import { t } from '../i18n'
 
 export type QuadroAgua = {
   idx: number; safra: number; cultura: string
@@ -36,7 +37,7 @@ export type PanoramaCiclo = {
   provisorio: boolean
 }
 
-/** Limiares de apresentação (os mesmos do widget), não níveis oficiais de manejo nem do ZARC. */
+/** Limiares de apresentação (os mesmos do widget), não níveis oficiais de manejo. */
 export const estadoAgua = (v: number | null): QuadroAgua['estado'] =>
   v == null ? 'none' : v < 0.45 ? 'risk' : v < 0.55 ? 'warn' : 'good'
 
@@ -77,11 +78,11 @@ export function atencaoCiclo(rot: ResRotacao | null, defs: SafraDef[]): Panorama
       de: q.idx, ate: q.idx, safra: q.safra, cultura: q.cultura, fase: q.fase, nomeFase: q.nomeFase,
       estado: q.estado, sensivel: q.sensivel, critica: q.critica, menorAtendimento: q.atendimento,
       reacao: q.sensivel
-        ? 'Fase sensível à falta de água para esta cultura (Ky ≥ 1 na API): a produção tende a cair mais que o déficit.'
-        : 'Restrição de água em fase de menor sensibilidade (Ky < 1 na API); não implica a mesma resposta da floração.',
+        ? t('Fase sensível à falta de água para esta cultura (Ky ≥ 1 na API): a produção tende a cair mais que o déficit.')
+        : t('Restrição de água em fase de menor sensibilidade (Ky < 1 na API); não implica a mesma resposta da floração.'),
       acao: maturacao
-        ? 'Confirme a maturidade no campo antes de alterar o manejo de água.'
-        : 'Confira a água na zona das raízes. Se houver irrigação, avalie a necessidade com assistência técnica; o índice não define lâmina nem momento de aplicação.',
+        ? t('Confirme a maturidade no campo antes de alterar o manejo de água.')
+        : t('Confira a água na zona das raízes. Se houver irrigação, avalie a necessidade com assistência técnica; o índice não define lâmina nem momento de aplicação.'),
     })
   }
   const provisorio = !!rot?.safras.some(s => s.risco?.metodo === 'MOCK')

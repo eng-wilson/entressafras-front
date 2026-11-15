@@ -19,7 +19,9 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:5173',
+    baseURL: process.env.PW_BASE_URL ?? 'http://localhost:5173',
+    // Os testes conferem o texto em português: o app escolhe o idioma pelo navegador.
+    locale: 'pt-BR',
     viewport: { width: 1440, height: 1120 },
     trace: 'on-first-retry',
   },
@@ -42,7 +44,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'pnpm dev',
-    url: 'http://localhost:5173',
+    url: process.env.PW_BASE_URL ?? 'http://localhost:5173',
     reuseExistingServer: true,
   },
 });

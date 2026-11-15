@@ -1,4 +1,5 @@
 import { useConjunto } from '../state/conjunto'
+import { t } from '../i18n'
 type Props = {
   mode: 'cal' | 'cmp'; onMode: (m: 'cal' | 'cmp') => void
   /** Abre o rascunho "Nova rotação" (ou foca o que já está aberto). */
@@ -12,17 +13,17 @@ export function RotationsHeader({ mode, onMode, onAdd, addBloqueio = null }: Pro
   return (
     <div className="mstrip">
       <div className="ms-title">
-        <h2 className="h2r">Rotações</h2>
-        <p>Safra {conj.ano}/{String(conj.ano + 1).slice(2)} · na ordem recomendada pela API</p>
+        <h2 className="h2r">{t('Rotações')}</h2>
+        <p>{t('Safra {ano} · na ordem recomendada pela API', { ano: `${conj.ano}/${String(conj.ano + 1).slice(2)}` })}</p>
       </div>
-      <button className="add" type="button" aria-label="Criar minha rotação" title={addBloqueio ?? 'Criar minha rotação'}
+      <button className="add" type="button" aria-label={t('Criar minha rotação')} title={addBloqueio ?? t('Criar minha rotação')}
         disabled={!!addBloqueio} onClick={onAdd}>
         <svg className="ic" aria-hidden="true">
           <use href="/canvas-icons.svg#i-plus" />
         </svg>
       </button>
       {/* Segmented control — Calendário / Comparação */}
-      <div className="segc" role="group" aria-label="Modo de visualização">
+      <div className="segc" role="group" aria-label={t('Modo de visualização')}>
         {(['cal', 'cmp'] as const).map(m => (
           <button
             key={m}
@@ -31,7 +32,7 @@ export function RotationsHeader({ mode, onMode, onAdd, addBloqueio = null }: Pro
             aria-pressed={mode === m}
             onClick={() => onMode(m)}
           >
-            {m === 'cal' ? 'Calendário' : 'Comparação'}
+            {m === 'cal' ? t('Calendário') : t('Comparação')}
           </button>
         ))}
       </div>

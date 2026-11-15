@@ -2,7 +2,7 @@
 
 > **Revisão de 15/11/2026:** com o contrato novo da API, Resiliência, Produtividade e Saúde do solo vêm das escalas 0–100 da API (`scores`), e a ordem vem do `rank` calculado pelas prioridades enviadas. Economia de água continua mock. As seções de Saúde do solo e Produtividade abaixo descrevem o mock anterior e ficam como histórico. Mapa atualizado: [INTEGRACAO_API.md](INTEGRACAO_API.md).
 
-> **Regra do projeto (14/11/2026):** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. A resiliência climática e a ordem das rotações vêm da API (`POST /api/rotations/recommendations`). O balanço hídrico ZARC que o front fazia foi removido. Água, solo e produtividade continuam ilustrativos (mock), porque a API ainda não os entrega. Detalhes: [INTEGRACAO_API.md](INTEGRACAO_API.md).
+> **Regra do projeto (14/11/2026):** quando a API resolve algo que a tela mostra, o front não calcula; vale só o dado da API. A resiliência climática e a ordem das rotações vêm da API (`POST /api/rotations/recommendations`). O balanço hídrico que o front fazia foi removido. Água, solo e produtividade continuam ilustrativos (mock), porque a API ainda não os entrega. Detalhes: [INTEGRACAO_API.md](INTEGRACAO_API.md).
 
 Revisão de 14/11/2026. Este documento descreve como a tela calcula cada um dos quatro indicadores (Resiliência climática, Economia de água, Saúde do solo e Produtividade) e a ordenação das rotações. Para cada um, indica a fórmula, a origem de cada dado (API real ou mock), as faixas de nota, onde a regra está no código e o que falta para sair do mock.
 
@@ -30,12 +30,11 @@ Código: [`src/logic/aptidao.ts`](../src/logic/aptidao.ts).
 
 | Eixo | Ótima | Média | Fraca | Função |
 |---|---|---|---|---|
-| Resiliência climática | 8 a 10 anos (risco 20% no ZARC) | 6 ou 7 anos (risco 30% ou 40%) | até 5 anos (acima de 40%) | `faixaAnos` / `classeAnos` |
-| Água, solo, produtividade | nota ≥ 70 | nota ≥ 40 | nota < 40 | `faixa` |
+| Todas as prioridades (resiliência, água, solo, produtividade) | nota ≥ 70 | nota ≥ 40 | nota < 40 | `faixa` / `faixaDaNota` |
 
 A ordem das rotações não usa estas notas: vem do `rank` da API.
 
-As faixas da resiliência seguem os níveis de risco do ZARC (risco da API até 20% = Ótima, 30–40% = Média, acima = Fraca). As dos outros eixos são cortes ilustrativos, sem fundamentação.
+Uma régua só para as 4 prioridades, própria do app: são cortes de apresentação, sem referência normativa. Na resiliência, a nota é a segurança hídrica (100 − risco hídrico da API): risco até 30% = Ótima, 31–60% = Média, acima de 60% = Fraca.
 
 ## Resiliência climática
 
@@ -44,9 +43,9 @@ As faixas da resiliência seguem os níveis de risco do ZARC (risco da API até 
 **Código:** [`src/logic/resiliencia.ts`](../src/logic/resiliencia.ts) só organiza o que veio da API; textos em [`aptidao.ts`](../src/logic/aptidao.ts); exibição dos dados em [`MemoriaCalculo.tsx`](../src/components/MemoriaCalculo.tsx).
 
 1. **Risco da safra:** `risk.risk_percentage` da cultura, sem nenhuma conta no front.
-2. **Leitura na régua do ZARC:** só para classificar (selo e cor): anos sem perda crítica = (100 − risco) ÷ 10. Até 20% = favorável (8 ou mais em 10), 30–40% = arriscado, acima de 40% = desfavorável.
+2. **Segurança hídrica:** só para classificar (selo e cor): 100 − risco, na régua única do app. 70 ou mais = favorável (risco até 30%), 40–69 = arriscado, abaixo de 40 = desfavorável (`classeSeguranca`).
 3. **Rotação:** vale a safra mais arriscada (a API entrega o risco por cultura, não por ano).
-4. **Nota no mapa:** `max(12, anos × 10)`.
+4. **Nota no mapa:** a segurança hídrica (com a API, `scores.water_security`), com piso de 12.
 5. **Sem risco na resposta:** "Sem dado de risco". A tela não estima nada no lugar.
 
 O que o front ainda calcula aqui, por não vir pronto da API: o consumo de água do ciclo (Σ Kc × ET0), com Kc e ET0 da API, e a posição das fases no calendário, pelas datas e estágios FAO-56 da API.
@@ -140,4 +139,3 @@ A ordem é o `rank` da API. As prioridades de "O que importa" vão na requisiç�
 - **CAD:** capacidade de água disponível no solo para as raízes, em mm.
 - **ISNA:** índice de satisfação das necessidades de água = água usada ÷ água necessária (0 a 1).
 - **p20:** chuva superada em 8 de cada 10 anos naquele decêndio.
-- **ZARC:** Zoneamento Agrícola de Risco Climático (MAPA/Embrapa). Define épocas de plantio com risco de perda de 20%, 30% ou 40%.

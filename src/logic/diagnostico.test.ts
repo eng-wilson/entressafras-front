@@ -22,11 +22,11 @@ describe('diagnostico (fase crítica da API)', () => {
     const d = diagnostico(rot)
     expect(d.criticos).toHaveLength(1)
     const p = d.criticos[0]
-    expect(p).toMatchObject({ safra: 1, nome: 'Milho safrinha', fase: 2, pct: 30, falhas: 3, cls: 'warn', isna: 0.66 })
+    expect(p).toMatchObject({ safra: 1, nome: 'Milho safrinha', fase: 2, pct: 45, cls: 'warn', isna: 0.66 })
     // A fase III no calendário vem dos estágios FAO-56 da API
     expect(rot.safras[1].calc.decendios.filter(x => x.fase === 2).map(x => x.idx)).toEqual(
       Array.from({ length: p.ate - p.de + 1 }, (_, i) => p.de + i))
-    expect(textoCritico(p)).toMatch(/^Milho safrinha, floração e enchimento de grãos \(.+\): risco hídrico de 30% \(API\)/)
+    expect(textoCritico(p)).toMatch(/^Milho safrinha, floração e enchimento de grãos \(.+\): risco hídrico de 45% \(API\)/)
     expect(d.limitante).toBe(1)
   })
 

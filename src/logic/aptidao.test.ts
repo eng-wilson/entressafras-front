@@ -5,7 +5,7 @@ import { conjuntoDaApi } from './rotacoesApi'
 const ROTS = CONJUNTO_LOCAL.rotacoes
 const API = conjuntoDaApi(ROTACOES_FIXTURE).rotacoes
 import { climaDeMock } from '../data/climaFixture'
-import { aptidao, detalheSafra, faixa, faixaAnos, motivo, motivoDetalhe, receitaHa, receitaSafra, safraLimitante } from './aptidao'
+import { aptidao, detalheSafra, faixa, faixaDaNota, motivo, motivoDetalhe, receitaHa, receitaSafra, safraLimitante } from './aptidao'
 import { resiliencia } from './resiliencia'
 
 const res = resiliencia(climaDeMock(), 'medio', CONJUNTO_LOCAL.rotacoes.map(r => r.safras))
@@ -27,8 +27,8 @@ describe('aptidao', () => {
     expect(aptidao(0, rot(0), ROTS).prod).toBe(57) // R$ 8.842 ÷ 15.378
   })
 
-  it('resiliência pelo risco da API, em escala fixa de 10 pontos por ano', () => {
-    expect([0, 1, 2, 3].map(i => aptidao(i, resApi.rotacoes[i], API).risco)).toEqual([80, 80, 70, 60])
+  it('resiliência é a segurança hídrica da API (0–100)', () => {
+    expect([0, 1, 2, 3].map(i => aptidao(i, resApi.rotacoes[i], API).risco)).toEqual([80, 80, 55, 60])
   })
 
   it('sem risco da API, a resiliência fica sem nota', () => {
@@ -54,14 +54,15 @@ describe('faixa e motivo', () => {
     expect(faixa(70).rotulo).toBe('Ótima')
   })
 
-  it('resiliência segue os níveis de risco do ZARC', () => {
-    expect([8, 7, 6, 5].map(n => faixaAnos(n).rotulo)).toEqual(['Ótima', 'Média', 'Média', 'Fraca'])
+  it('as 4 prioridades usam a mesma régua (resiliência inclusive); sem nota, sem faixa', () => {
+    expect([80, 70, 55, 39].map(n => faixaDaNota(n)!.rotulo)).toEqual(['Ótima', 'Ótima', 'Média', 'Fraca'])
+    expect(faixaDaNota(null)).toBeNull()
   })
 
   it('aponta a safra que limita a rotação, com o risco da API', () => {
     const r = resApi.rotacoes[2]
     expect(safraLimitante(r).nome).toBe('Milho safrinha')
-    expect(motivo(API[2], 'risco', r)).toBe('milho safrinha: risco hídrico de 30% (API, provisório)')
+    expect(motivo(API[2], 'risco', r)).toBe('milho safrinha: risco hídrico de 45% (API, provisório)')
     expect(motivo(API[2], 'solo', r)).toBe('cobertura viva em 208 de 366 dias; a troca de cultura muda de família botânica')
     expect(motivo(API[2], 'agua', r)).toBeNull()
   })
@@ -69,8 +70,8 @@ describe('faixa e motivo', () => {
   it('explica o risco da API e avisa quando ele é MOCK', () => {
     const milho = resApi.rotacoes[2].safras[1]
     expect(detalheSafra(milho)).toBe(
-      'Risco hídrico de milho safrinha calculado pela API Entressafras: em 30% das 10 safras históricas a perda por falta de água passou de 20%. ' +
-        'A perda média estimada por falta de água é de 14.5%. Leitura pela régua do ZARC: risco 30% no ZARC. ' +
+      'Risco hídrico de milho safrinha calculado pela API Entressafras: em 45% das 10 safras históricas a perda por falta de água passou de 20%. ' +
+        'A perda média estimada por falta de água é de 14,5%. Segurança hídrica: 55 de 100 (média). ' +
         'Atenção: o servidor ainda marca este valor como MOCK (provisório, não calculado com o clima do talhão).',
     )
     expect(detalheSafra(rot(0).safras[0])).toMatch(/não trouxe o risco hídrico/)

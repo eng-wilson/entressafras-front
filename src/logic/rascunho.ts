@@ -2,16 +2,17 @@
 // (POST /api/rotations/simulate). Aqui só a geometria da entrada do usuário: decêndios ↔ datas, limites do
 // arrasto e o pedido. Status, risco, ranking e janela de plantio vêm da resposta (regra "só dados da API").
 // Lacunas e decisões: fieldshift-nova-rotacao/LACUNAS-SIMULATE.md.
-import { MONTHS_SHORT } from '../data/mock'
 import { PERFIS } from '../data/perfis'
 import { NOMES_PT } from '../data/nomesCulturas'
 import type { CropSummary, CustomCropInput, RotationSimulationResponse, SweepPoint } from '../types'
-import { classeAnos } from './status'
-import { anosDoRisco } from './resiliencia'
+import { classeSeguranca } from './status'
+import { segurancaDoRisco } from './resiliencia'
 import { decendioDaData } from './rotacoesApi'
+import { mesCurtoDe } from './periodo'
+import { ordinal, t } from '../i18n'
 
 export const N_DEC = 36
-/** A API simula rotações de exatamente 2 culturas (L1). */
+/** A API simula rotações de 1 cultura (seguida de pousio até 31/ago) ou 2 (L1). */
 export const MAX_CULTURAS = 2
 /** O ciclo enviado precisa ficar entre 50% e 150% do ciclo de referência da cultura (422 fora disso). */
 export const FAIXA_CICLO: [number, number] = [0.5, 1.5]
@@ -94,14 +95,14 @@ export function comDatas(c: CulturaRascunho, plantio: string, ciclo: number, ano
 export function faixaDecendio(idx: number, ano: number): string {
   const ini = (idx % 3) * 10 + 1
   const fim = +fimDecendio(idx, ano).slice(8)
-  return `${ini}–${fim} ${MONTHS_SHORT[mesDoAno(idx)].toLowerCase()}`
+  return t('{dias} {mes}', { dias: `${ini}–${fim}`, mes: mesCurtoDe(mesDoAno(idx)) })
 }
 /** "21 out". */
-export const dataCurta = (iso: string) => `${+iso.slice(8, 10)} ${MONTHS_SHORT[(+iso.slice(5, 7) + 3) % 12].toLowerCase()}`
+export const dataCurta = (iso: string) => t('{dia} {mes}', { dia: +iso.slice(8, 10), mes: mesCurtoDe((+iso.slice(5, 7) + 3) % 12) })
 /** "Plantio 21 out · colheita 20 fev" (datas exatas, as que vão para a API). */
 export function datasCultura(c: CulturaRascunho, ano: number): string {
   const d = datasDe(c, ano)
-  return `Plantio ${dataCurta(d.plantio)} · colheita ${dataCurta(d.colheita)}`
+  return t('Plantio {plantio} · colheita {colheita}', { plantio: dataCurta(d.plantio), colheita: dataCurta(d.colheita) })
 }
 
 // ---------- Nomes ----------
@@ -113,7 +114,7 @@ export function nomeCultura(code: number, pos: number, fallback?: string): strin
   const p = PERFIS[code]
   if (p) return pos === 1 && p.nome2 ? p.nome2 : p.nome
   if (NOMES_PT[code]) return NOMES_PT[code]
-  return fallback ? maiuscula(fallback) : `Cultura ${code}`
+  return fallback ? maiuscula(fallback) : t('Cultura {code}', { code })
 }
 
 export type ItemCatalogo = { code: number; nome: string; comum: boolean }
@@ -132,8 +133,8 @@ export function catalogoRascunho(itens: CropSummary[]): ItemCatalogo[] {
 
 /** "Soja depois sorgo"; sem culturas, "Nova rotação". */
 export function tituloRascunho(nomes: string[]): string {
-  if (!nomes.length) return 'Nova rotação'
-  return nomes.map((n, i) => (i === 0 ? n : minuscula(n))).join(' depois ')
+  if (!nomes.length) return t('Nova rotação')
+  return nomes.map((n, i) => (i === 0 ? t(n) : minuscula(t(n)))).reduce((a, b) => t('{a} depois {b}', { a, b }))
 }
 
 // ---------- Ciclo e limites do arrasto ----------
@@ -210,12 +211,12 @@ export function arrastar(r: Rascunho, i: number, gesto: Gesto, alvo: number, ano
 export function textoLimite(m: MotivoLimite, i: number, nomes: string[], c: CulturaRascunho): string {
   const [min, max] = faixaCiclo(c)
   switch (m) {
-    case 'anterior': return `Limite: colheita de ${minuscula(nomes[i - 1] ?? '')}`
-    case 'seguinte': return `Limite: plantio de ${minuscula(nomes[i + 1] ?? '')}`
-    case 'cicloMin': return `Ciclo mínimo de ${minuscula(nomes[i])}: ${min} dias`
-    case 'cicloMax': return `Ciclo máximo de ${minuscula(nomes[i])}: ${max} dias`
-    case 'inicio': return 'Limite: início da safra (1 set)'
-    case 'fim': return 'Limite: fim da safra (31 ago)'
+    case 'anterior': return t('Limite: colheita de {cultura}', { cultura: minuscula(t(nomes[i - 1] ?? '')) })
+    case 'seguinte': return t('Limite: plantio de {cultura}', { cultura: minuscula(t(nomes[i + 1] ?? '')) })
+    case 'cicloMin': return t('Ciclo mínimo de {cultura}: {n} dias', { cultura: minuscula(t(nomes[i])), n: min })
+    case 'cicloMax': return t('Ciclo máximo de {cultura}: {n} dias', { cultura: minuscula(t(nomes[i])), n: max })
+    case 'inicio': return t('Limite: início da safra (1 set)')
+    case 'fim': return t('Limite: fim da safra (31 ago)')
   }
 }
 
@@ -248,9 +249,9 @@ export const cheio = (r: Rascunho) =>
   r.culturas.length >= MAX_CULTURAS || (r.culturas.length > 0 && r.culturas[r.culturas.length - 1].e >= N_DEC)
 
 // ---------- Pedido e resposta ----------
-/** Culturas do pedido (datas exatas); null com menos de 2 (a API só simula 2). */
+/** Culturas do pedido (datas exatas); null sem nenhuma. Com 1, a API simula a cultura seguida de pousio. */
 export function pedidoCulturas(r: Rascunho, ano: number): CustomCropInput[] | null {
-  if (r.culturas.length !== MAX_CULTURAS) return null
+  if (r.culturas.length === 0 || r.culturas.length > MAX_CULTURAS) return null
   return r.culturas.map(c => {
     if (c.plantioLivre) return { code: c.code }
     const d = datasDe(c, ano)
@@ -340,9 +341,9 @@ function ajustarCiclo(r: Rascunho, i: number, ano: number): Rascunho | null {
 export type Classe = 'good' | 'warn' | 'risk' | 'none'
 export const ROTULO_CLASSE: Record<Classe, string> = { good: 'Favorável', warn: 'Arriscado', risk: 'Desfavorável', none: 'Sem dado' }
 
-/** Mesma régua da tela principal: anos bons em 10 pelo risco hídrico da API; sem risco, sem dado. */
+/** Mesma régua da tela principal: segurança hídrica (100 − risco da API); sem risco, sem dado. */
 export const classeDoRisco = (pct: number | null | undefined): Classe =>
-  pct == null ? 'none' : classeAnos(anosDoRisco(pct))
+  pct == null ? 'none' : classeSeguranca(segurancaDoRisco(pct))
 
 const ORDEM: Classe[] = ['risk', 'warn', 'good']
 /** Pior classe entre as culturas com dado (a que não tem dado não entra); índice da cultura citada. */
@@ -358,7 +359,7 @@ export function piorClasse(cls: Classe[]): { cls: Classe; i: number } {
 export function pontoDoSweep(resp: RotationSimulationResponse | null, enviado: CustomCropInput[] | null): SweepPoint | null {
   if (!resp || !enviado || enviado.some(c => !c.planting_date || !c.harvest_date)) return null
   for (const sw of [resp.first_planting_sweep, resp.second_planting_sweep]) {
-    const p = sw?.points.find(pt => pt.crops.every((c, i) => c.code === enviado[i].code
+    const p = sw?.points.find(pt => pt.crops.length === enviado.length && pt.crops.every((c, i) => c.code === enviado[i].code
       && c.planting_date === enviado[i].planting_date && c.harvest_date === enviado[i].harvest_date))
     if (p) return p
   }
@@ -394,8 +395,9 @@ export function faixaDoSweep(resp: RotationSimulationResponse | null, i: number)
 }
 
 /** Selo "Ficaria em 3º" e cartão "3º de 14" (o rank compara com todos os candidatos, L6). */
-export const seloRanking = (rank: number, recomendada: boolean) => (recomendada ? `Ficaria em ${rank}º` : 'Fora das 4 melhores')
-export const posicaoRanking = (rank: number, entre: number) => `${rank}º de ${entre}`
+export const seloRanking = (rank: number, recomendada: boolean) =>
+  (recomendada ? t('Ficaria em {pos}', { pos: ordinal(rank, 'm') }) : t('Fora das 4 melhores'))
+export const posicaoRanking = (rank: number, entre: number) => t('{pos} de {total}', { pos: ordinal(rank, 'm'), total: entre })
 
 /** Dias sem cultura entre a colheita da 1ª e o plantio da 2ª (datas reais, L11). */
 export function diasSemCobertura(r: Rascunho, ano: number): number {
@@ -406,6 +408,12 @@ export function diasSemCobertura(r: Rascunho, ano: number): number {
   return total
 }
 
+/** Dias de pousio entre a colheita da última cultura e o fim da safra (31/ago), em datas reais. */
+export function diasDePousio(r: Rascunho, ano: number): number {
+  const ultima = r.culturas.at(-1)
+  return ultima ? Math.max(0, diasEntre(datasDe(ultima, ano).colheita, fimDecendio(N_DEC - 1, ano))) : 0
+}
+
 // ---------- Textos da API em português (L4) ----------
 export type Aviso = { titulo: string; texto: string }
 
@@ -413,32 +421,35 @@ export type Aviso = { titulo: string; texto: string }
 export function traduzirCheck(check: string, nomesApi: string[], nomes: string[]): Aviso {
   const nome = (n: string) => {
     const i = nomesApi.findIndex(x => x.toLowerCase() === n.trim().toLowerCase())
-    return i >= 0 ? nomes[i] : maiuscula(n.trim())
+    return i >= 0 ? t(nomes[i]) : maiuscula(n.trim())
   }
   let m = /^Both crops are (.+?): no botanical family change/.exec(check)
-  if (m) return { titulo: 'Mesma família botânica', texto: `As duas culturas são ${m[1]}: pragas, doenças e nematoides passam de uma para a outra.` }
+  if (m) return { titulo: t('Mesma família botânica'), texto: t('As duas culturas são {familia}: pragas, doenças e nematoides passam de uma para a outra.', { familia: m[1] }) }
   m = /^(.+?): planting on (\d{4}-\d{2}-\d{2}) is (\d+) days from the regional calendar date \((\d{4}-\d{2}-\d{2})\)/.exec(check)
-  if (m) return { titulo: 'Fora do calendário da região', texto: `${nome(m[1])}: plantio a ${m[3]} dias da data usual da região (${dataCurta(m[4])}). A recomendação aceita até 30.` }
+  if (m) return { titulo: t('Fora do calendário da região'), texto: t('{cultura}: plantio a {dias} dias da data usual da região ({data}). A recomendação aceita até 30.', { cultura: nome(m[1]), dias: m[3], data: dataCurta(m[4]) }) }
   m = /^(.+?): mean temperature over the cycle is outside/.exec(check)
-  if (m) return { titulo: 'Temperatura', texto: `${nome(m[1])}: a temperatura média do ciclo fica fora dos limites da cultura.` }
+  if (m) return { titulo: t('Temperatura'), texto: t('{cultura}: a temperatura média do ciclo fica fora dos limites da cultura.', { cultura: nome(m[1]) }) }
   m = /^(.+?) is harvested on (\d{4}-\d{2}-\d{2}), after the end of the agricultural year/.exec(check)
-  if (m) return { titulo: 'Colheita depois da safra', texto: `${nome(m[1])}: colheita em ${dataCurta(m[2])}, depois do fim da safra (31 ago).` }
-  return { titulo: 'Alerta agronômico', texto: check }
+  if (m) return { titulo: t('Colheita depois da safra'), texto: t('{cultura}: colheita em {data}, depois do fim da safra (31 ago).', { cultura: nome(m[1]), data: dataCurta(m[2]) }) }
+  return { titulo: t('Alerta agronômico'), texto: check }
 }
 
 
 /** Erro da simulação em português. `nomePorCodigo` dá o nome exibido de cada cultura. */
 export function mensagemErro(motivo: string, detalhe: string, nomePorCodigo: (code: number) => string): string {
-  if (motivo === 'rede') return 'Sem conexão com o serviço de simulação.'
-  if (motivo === 'http' || motivo === 'resposta_invalida') return 'O serviço de simulação não respondeu como esperado.'
+  if (motivo === 'rede') return t('Sem conexão com o serviço de simulação.')
+  if (motivo === 'http' || motivo === 'resposta_invalida') return t('O serviço de simulação não respondeu como esperado.')
   let m = /crop (\d+) has no FAO-56 water requirements/.exec(detalhe)
-  if (m) return `${nomePorCodigo(+m[1])} não tem dados de consumo de água para simular.`
+  if (m) return t('{cultura} não tem dados de consumo de água para simular.', { cultura: t(nomePorCodigo(+m[1])) })
   m = /crop (\d+) cycle of (\d+) days is outside .*reference cycle \((\d+) days\)/.exec(detalhe)
-  if (m) return `${nomePorCodigo(+m[1])}: ciclo de ${m[2]} dias fora da faixa aceita (${Math.ceil(+m[3] * FAIXA_CICLO[0])} a ${Math.floor(+m[3] * FAIXA_CICLO[1])} dias).`
-  if (/first crop must be planted inside the agricultural year/.test(detalhe)) return 'O plantio da 1ª cultura precisa ficar dentro da safra.'
-  if (/second crop must be planted after the harvest/.test(detalhe)) return 'A 2ª cultura não cabe aqui: ela precisa ser plantada depois da colheita da 1ª.'
-  if (/second crop must be planted by the end/.test(detalhe)) return 'A 2ª cultura precisa ser plantada antes do fim da safra.'
-  if (/harvest_date must be after/.test(detalhe)) return 'A colheita precisa ser depois do plantio.'
-  if (/unknown crop/.test(detalhe)) return 'Cultura desconhecida no catálogo da API.'
-  return 'Não foi possível simular com estas culturas e datas.'
+  if (m) {
+    return t('{cultura}: ciclo de {ciclo} dias fora da faixa aceita ({min} a {max} dias).',
+      { cultura: t(nomePorCodigo(+m[1])), ciclo: m[2], min: Math.ceil(+m[3] * FAIXA_CICLO[0]), max: Math.floor(+m[3] * FAIXA_CICLO[1]) })
+  }
+  if (/first crop must be planted inside the agricultural year/.test(detalhe)) return t('O plantio da 1ª cultura precisa ficar dentro da safra.')
+  if (/second crop must be planted after the harvest/.test(detalhe)) return t('A 2ª cultura não cabe aqui: ela precisa ser plantada depois da colheita da 1ª.')
+  if (/second crop must be planted by the end/.test(detalhe)) return t('A 2ª cultura precisa ser plantada antes do fim da safra.')
+  if (/harvest_date must be after/.test(detalhe)) return t('A colheita precisa ser depois do plantio.')
+  if (/unknown crop/.test(detalhe)) return t('Cultura desconhecida no catálogo da API.')
+  return t('Não foi possível simular com estas culturas e datas.')
 }

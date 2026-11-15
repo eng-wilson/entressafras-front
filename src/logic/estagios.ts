@@ -3,7 +3,7 @@
 // crescimento, floração, enchimento e maturação em 30/20/30/20% do miolo, colheita no último decêndio;
 // depois da última colheita, 3 decêndios de palhada e então pousio. Ilustrativo, como STAGES.
 import type { SafraDef, Stage, StageKey } from '../data/mock'
-import type { CulturaRef } from '../data/zarc'
+import type { CulturaRef } from '../data/fases'
 import { faseNoCiclo } from './resiliencia'
 
 /** Planta dos indicadores: só há soja e milho; as outras gramíneas usam o do milho, as demais o da soja. */

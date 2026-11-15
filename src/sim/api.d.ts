@@ -72,7 +72,11 @@ export type Talhao = {
 }
 
 /** O canvas precisa de tamanho CSS; botões de zoom opcionais em `.talhao-zoom` no mesmo pai. */
-export function createTalhao(canvas: HTMLCanvasElement, opcoes?: { rotuloClima?: boolean; resolucao?: number }): Talhao
+export function createTalhao(canvas: HTMLCanvasElement, opcoes?: {
+  rotuloClima?: boolean; resolucao?: number
+  /** Tradução dos textos da cena: chave em português, {nome} para variáveis. */
+  t?: (pt: string, vars?: Record<string, string | number>) => string
+}): Talhao
 export const CLASSES_SOLO: Record<string, ClasseSolo>
 /** Catálogo de culturas da simulação, por id. */
 export const CULTURAS: Record<string, { id: string; nome: string; cicloDias: number }>

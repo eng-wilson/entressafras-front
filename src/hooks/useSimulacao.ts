@@ -103,8 +103,13 @@ export function useSimulacao(base: BaseSimulacao | null, culturas: CustomCropInp
     setTentativa(n => n + 1)
   }, [])
 
-  const s0 = chavesFaixa && st.faixas[0]?.chave === chavesFaixa[0] ? st.faixas[0].dados : null
-  const s1 = chavesFaixa && st.faixas[1]?.chave === chavesFaixa[1] ? st.faixas[1].dados : null
+  // Uma faixa por cultura; com 1 cultura (seguida de pousio) não há a da 2ª.
+  const faixaValida = (i: number) => {
+    const k = chavesFaixa?.[i], f = st.faixas[i]
+    return k != null && f?.chave === k ? f.dados : null
+  }
+  const s0 = faixaValida(0)
+  const s1 = faixaValida(1)
   const sweeps = useMemo(() => [s0, s1], [s0, s1])
   const atual = !!chave && st.chave === chave && !!st.dados && JSON.stringify(st.enviado) === JSON.stringify(culturas)
   const previa = useMemo(

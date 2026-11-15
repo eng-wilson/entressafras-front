@@ -3,6 +3,7 @@ import type { Map as LMap } from 'leaflet'
 import { CircleMarker, MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMapEvents } from 'react-leaflet'
 import type { Contorno } from '../types'
 import { VISTA_INICIAL } from './exemplo'
+import { t } from '../i18n'
 
 export type Camada = 'mapa' | 'sat'
 const VERDE = '#1E7A3C'
@@ -43,7 +44,7 @@ export function MapaTalhao({ camada, pontos, fechado, desenhando, fundo, talhoes
       zoom={VISTA_INICIAL.zoom}
       zoomControl={false}
     >
-      <TileLayer key={camada} url={c.url} attribution={c.attribution} maxZoom={19} />
+      <TileLayer key={camada} url={c.url} attribution={t(c.attribution)} maxZoom={19} />
       <Cliques ativo={desenhando} onPonto={onPonto} />
       {talhoes.filter(t => t.contorno.length >= 3).map(t => (
         <Polygon key={t.id} positions={t.contorno} interactive={!desenhando && !!onEscolher}

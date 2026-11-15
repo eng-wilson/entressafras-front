@@ -3,6 +3,7 @@
 // Se o servidor marcar valores como MOCK em `warnings` ou em `risk.method`, a tela os mostra como provisórios.
 import type { CustomCropInput, Ponto, Priorities, RotationRecommendations, SoilType, Textura } from '../types'
 import { API_URL } from './clima'
+import { t } from '../i18n'
 
 export type MotivoErroRotacoes = 'rede' | 'http' | 'parametros' | 'resposta_invalida'
 
@@ -71,11 +72,11 @@ export function rotacoesValidas(x: unknown): x is RotationRecommendations {
   return x.rotations.every(rotacaoValida) && customValidas(x.custom_rotations)
 }
 
-/** custom_rotations da resposta: ausente ou rotações de 2 culturas com rank. */
+/** custom_rotations da resposta: ausente ou rotações de 1 cultura (seguida de pousio) ou 2, com rank. */
 function customValidas(v: unknown): boolean {
   if (v === undefined) return true
   return Array.isArray(v) && v.every(r => objeto(r) && typeof r.id === 'string' && Number.isInteger(r.rank)
-    && Array.isArray(r.crops) && r.crops.length === 2
+    && Array.isArray(r.crops) && r.crops.length >= 1 && r.crops.length <= 2
     && r.crops.every(c => objeto(c) && culturaValida(c.crop) && typeof c.planting_date === 'string' && DATA.test(c.planting_date)
       && typeof c.harvest_date === 'string' && DATA.test(c.harvest_date)))
 }
@@ -106,7 +107,7 @@ export async function recomendarRotacoes(p: PedidoRotacoes, signal?: AbortSignal
   } catch (e) {
     if (!(e instanceof ErroRotacoes) || e.motivo !== 'parametros') throw e
     const dados = await pedirRotacoes({ ...p, custom: [] }, signal)
-    return { ...dados, custom_rotations: [], warnings: [...dados.warnings, AVISO_SALVAS_INVALIDAS] }
+    return { ...dados, custom_rotations: [], warnings: [...dados.warnings, t(AVISO_SALVAS_INVALIDAS)] }
   }
 }
 

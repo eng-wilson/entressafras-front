@@ -2,6 +2,7 @@ import type { Textura } from '../types'
 import { CAMPOS_LAUDO, NAO_SEI, TEXTURAS, texturaEfetiva } from '../logic/solo'
 import { Icone } from './Icone'
 import type { FormSolo } from './dados'
+import { t } from '../i18n'
 
 type Props = { form: FormSolo; onMudar: (f: FormSolo) => void }
 
@@ -18,10 +19,10 @@ export function PassoSolo({ form, onMudar }: Props) {
     <>
       <section aria-labelledby="ob-tex-h">
         <div className="ob-tex-h">
-          <h3 id="ob-tex-h">Como é a terra desse talhão?</h3>
-          {tex.peloLaudo && <span className="ob-tex">Pelo laudo · {analise?.arg} % de argila</span>}
+          <h3 id="ob-tex-h">{t('Como é a terra desse talhão?')}</h3>
+          {tex.peloLaudo && <span className="ob-tex">{t('Pelo laudo · {arg} % de argila', { arg: analise?.arg })}</span>}
         </div>
-        <p className="ob-cinza">Pegue um punhado de terra úmida e aperte na mão.</p>
+        <p className="ob-cinza">{t('Pegue um punhado de terra úmida e aperte na mão.')}</p>
         <div className="ob-sgrid" role="radiogroup" aria-labelledby="ob-tex-h">
           {CARTOES.map(c => {
             const on = tex.textura === c.k
@@ -29,9 +30,9 @@ export function PassoSolo({ form, onMudar }: Props) {
               <button key={c.k} className={`ob-scard${on ? ' on' : ''}`} type="button" role="radio" aria-checked={on}
                 onClick={() => onMudar({ ...form, textura: c.k, texturaManual: true })}>
                 {c.foto
-                  ? <img className="ob-sph" src={c.foto} alt={c.alt} />
+                  ? <img className="ob-sph" src={c.foto} alt={c.alt && t(c.alt)} />
                   : <span className="ob-sph ob-sph-ic"><Icone id="i-pin" /></span>}
-                <span className="ob-sct"><b>{c.nome}</b><small>{c.dica}</small></span>
+                <span className="ob-sct"><b>{t(c.nome)}</b><small>{t(c.dica)}</small></span>
                 <span className="ob-sck" aria-hidden="true">{on && <Icone id="i-check" />}</span>
               </button>
             )
@@ -41,15 +42,15 @@ export function PassoSolo({ form, onMudar }: Props) {
 
       <section className="ob-well" aria-labelledby="ob-ana-h">
         <div className="ob-tex-h">
-          <h3 id="ob-ana-h">Tem análise de solo?</h3>
-          <span className="ob-cinza">Opcional</span>
+          <h3 id="ob-ana-h">{t('Tem análise de solo?')}</h3>
+          <span className="ob-cinza">{t('Opcional')}</span>
         </div>
         {!analise ? (
           <>
-            <p className="ob-cinza">Com o laudo, as sugestões levam em conta a acidez, o fósforo e o potássio.</p>
+            <p className="ob-cinza">{t('Com o laudo, as sugestões levam em conta a acidez, o fósforo e o potássio.')}</p>
             <div className="ob-row ob-esq">
               <button className="ob-btn" type="button" onClick={() => onMudar({ ...form, analise: {}, texturaManual: false })}>
-                <Icone id="i-pencil" />Digitar valores
+                <Icone id="i-pencil" />{t('Digitar valores')}
               </button>
             </div>
           </>
@@ -67,7 +68,7 @@ export function PassoSolo({ form, onMudar }: Props) {
               ))}
             </div>
             <button className="ob-lnk" type="button" onClick={() => onMudar({ ...form, analise: null, texturaManual: true })}>
-              Remover análise
+              {t('Remover análise')}
             </button>
           </>
         )}
@@ -81,9 +82,9 @@ function FragmentoCampo({ k, nome, sub, unidade, exemplo, valor, onMudar }:
   const id = `ob-${k}`
   return (
     <>
-      <label className="ob-l" htmlFor={id}>{nome}<small>{sub}</small></label>
+      <label className="ob-l" htmlFor={id}>{t(nome)}<small>{t(sub)}</small></label>
       <span className="ob-tf ob-num">
-        <input id={id} type="text" inputMode="decimal" placeholder={exemplo} value={valor} onChange={e => onMudar(e.target.value)} />
+        <input id={id} type="text" inputMode="decimal" placeholder={t(exemplo)} value={valor} onChange={e => onMudar(e.target.value)} />
         <span className="ob-u">{unidade}</span>
       </span>
     </>

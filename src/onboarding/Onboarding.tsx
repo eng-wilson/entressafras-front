@@ -16,6 +16,8 @@ import { HudDesenho } from './HudDesenho'
 import { Icone } from './Icone'
 import { JanelaPassos } from './JanelaPassos'
 import { MapaTalhao, type Camada } from './MapaTalhao'
+import { t, type Idioma } from '../i18n'
+import { SeletorIdioma } from '../components/SeletorIdioma'
 
 export type ModoOnboarding = 'novo' | 'editar' | 'redesenhar' | 'talhoes'
 
@@ -29,6 +31,8 @@ type Props = {
   /** Modo talhoes: todos os talhões salvos e a troca do ativo. */
   talhoes?: Talhao[]
   onEscolher?: (id: string) => void
+  /** Troca o idioma (seletor PT | EN no topo, como no cabeçalho do app). */
+  onIdioma?: (i: Idioma) => void
 }
 
 type Tela = 'vazio' | 'desenho' | 'janela' | 'lista'
@@ -36,7 +40,7 @@ type Tela = 'vazio' | 'desenho' | 'janela' | 'lista'
 const telaInicial = (modo: ModoOnboarding): Tela =>
   modo === 'novo' ? 'vazio' : modo === 'redesenhar' ? 'desenho' : modo === 'talhoes' ? 'lista' : 'janela'
 
-export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [], onEscolher }: Props) {
+export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [], onEscolher, onIdioma }: Props) {
   const [tela, setTela] = useState<Tela>(telaInicial(modo))
   const [pontos, setPontos] = useState<Contorno>(modo === 'editar' && talhao ? talhao.contorno : [])
   const [camada, setCamada] = useState<Camada>('sat') // satélite por padrão: o agricultor reconhece o talhão pela imagem
@@ -55,7 +59,7 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [],
     } else if (modo === 'novo' && 'geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
         p => mapa.setView([p.coords.latitude, p.coords.longitude], 15),
-        () => setAviso('Sem acesso à sua localização: mostrando Rio Verde, GO. Use a busca para achar sua fazenda.'),
+        () => setAviso(t('Sem acesso à sua localização: mostrando Rio Verde, GO. Use a busca para achar sua fazenda.')),
         { timeout: 8000 },
       )
     }
@@ -102,49 +106,50 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [],
     if (!q || !mapa) return
     const lugar = await buscar(q)
     if (lugar) { mapa.setView([lugar.lat, lugar.lon], 14); setAviso('') }
-    else setAviso(`Nada encontrado para "${q}". Tente o nome da cidade ou navegue pelo mapa.`)
+    else setAviso(t('Nada encontrado para "{busca}". Tente o nome da cidade ou navegue pelo mapa.', { busca: q }))
   }
   function minhaLocalizacao() {
-    if (!('geolocation' in navigator)) { setAviso('Este navegador não informa a localização.'); return }
+    if (!('geolocation' in navigator)) { setAviso(t('Este navegador não informa a localização.')); return }
     navigator.geolocation.getCurrentPosition(
       p => { mapa?.setView([p.coords.latitude, p.coords.longitude], 15); setAviso('') },
-      () => setAviso('Não foi possível obter a sua localização.'),
+      () => setAviso(t('Não foi possível obter a sua localização.')),
     )
   }
   function comecarDesenho() { setPontos([]); setAviso(''); setTela('desenho') }
 
-  const subtitulo = modo === 'novo' ? 'Nenhum talhão ainda'
-    : modo === 'talhoes' ? `${talhoes.length} ${talhoes.length === 1 ? 'talhão' : 'talhões'}` : talhao?.nome ?? ''
+  const subtitulo = modo === 'novo' ? t('Nenhum talhão ainda')
+    : modo === 'talhoes' ? (talhoes.length === 1 ? t('{n} talhão', { n: 1 }) : t('{n} talhões', { n: talhoes.length })) : talhao?.nome ?? ''
   return (
     <div className="ob">
       <div className="ob-win">
         <header className="ob-bar">
           <div className="ob-brand"><span className="ob-logo"><Icone id="i-leaf" /></span><span>Field Shift</span></div>
           <div className="ob-tit">
-            <div className="ob-t">{modo === 'redesenhar' ? 'Redesenhar talhão' : 'Talhões'}</div>
+            <div className="ob-t">{modo === 'redesenhar' ? t('Redesenhar talhão') : t('Talhões')}</div>
             <div className="ob-st">{subtitulo}</div>
           </div>
           <div className="ob-acts">
-            <div className="ob-seg ob-hide-sm" role="radiogroup" aria-label="Tipo de mapa">
+            {onIdioma && <SeletorIdioma onTrocar={onIdioma} />}
+            <div className="ob-seg ob-hide-sm" role="radiogroup" aria-label={t('Tipo de mapa')}>
               {(['mapa', 'sat'] as const).map(c => (
                 <button key={c} type="button" role="radio" aria-checked={camada === c} className={camada === c ? 'on' : ''} onClick={() => setCamada(c)}>
-                  {c === 'mapa' ? 'Mapa' : 'Satélite'}
+                  {c === 'mapa' ? t('Mapa') : t('Satélite')}
                 </button>
               ))}
             </div>
             <form className="ob-tf ob-busca ob-hide-sm" role="search" onSubmit={buscarLugar}>
               <Icone id="i-search" />
-              <input type="search" placeholder="Buscar local" aria-label="Buscar local no mapa" value={busca} onChange={e => setBusca(e.target.value)} />
+              <input type="search" placeholder={t('Buscar local')} aria-label={t('Buscar local no mapa')} value={busca} onChange={e => setBusca(e.target.value)} />
             </form>
             {((modo === 'novo' && tela === 'vazio') || tela === 'lista') && (
-              <button className="ob-btn ob-pri" type="button" onClick={comecarDesenho}><Icone id="i-pencil" />{tela === 'lista' ? 'Novo talhão' : 'Desenhar talhão'}</button>
+              <button className="ob-btn ob-pri" type="button" onClick={comecarDesenho}><Icone id="i-pencil" />{tela === 'lista' ? t('Novo talhão') : t('Desenhar talhão')}</button>
             )}
             {onCancelar && (
-              <button className="ob-tb" type="button" onClick={onCancelar} aria-label="Voltar às sugestões" title="Voltar às sugestões"><Icone id="i-x" /></button>
+              <button className="ob-tb" type="button" onClick={onCancelar} aria-label={t('Voltar às sugestões')} title={t('Voltar às sugestões')}><Icone id="i-x" /></button>
             )}
           </div>
         </header>
-        <main className="ob-main" aria-label="Mapa para desenhar o talhão">
+        <main className="ob-main" aria-label={t('Mapa para desenhar o talhão')}>
           <MapaTalhao
             camada={camada}
             pontos={pontos}
@@ -163,8 +168,8 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [],
           {tela === 'vazio' && <EstadoVazio onDesenhar={comecarDesenho} onExemplo={() => onConcluir(dadosExemplo())} />}
           {tela === 'lista' && (
             <section className="ob-lista" aria-labelledby="ob-lista-t">
-              <h2 id="ob-lista-t">Seus talhões</h2>
-              <p className="ob-cinza ob-peq">Escolha um talhão aqui ou no mapa.</p>
+              <h2 id="ob-lista-t">{t('Seus talhões')}</h2>
+              <p className="ob-cinza ob-peq">{t('Escolha um talhão aqui ou no mapa.')}</p>
               <ul>
                 {talhoes.map(t => (
                   <li key={t.id}>
@@ -177,16 +182,16 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [],
                   </li>
                 ))}
               </ul>
-              <button className="ob-btn" type="button" onClick={comecarDesenho}><Icone id="i-plus" />Desenhar novo talhão</button>
+              <button className="ob-btn" type="button" onClick={comecarDesenho}><Icone id="i-plus" />{t('Desenhar novo talhão')}</button>
             </section>
           )}
           <div className="ob-mctl" style={{ right: 16, bottom: 32 }}>
-            <button type="button" onClick={() => mapa?.zoomIn()} aria-label="Aproximar"><Icone id="i-plus" /></button>
+            <button type="button" onClick={() => mapa?.zoomIn()} aria-label={t('Aproximar')}><Icone id="i-plus" /></button>
             <span />
-            <button type="button" onClick={() => mapa?.zoomOut()} aria-label="Afastar"><Icone id="i-minus" /></button>
+            <button type="button" onClick={() => mapa?.zoomOut()} aria-label={t('Afastar')}><Icone id="i-minus" /></button>
           </div>
           <div className="ob-mctl" style={{ right: 16, bottom: 114 }}>
-            <button type="button" onClick={minhaLocalizacao} aria-label="Ir para minha localização"><Icone id="i-locate" /></button>
+            <button type="button" onClick={minhaLocalizacao} aria-label={t('Ir para minha localização')}><Icone id="i-locate" /></button>
           </div>
           <p className="ob-aviso" role="status">{aviso}</p>
         </main>

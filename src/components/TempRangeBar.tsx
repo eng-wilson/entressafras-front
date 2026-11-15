@@ -1,4 +1,5 @@
 import type { TempResult } from '../types'
+import { t } from '../i18n'
 
 // Widget de temperatura (padrão dos widgets da cena): mínima e máxima do decêndio em destaque e a faixa
 // entre elas como uma cápsula sobre a escala de 0 a 45 °C, com os limites da cultura marcados.
@@ -23,20 +24,20 @@ export function TempRangeBar({ temp, carregando = false, carregandoReferencia = 
     .filter(l => l.x >= 0)
 
   return (
-    <div className="pl wg" aria-label={carregando ? 'Temperatura: carregando' : temp.aria}>
+    <div className="pl wg" aria-label={carregando ? t('Temperatura: carregando') : temp.aria}>
       <span className="wg-h">
         <svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-temp" /></svg>
-        Temperatura
+        {t('Temperatura')}
       </span>
       <span className="wg-v">
         {carregando ? <span className="sk sk-num" /> : temp.semDado ? '–' : (
-          <><span className="wg-min">{temp.loLabel}</span><small> a </small><span className="wg-max">{temp.hiLabel}</span></>
+          <><span className="wg-min">{temp.loLabel}</span><small> {t('a')} </small><span className="wg-max">{temp.hiLabel}</span></>
         )}
       </span>
       {carregando || carregandoReferencia ? <span className="sk sk-chip" /> : (
         <span className={`pl-s wg-s ${temp.semDado || temp.label === 'Sem referência' ? 'neu' : temp.cls}`}>
           <svg className="ic" aria-hidden="true"><use href={`/canvas-icons.svg#${temp.icon.replace('#', '')}`} /></svg>
-          {temp.label}
+          {t(temp.label)}
         </span>
       )}
       <div className="wg-g" aria-hidden="true">
@@ -46,7 +47,7 @@ export function TempRangeBar({ temp, carregando = false, carregandoReferencia = 
           {!temp.semDado && !carregando && <span className="wg-cap" style={capsula} />}
         </div>
       </div>
-      <span className="wg-f">mínima e máxima do decêndio</span>
+      <span className="wg-f">{t('mínima e máxima do decêndio')}</span>
     </div>
   )
 }

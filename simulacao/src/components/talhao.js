@@ -23,7 +23,8 @@ const MODO = { solo: { tipo: 'real' }, planta: { modo: 'real', ganho: 1 } };
 
 // opcoes.rotuloClima: false = sem a etiqueta de clima desenhada no topo do canvas.
 // opcoes.resolucao: lado, em pixels, das texturas do solo (topo e perfil), repintadas a cada dia; padrão 1024.
-export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = {}) {
+// t (opcional): tradução dos textos da cena (a chave é o texto em português; {nome} recebe variáveis).
+export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024, t = (s, v) => (v ? s.replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m) : s) } = {}) {
     const ctx = canvas.getContext('2d');
     const cam = createCamera();
     const cenas = new Map();     // cultura → { lavoura, diorama }
@@ -127,12 +128,13 @@ export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = 
         const { cena, sim, crop, classe, dia } = atual;
         const reg = sim.plantas[dia];
         atual.clima = climaVisual(sim, dia);
-        // Colhido (pousio): t antes da 1ª fase = nenhuma planta. A cultura nunca fica de pé depois da colheita.
-        const t = atual.colhido ? -1 : sim.termica?.progresso[dia] ?? dia / crop.cicloDias;
-        cena.lavoura.atualizar(t, reg, { ...MODO.planta, clima: atual.clima, pragas: sim.pragasVisuais });
+        // Colhido (pousio): progresso antes da 1ª fase = nenhuma planta. A cultura nunca fica de pé depois da colheita.
+        // (Não chamar de `t`: é o nome da função de tradução usada logo abaixo.)
+        const progresso = atual.colhido ? -1 : sim.termica?.progresso[dia] ?? dia / crop.cicloDias;
+        cena.lavoura.atualizar(progresso, reg, { ...MODO.planta, clima: atual.clima, pragas: sim.pragasVisuais });
         cena.diorama.atualizar({ sim, dia, classe, modo: MODO.solo, lavoura: cena.lavoura, reg });
-        const estado = atual.clima.seca > 0.7 ? 'Seca intensa' : atual.clima.seca > 0.25 ? 'Estresse por seca ou calor' : atual.clima.chuva >= 30 ? 'Chuva intensa' : atual.clima.chuva >= 0.2 ? 'Chuva' : 'Sem chuva';
-        canvas.setAttribute('aria-label', `Talhão simulado: ${estado}, ${atual.clima.chuva.toFixed(1)} mm de chuva no dia. Arraste para mover; mais e menos para zoom; zero para restaurar.`);
+        const estado = t(atual.clima.seca > 0.7 ? 'Seca intensa' : atual.clima.seca > 0.25 ? 'Estresse por seca ou calor' : atual.clima.chuva >= 30 ? 'Chuva intensa' : atual.clima.chuva >= 0.2 ? 'Chuva' : 'Sem chuva');
+        canvas.setAttribute('aria-label', t('Talhão simulado: {estado}, {chuva} mm de chuva no dia. Arraste para mover; mais e menos para zoom; zero para restaurar.', { estado, chuva: atual.clima.chuva.toFixed(1) }));
     }
 
     const t0 = performance.now();

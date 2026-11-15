@@ -1,4 +1,4 @@
-import type { CulturaRef, ZarcId } from './zarc'
+import type { CulturaRef } from './fases'
 import type { CropCalendarInfo, CropRisk, Priorities, RotationScores, SoilInfo, SoilProperties, SoilProtection, RotationCrop } from '../types'
 
 // TMIN, TMAX e THIS_RAIN alimentam apenas testes e a fixture de clima.
@@ -48,15 +48,13 @@ export const STAGES: Stage[] = [
   { crop: null,    k: 'bare',  name: 'Pousio',                        from: 32, to: 35 },
 ]
 
-// Cada safra aponta a curva de consumo de água (ref → data/zarc.ts, KC) e a portaria do ZARC que a avalia (zarc).
+// Cada safra aponta a cultura do catálogo (ref), de onde vêm os requisitos e o Kc de reserva.
 // Em consórcio vale a cultura que define a safra: o milho (vendido); na cobertura, o milheto.
 /** Janela de uma safra em decêndios (idx 0 = 1–10 set), inclusiva. */
 export type SafraDef = {
   nome: string
   /** Id da cultura no catálogo local (data/culturas.ts): requisitos do EcoCrop e Kc de reserva. */
   ref: CulturaRef | string
-  /** Portaria do ZARC que avalia a safra; null = sem critério conhecido (a resiliência fica "Sem dado"). */
-  zarc: ZarcId | null
   de: number; ate: number
   cobertura?: boolean
   /** Cultura plantada junto, só no desenho do talhão (id do simulador). */
@@ -133,10 +131,10 @@ export type ConjuntoRotacoes = {
 
 // Conjunto local (o protótipo original): 4 rotações fixas, na ordem de CT. Hoje alimenta só testes e fixtures.
 export const SAFRAS: SafraDef[][] = [
-  [{ nome: 'Soja', ref: 'soja', zarc: 'soja', de: 5, ate: 15 }, { nome: 'Crotalária + milheto', ref: 'milheto', zarc: 'coberturaMilheto', de: 16, ate: 27, cobertura: true, companheira: 'crotalaria_spectabilis' }],
-  [{ nome: 'Soja', ref: 'soja', zarc: 'soja', de: 5, ate: 15 }, { nome: 'Sorgo', ref: 'sorgo', zarc: 'sorgoGranifero', de: 16, ate: 27 }],
-  [{ nome: 'Soja precoce', ref: 'soja', zarc: 'soja', de: 3, ate: 12 }, { nome: 'Milho + braquiária', ref: 'milho', zarc: 'milhoBraquiaria', de: 13, ate: 26, companheira: 'brizantha_marandu' }],
-  [{ nome: 'Soja', ref: 'soja', zarc: 'soja', de: 5, ate: 15 }, { nome: 'Milho safrinha', ref: 'milho', zarc: 'milho2', de: 16, ate: 28 }],
+  [{ nome: 'Soja', ref: 'soja', de: 5, ate: 15 }, { nome: 'Crotalária + milheto', ref: 'milheto', de: 16, ate: 27, cobertura: true, companheira: 'crotalaria_spectabilis' }],
+  [{ nome: 'Soja', ref: 'soja', de: 5, ate: 15 }, { nome: 'Sorgo', ref: 'sorgo', de: 16, ate: 27 }],
+  [{ nome: 'Soja precoce', ref: 'soja', de: 3, ate: 12 }, { nome: 'Milho + braquiária', ref: 'milho', de: 13, ate: 26, companheira: 'brizantha_marandu' }],
+  [{ nome: 'Soja', ref: 'soja', de: 5, ate: 15 }, { nome: 'Milho safrinha', ref: 'milho', de: 16, ate: 28 }],
 ]
 
 // Scores ilustrativos (menor = melhor); índice = rotação 0–3. Resiliência e produtividade já não vêm daqui:

@@ -1,7 +1,8 @@
 import type { SoilResult, StatusLevel } from '../types'
+import { numero, t } from '../i18n'
 
 const TRACK_W = 268
-const fmtPt = (v: number) => v.toFixed(2).replace('.', ',')
+const fmtPt = (v: number) => numero(v, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 
 /**
  * Widget "Água para a cultura": atendimento à demanda (ETa/ETc) da fase em que a cultura está, da API
@@ -14,16 +15,20 @@ export function soilGauge(atendimento: number | null, hasCrop: boolean, provisor
   if (hasCrop && atendimento != null && Number.isFinite(atendimento)) {
     const wv = Math.max(0, Math.min(1, atendimento))
     const cls: StatusLevel = wv < 0.45 ? 'risk' : wv < 0.55 ? 'warn' : 'good'
-    const SL: Record<string,[string,string]> = { good:['Bom','#i-okc'], warn:['Atenção','#i-alert'], risk:['Crítico','#i-xc'] }
+    const SL: Record<string,[string,string]> = { good:[t('Bom'),'#i-okc'], warn:[t('Atenção'),'#i-alert'], risk:[t('Crítico'),'#i-xc'] }
     return { ...gradCrop, cls, label:SL[cls][0], icon:SL[cls][1],
       val: fmtPt(wv), cx: wv*TRACK_W,
-      aria: `Atendimento à demanda de água nesta fase ${fmtPt(wv)}, ${SL[cls][0]}, média histórica da API${provisorio ? ', provisório' : ''}`,
-      imp: `Atendimento à demanda na fase, média das safras históricas da API${provisorio ? ' (provisório)' : ''}.`, fix: 'Confira os momentos de atenção e confirme as condições no campo.', hasCrop: true,
-      m1: 0.45*TRACK_W, m2: 0.55*TRACK_W, unit: `ETa ÷ ETc · fase, média da API${provisorio ? ' · provisório' : ''}` }
+      aria: provisorio
+        ? t('Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica da API, provisório', { valor: fmtPt(wv), rotulo: SL[cls][0] })
+        : t('Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica da API', { valor: fmtPt(wv), rotulo: SL[cls][0] }),
+      imp: provisorio ? t('Atendimento à demanda na fase, média das safras históricas da API (provisório).')
+        : t('Atendimento à demanda na fase, média das safras históricas da API.'),
+      fix: t('Confira os momentos de atenção e confirme as condições no campo.'), hasCrop: true,
+      m1: 0.45*TRACK_W, m2: 0.55*TRACK_W, unit: provisorio ? t('ETa ÷ ETc · fase, média da API · provisório') : t('ETa ÷ ETc · fase, média da API') }
   }
 
-  return { ...gradSoil, cls: 'good', semDado: true, label: hasCrop ? 'Sem dado' : 'Sem demanda', icon: '#i-info',
-    val: '—', cx: 0, aria: hasCrop ? 'Atendimento à demanda de água sem dado' : 'Sem cultura no período; demanda de água não avaliada',
-    imp: 'A API não trouxe o atendimento à demanda desta fase.', fix: 'A tela não estima um valor no lugar.', hasCrop,
+  return { ...gradSoil, cls: 'good', semDado: true, label: hasCrop ? t('Sem dado') : t('Sem demanda'), icon: '#i-info',
+    val: '—', cx: 0, aria: hasCrop ? t('Atendimento à demanda de água sem dado') : t('Sem cultura no período; demanda de água não avaliada'),
+    imp: t('A API não trouxe o atendimento à demanda desta fase.'), fix: t('A tela não estima um valor no lugar.'), hasCrop,
     m1: null, m2: null, unit: 'ETa ÷ ETc · API' }
 }
