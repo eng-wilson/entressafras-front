@@ -75,6 +75,8 @@ export const DADOS = [
     servido: a => (a.rotacoes?.soil_properties ? 'real' : null), precisa: '—' },
   { dado: 'Economia de água da rotação', fonte: null, front: 'Eixo "Economia de água" (`src/data/perfis.ts`, mock)', emUso: false,
     servido: () => null, precisa: 'Indicador de consumo ou eficiência de água por rotação' },
+  { dado: 'Lucro estimado por rotação', fonte: 'rotacoes', front: 'Cards da comparação, dentro de Produtividade (aparece quando a API envia)', emUso: true,
+    servido: a => deRotacoes(a, x => rot0(x)?.economics?.profit_brl_per_ha != null), precisa: 'Lucro por hectare da rotação (receita − custo), com método e data dos preços' },
   { dado: 'Produção (sc/ha) e preço por cultura', fonte: null, front: 'Tabela de comparação e receita (`src/data/perfis.ts`, mock)', emUso: false,
     servido: () => null, precisa: 'Produtividade e preço por cultura e região, com data' },
   { dado: 'Efeito da sequência nas pragas', fonte: null, front: 'Selo "Mais pragas" e texto (`src/data/perfis.ts`, mock)', emUso: false,

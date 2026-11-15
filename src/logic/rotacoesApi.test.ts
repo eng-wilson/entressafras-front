@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
 import { SIMULACAO_FIXTURE } from '../data/simulacaoFixture'
 import { climaDeMock } from '../data/climaFixture'
-import { conjuntoDaApi, decendioDaData, historicoEcoCrop, mesDaData, nomeRotacao, prioridadesApi, textoProtecaoSolo } from './rotacoesApi'
+import { conjuntoDaApi, decendioDaData, historicoEcoCrop, lucroDaApi, mesDaData, mesmasCulturas, nomeRotacao, prioridadesApi, rotacaoAtualEcoCrop, textoProtecaoSolo } from './rotacoesApi'
 import { resiliencia } from './resiliencia'
 import { diagnostico } from './diagnostico'
 import { aptidao } from './aptidao'
 import { estagios } from './estagios'
-import type { RotationRecommendations } from '../types'
+import type { CustomRotation, RotationRecommendations } from '../types'
 
 const conj = conjuntoDaApi(ROTACOES_FIXTURE)
 
@@ -150,5 +150,55 @@ describe('rotações salvas (custom_rotations)', () => {
   it('sem a salva correspondente, a custom fica de fora', () => {
     const c = conjuntoDaApi({ ...ROTACOES_FIXTURE, custom_rotations: [custom(1)] }, null, [])
     expect(c.rotacoes).toHaveLength(4)
+  })
+})
+
+describe('rotação atual do talhão (última safra do histórico) na comparação', () => {
+  const hist = { '2024/25': { c1: 'soja', c2: 'sorgo' }, '2025/26': { c1: 'soja', c2: 'milho' } }
+  const custom = (codes: [number, number], rank: number) => {
+    const base = structuredClone(ROTACOES_FIXTURE.rotations[0])
+    base.rank = rank
+    base.crops = [structuredClone(base.crops[0]), structuredClone(base.crops[1])]
+    base.crops[0].crop.eco_port_code = codes[0]
+    base.crops[1].crop.eco_port_code = codes[1]
+    // Só os campos que conjuntoDaApi lê (rank, culturas, notas)
+    return base as unknown as CustomRotation
+  }
+
+  it('vai em custom_rotations com os códigos EcoCrop da safra mais recente, sem datas', () => {
+    expect(rotacaoAtualEcoCrop(hist)).toEqual([{ code: 1150 }, { code: 2175 }])
+    expect(rotacaoAtualEcoCrop({ '2025/26': { c1: 'soja', c2: 'nao_plantei' } })).toBeNull()
+    expect(rotacaoAtualEcoCrop(null)).toBeNull()
+    expect(mesmasCulturas([{ code: 1150 }, { code: 2175 }], [{ code: 1150, planting_date: '2027-10-01' }, { code: 2175 }])).toBe(true)
+  })
+
+  it('entra na lista como "Atual", sem ser salva, na posição que a API deu', () => {
+    const r: RotationRecommendations = { ...ROTACOES_FIXTURE, custom_rotations: [custom([2175, 1150], 2)] }
+    const c = conjuntoDaApi(r, { '2025/26': { c1: 'milho', c2: 'soja' } }, [{ id: 'historico', em: 0, historico: true }])
+    expect(c.rotacoes).toHaveLength(5)
+    const atual = c.rotacoes.find(x => x.historico)!
+    expect(atual).toMatchObject({ id: 'historico', ct: { atual: true } })
+    expect(atual.salva).toBeUndefined()
+    expect(c.rotacoes.indexOf(atual)).toBe(1)
+  })
+
+  it('se uma recomendada já tem as mesmas culturas, a cópia sai e a recomendada fica marcada "Atual"', () => {
+    const [a, b] = ROTACOES_FIXTURE.rotations[2].crops.map(x => x.crop.eco_port_code) as [number, number]
+    const r: RotationRecommendations = { ...ROTACOES_FIXTURE, custom_rotations: [custom([a, b], 3)] }
+    const c = conjuntoDaApi(r, hist, [{ id: 'historico', em: 0, historico: true }])
+    expect(c.rotacoes).toHaveLength(4)
+    expect(c.rotacoes.some(x => x.historico)).toBe(false)
+    expect(c.rotacoes[2].ct.atual).toBe(true)
+  })
+})
+
+describe('lucro estimado (contrato provisório)', () => {
+  it('vem da API quando enviado; sem o campo, fica ausente (nada estimado no front)', () => {
+    const r = structuredClone(ROTACOES_FIXTURE)
+    r.rotations[0].economics = { profit_brl_per_ha: 1234.5 }
+    expect(lucroDaApi(r.rotations[0])).toBe(1234.5)
+    const c = conjuntoDaApi(r)
+    expect(c.rotacoes[0].lucro).toBe(1234.5)
+    expect(c.rotacoes[1].lucro).toBeNull()
   })
 })

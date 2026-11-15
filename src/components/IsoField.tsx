@@ -18,6 +18,8 @@ export type EntradaSim = {
   /** Safra da rotação (índice) e fração do ciclo mostrada (0 = plantio, 1 = colheita). */
   posicao: number
   fracao: number
+  /** Pousio depois da última colheita: a cena mostra o solo sem planta (nunca a cultura de pé). */
+  colhido?: boolean
   classeId: string
   respostas: RespostasSolo
   normais: Normais
@@ -87,6 +89,7 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, paus
 
   const posicao = sim?.posicao ?? 0
   const fracao = sim?.fracao ?? 0
+  const colhido = !!sim?.colhido
   const classeId = sim?.classeId ?? ''
   // Chave da simulação: o que muda o resultado. Trocar só o decêndio (posicao, fracao) não simula de novo.
   const chave = rotacao ? `${JSON.stringify(rotacao)}|${ano}|${classeId}|${soloChave}|${fonteChave}` : ''
@@ -105,6 +108,7 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, paus
           rotacao, ano, posicao, classe, classeId, solo, soloChave, fonte, fonteChave, resultado,
         })
         cena.current.dia(fracao * safra.cicloDias)
+        cena.current.colhido(colhido)
         aplicado.current = { chave, posicao, quando: performance.now() }
         setEstado('pronta')
       } catch (e) {
@@ -133,7 +137,7 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, paus
       })
     }
     return () => { valendo = false }
-  }, [chave, ano, rotacao, respostas, normais, posicao, fracao, classeId, solo, soloChave, fonte, fonteChave])
+  }, [chave, ano, rotacao, respostas, normais, posicao, fracao, colhido, classeId, solo, soloChave, fonte, fonteChave])
 
   return (
     <div className="isow" data-simulacao={estado}>

@@ -41,8 +41,12 @@
 .insp-provisional .ic { margin-top: 1px; }
 .insp-provisional strong { font-weight: 500; }
 .insp-group { background: var(--insp-surface); border-radius: 12px; overflow: clip; }
-.insp-rank { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: #e3eeff; color: #104c9b; border-radius: 12px; padding: 12px 14px; font-size: var(--insp-caption); }
-.insp-rank > div { min-width: 0; }
+.insp-rank { background: #e3eeff; color: #104c9b; border-radius: 12px; padding: 12px 14px; font-size: var(--insp-caption); }
+.insp-rank-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.insp-rank-h > div { min-width: 0; }
+/* Por que nesta posição: curto, logo abaixo da posição */
+.insp .insp-rank-why { margin-top: 8px; padding-top: 8px; border-top: 1px solid #c9dcf7; color: #104c9b; }
+.insp-rank-why span { color: #386397; }
 .insp-rank small { display: block; margin-top: 2px; color: #386397; font-size: var(--insp-caption); }
 .insp-rank strong { font-size: var(--insp-body); font-weight: 600; flex: none; font-variant-numeric: tabular-nums; }
 .insp-row { display: flex; width: 100%; align-items: center; gap: 10px; min-height: 46px; padding: 12px; text-align: left; position: relative; }
@@ -61,6 +65,8 @@
 .insp-culture-copy { flex: 1; min-width: 0; }
 .insp-culture-copy strong { display: block; font-weight: 600; }
 .insp-culture-copy small { display: block; color: var(--insp-secondary); font-size: var(--insp-caption); overflow-wrap: anywhere; }
+/* "1ª safra" é só um rótulo pequeno e claro acima; o nome da cultura é o que sobressai. */
+.insp-culture-copy small.insp-culture-ord { font-size: .75rem; font-weight: 500; color: var(--insp-secondary); opacity: .85; margin-bottom: 1px; }
 .insp-culture-row.selected { background: #e4ecf8; }
 .insp-culture-row:hover { background: #edf1f7; }
 .insp-culture-row.selected:hover { background: #dbe7f8; }

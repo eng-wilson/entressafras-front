@@ -1,5 +1,5 @@
 import type { CulturaRef, ZarcId } from './zarc'
-import type { CropCalendarInfo, CropRisk, Priorities, RotationScores, SoilInfo, SoilProperties, SoilProtection } from '../types'
+import type { CropCalendarInfo, CropRisk, Priorities, RotationScores, SoilInfo, SoilProperties, SoilProtection, RotationCrop } from '../types'
 
 // TMIN, TMAX e THIS_RAIN alimentam apenas testes e a fixture de clima.
 // Temperaturas mínimas por décimo (setembro décimo 0 → agosto décimo 35)
@@ -73,6 +73,8 @@ export type SafraDef = {
   calendario?: CropCalendarInfo
   /** Ky por fase (I a IV), da API: resposta da produção ao déficit hídrico (FAO-33). null = não informado. */
   ky?: [number | null, number | null, number | null, number | null]
+  /** A cultura como veio da API (rotations[].crops[n]), sem nenhuma conta: base de "De onde vêm estes números". */
+  api?: RotationCrop
 }
 
 /** Barra do calendário, em meses desde 1º de setembro (0–12); sem rótulo = pousio. */
@@ -103,10 +105,14 @@ export type RotacaoDef = {
   cor: number
   /** Escalas 0–100 da API (produtividade preservada, segurança hídrica, proteção do solo, média). */
   scores?: RotationScores
+  /** Lucro estimado da rotação em R$/ha, da API; ausente enquanto o backend não envia. */
+  lucro?: number | null
   /** Índice de proteção do solo planejada, da API. */
   protecaoSolo?: SoilProtection
   /** Rotação criada pelo agricultor ("Nova"), ranqueada pela API em custom_rotations; id da salva no navegador. */
   salva?: { id: string; em: number }
+  /** Rotação atual do talhão (a última safra do histórico), simulada pela API em custom_rotations para comparar. */
+  historico?: boolean
 }
 
 /** Rotações da tela: da API (POST /api/rotations/recommendations) ou o conjunto local dos testes. */

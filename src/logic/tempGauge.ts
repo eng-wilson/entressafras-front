@@ -75,9 +75,13 @@ export function tempGauge(
       aria: aria('Sem referência da cultura'), imp: 'Requisitos térmicos indisponíveis.',
       fix: 'Consulte os dados da cultura.', x1: -20, x2: -20, x3: -20, x4: -20 }
   }
-  // Faixas gerais da espécie; nenhuma regra fenológica é inventada quando o catálogo não a fornece.
-  const cold: StatusLevel = lo < t.absolute_min ? 'risk' : lo < t.optimal_min ? 'warn' : 'good'
-  const hot: StatusLevel = hi > t.absolute_max ? 'risk' : hi > t.optimal_max ? 'warn' : 'good'
+  // Faixas gerais da espécie (EcoCrop); nenhuma regra fenológica é inventada quando o catálogo não a fornece.
+  // A faixa ótima do EcoCrop vale para a temperatura MÉDIA: comparar a mínima da madrugada com o ótimo dava
+  // "Frio" a 23–33 °C (milheto, ótimo 25–35). Os limites absolutos seguem nos extremos: noite abaixo do mínimo
+  // ou tarde acima do máximo tolerado é risco real, mesmo com a média boa.
+  const media = (lo + hi) / 2
+  const cold: StatusLevel = lo < t.absolute_min ? 'risk' : media < t.optimal_min ? 'warn' : 'good'
+  const hot: StatusLevel = hi > t.absolute_max ? 'risk' : media > t.optimal_max ? 'warn' : 'good'
   // Limite letal inicial só vale em semeadura/emergência e usa extremo histórico, não a média.
   const geada = (stageK === 'seed' || stageK === 'emerg') && t.killing_early_growth != null
     && faixa.tminExtremo != null && faixa.tminExtremo <= t.killing_early_growth
@@ -96,7 +100,7 @@ export function tempGauge(
     ...grad, ...geometria, cls: lvl, label, icon,
     aria: aria(label),
     imp: geada ? 'Extremo histórico atingiu o limite letal inicial informado pelo EcoCrop.'
-      : `Referência térmica geral de ${referencia!.scientific_name} (EcoCrop).`,
+      : `Média do decêndio de ${grau(media)}, comparada à faixa ótima de ${referencia!.scientific_name} (EcoCrop, ${grau(t.optimal_min)} a ${grau(t.optimal_max)}).`,
     fix: 'Requisitos gerais da espécie; avalie cultivar e condições locais com seu agrônomo.',
     x1: X(t.absolute_min), x2: X(t.optimal_min), x3: X(t.optimal_max), x4: X(t.absolute_max),
   }

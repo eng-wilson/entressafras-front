@@ -233,6 +233,15 @@ export type Rotation = {
   id: string; rank: number; crops: [RotationCrop, RotationCrop]
   soil_protection: SoilProtection
   scores: RotationScores
+  /** Resultado econômico da rotação. CONTRATO PROVISÓRIO: o backend ainda não publicou; ajustar em lucroDaApi. */
+  economics?: RotationEconomics | null
+}
+/** Provisório: lucro por hectare da rotação (receita menos custo), em reais. */
+export type RotationEconomics = {
+  profit_brl_per_ha: number | null
+  revenue_brl_per_ha?: number | null
+  cost_brl_per_ha?: number | null
+  method?: string
 }
 /** Prioridades do ranking na API: 1 liga o indicador, 0 desliga. */
 export type Priorities = { productivity: 0 | 1; water_security: 0 | 1; soil_protection: 0 | 1 }

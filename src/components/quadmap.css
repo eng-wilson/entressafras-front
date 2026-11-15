@@ -1,0 +1,118 @@
+/* Mapa de aptidão do modo Comparação. Escala da área central (canvas.css: .fl 14px, texto 13px, rótulos 12px,
+   espaçamento de 12 a 16px), com as listas agrupadas e as cores semânticas do painel direito. */
+/* O modal "Por safra" vai para o body (fora de .qmap): recebe as mesmas variáveis. */
+.qmap, .qm-modal {
+  --qm-label: #1d1d1f;
+  --qm-secondary: #636368;
+  --qm-surface: #f5f5f7;
+  --qm-separator: #dfdfe4;
+  --qm-accent: #0a64c2;
+  --qm-on: #0a4fa8;
+  --qm-good: #24733d;
+  --qm-warn: #805300;
+  --qm-risk: #b42332;
+  --qm-nd: #6e6e73;
+  color: var(--qm-label);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+}
+.trio-g .qmap { grid-column: 1 / -1; padding: 14px 16px; }
+.qm-h h2 { margin: 0; font-size: 14px; font-weight: 600; line-height: 1.3; }
+.qm-h p { margin: 2px 0 0; color: var(--qm-secondary); font-size: 12px; }
+
+/* Gráfico e cards começam na mesma linha: o topo dos rótulos do gráfico encosta no topo dos cards. */
+.qm-g { display: grid; grid-template-columns: minmax(240px, 360px) minmax(0, 1fr); gap: 20px; align-items: start; margin-top: 12px; }
+.qm-g.centro { align-items: center; }
+.qm-chart { position: sticky; top: 12px; }
+.qm-g.centro .qm-chart { position: static; }
+.qm-svg { display: block; width: 100%; height: auto; overflow: visible; }
+.qm-q { fill: #fafafc; }
+.qm-q.on { fill: #e3eefd; }
+.qm-ring { fill: none; stroke: rgba(60, 60, 67, .14); }
+.qm-ring.out { stroke: rgba(60, 60, 67, .45); stroke-width: 1.5; }
+.qm-ax { stroke: rgba(60, 60, 67, .4); stroke-width: 1.2; }
+.qm-diag { stroke: rgba(60, 60, 67, .16); stroke-dasharray: 2 3; }
+.qm-o { fill: var(--qm-label); }
+.qm-rot { transition: opacity .15s; }
+.qm-rot.dim { opacity: .2; }
+.qm-poly { fill: currentColor; fill-opacity: .14; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.qm-rot.on .qm-poly { fill-opacity: .22; stroke-width: 3; }
+.qm-poly.atual { fill-opacity: .06; stroke-dasharray: 5 4; }
+.qm-pt { fill: #fff; stroke: currentColor; stroke-width: 2; }
+.qm-pt.nd { stroke-dasharray: 2 2; }
+.qm-badge { fill: currentColor; stroke: #fff; stroke-width: 2; }
+.qm-badge-n { fill: #fff; font-size: 11px; font-weight: 700; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+.qm-lb { font-size: 12px; font-weight: 600; fill: var(--qm-secondary); }
+.qm-lb.on { fill: var(--qm-on); }
+.qm-n { font-size: 10.5px; fill: var(--qm-nd); font-variant-numeric: tabular-nums; }
+
+/* Cards: uma lista agrupada por rotação */
+.qm-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.qm-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; align-items: start; }
+.qm-card { background: var(--qm-surface); border-radius: 12px; overflow: clip; transition: box-shadow .15s; }
+.qm-card.on { box-shadow: inset 0 0 0 2px var(--qm-cor); }
+.qm-ch { display: flex; align-items: center; gap: 8px; padding: 10px 12px 0; }
+.qm-num { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 10px; background: var(--qm-cor); color: #fff; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.qm-num.atual { background: #fff; color: var(--qm-cor); box-shadow: inset 0 0 0 2px var(--qm-cor); }
+.qm-nome { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
+.qm-tipo { margin: 1px 0 0; padding: 0 12px 0 40px; color: var(--qm-secondary); font-size: 12px; }
+.qm-eixos { list-style: none; margin: 0; padding: 4px 0 6px; }
+.qm-eixos li { display: flex; align-items: center; gap: 6px; min-height: 26px; padding: 0 12px; }
+.qm-en { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qm-eixos li.on .qm-en { color: var(--qm-on); font-weight: 600; }
+/* Lucro estimado: sub-linha de Produtividade, recuada e menor */
+.qm-eixos li.qm-lucro { min-height: 22px; padding-left: 24px; font-size: 12px; color: var(--qm-secondary); }
+.qm-lucro-v { font-weight: 600; color: var(--qm-label); font-variant-numeric: tabular-nums; }
+.qm-lucro-v.neg { color: var(--qm-risk); }
+.qm-dots { display: inline-flex; align-items: center; gap: 3px; }
+.qm-dots i { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; }
+.qm-dots i.f { background: currentColor; }
+.qm-fx { width: 46px; font-weight: 600; }
+.qm-v { width: 26px; text-align: right; color: var(--qm-secondary); font-size: 12px; font-variant-numeric: tabular-nums; }
+.qm-dots.good, .qm-fx.good { color: var(--qm-good); }
+.qm-dots.warn, .qm-fx.warn { color: var(--qm-warn); }
+.qm-dots.risk, .qm-fx.risk { color: var(--qm-risk); }
+.qm-dots.nd, .qm-fx.nd { color: var(--qm-nd); }
+
+/* "Por safra": linha de lista recolhível, a linha inteira é o alvo */
+.qm-disc { display: flex; width: 100%; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 0; border-top: 1px solid var(--qm-separator); background: transparent; font: inherit; color: var(--qm-accent); font-weight: 600; text-align: left; cursor: pointer; }
+.qm-disc span { flex: 1; }
+.qm-disc svg { width: 12px; height: 12px; transition: transform .15s; }
+.qm-disc:hover { background: #ededf1; }
+.qm-disc:active { background: #e0e5e1; }
+.qm-disc:focus-visible, .qm-more:focus-visible, .qm-escolher:focus-visible { outline: 2px solid #0066cc; outline-offset: -2px; }
+.qm-modal { width: min(640px, calc(100vw - 32px)); }
+.qm-modal header { align-items: flex-start; }
+.qm-modal h2 { font-size: 17px; font-weight: 600; line-height: 1.3; }
+.qm-modal .qm-ch { padding: 0; align-items: flex-start; }
+.qm-modal .qm-num { margin-top: 2px; }
+.qm-modal-sub { margin: 2px 0 0; color: var(--qm-secondary); font-size: 12px; }
+.qm-modal .qm-sfs { gap: 16px; }
+.qm-modal .qm-sf { background: var(--qm-surface); border-radius: 12px; padding: 12px 14px; }
+.qm-sfs { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.qm-sfh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.qm-sfh b { color: var(--qm-secondary); font-size: 12px; font-weight: 600; }
+.qm-sfh strong { font-weight: 600; }
+.qm-sfd { color: var(--qm-secondary); font-size: 12px; font-variant-numeric: tabular-nums; }
+.qm-sf .qm-ev { list-style: none; margin: 4px 0 0; padding: 0; display: grid; grid-template-columns: auto auto auto 1fr; column-gap: 10px; row-gap: 4px; font-size: 13px; }
+.qm-sf .qm-ev li { display: contents; }
+.qm-sf .qm-ev { align-items: start; }
+/* Pontos centrados na primeira linha, mesmo quando a explicação ao lado quebra em várias */
+.qm-sf .qm-dots { height: 1.45em; }
+.qm-sf .qm-fx { width: auto; }
+.qm-why { color: var(--qm-secondary); }
+.qm-span { grid-column: 2 / -1; }
+.qm-more { margin-top: 4px; min-height: 28px; padding: 0; border: 0; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--qm-accent); cursor: pointer; }
+.qm-sfn { margin: 10px 0 0; color: var(--qm-secondary); font-size: 12px; }
+.qm-hint { margin: 0; color: var(--qm-secondary); font-size: 12px; }
+.qm-escolher { align-self: flex-start; display: inline-flex; align-items: center; gap: 6px; min-height: 32px; padding: 0 4px; border: 0; background: transparent; color: var(--qm-accent); font: inherit; font-weight: 600; cursor: pointer; border-radius: 8px; }
+.qm-escolher svg { width: 14px; height: 14px; }
+
+@media (max-width: 900px) {
+  .qm-g { grid-template-columns: minmax(0, 1fr); }
+  .qm-chart { position: static; max-width: 360px; width: 100%; justify-self: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qm-rot, .qm-card, .qm-disc svg { transition: none; }
+}

@@ -36,7 +36,8 @@ export function AtencaoCiclo({ panorama, estado, idx, anosApi, onNavegar, onAbri
     </button>
   )
   return (
-    <section className="attention-cycle" aria-label="Momentos de atenção da rotação">
+    // Só aparece quando a rotação tem algum momento de atenção; sem nenhum, fica oculto (não ocupa o painel).
+    <section className="attention-cycle" aria-label="Momentos de atenção da rotação" hidden={estado === 'pronto' && momentos.length === 0}>
       <div className="attention-heading"><h3>Atenção no ciclo</h3><button type="button" className="attention-info-button" aria-label="Como ler estes momentos" data-inspector-open="attention-method" onClick={onAbrirMetodo}><svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-info" /></svg></button></div>
       {estado === 'carregando' && <p className="attention-note" role="status">Aguardando as rotações da API…</p>}
       {estado === 'erro' && <p className="attention-note" role="status">As rotações da API não carregaram. Sem avaliação dos momentos de atenção.</p>}

@@ -31,7 +31,8 @@ test('catálogo mostra requisitos, cultivares gerais e ausência de referência 
 test('milho usa limite térmico do catálogo em vez de ficar sempre Bom', async ({ page }) => {
   await comTalhaoSalvo(page)
   await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ json: {
-    ...CLIMA_T07, decendios: CLIMA_T07.decendios.map(d => ({ ...d, tmin_media: 22, tmax_media: 35 })),
+    ...CLIMA_T07, // Média 34,5° acima do ótimo da cultura (o ótimo do EcoCrop vale para a média, não para a máxima)
+    decendios: CLIMA_T07.decendios.map(d => ({ ...d, tmin_media: 31, tmax_media: 38 })),
   } }))
   await page.goto('/')
   const slider = page.getByRole('slider', { name: 'Arraste para simular um período' })

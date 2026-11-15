@@ -5,7 +5,7 @@
 import css from '../../simulacao/styles/componente.css?inline'
 import { createTalhao, type Talhao } from './api.js'
 
-export type Cena = Pick<Talhao, 'mostrar' | 'dia' | 'restaurar' | 'pausar' | 'preparar' | 'destruir'>
+export type Cena = Pick<Talhao, 'mostrar' | 'dia' | 'colhido' | 'restaurar' | 'pausar' | 'preparar' | 'destruir'>
 
 /** A cena ocupa o container inteiro: a altura vem do CSS do app (.cena .iso-sim), e o canvas acompanha. */
 export function montarCena(container: HTMLElement): Cena {
@@ -49,6 +49,7 @@ export function montarCena(container: HTMLElement): Cena {
   return {
     mostrar: o => talhao.mostrar(o),
     dia: d => talhao.dia(d),
+    colhido: c => talhao.colhido(c),
     restaurar: () => talhao.restaurar(),
     pausar: p => talhao.pausar(p),
     preparar: c => talhao.preparar(c),
