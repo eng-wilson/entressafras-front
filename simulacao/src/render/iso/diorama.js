@@ -4,14 +4,29 @@ import { createSurface2D } from '../soil/surface2d.js';
 import { createProfile2D } from '../soil/profile2d.js';
 import { createRootAtlas, drawRoots } from '../soil/roots.js';
 import { celulaDe } from '../../simulation/season.js';
+import { createCamera } from './camera.js';
 
 export function createDiorama({ width, depth, totalH, profTotalM, crop, resolucao = 1024 }) {
     const topo = createSurface2D({ width, depth, res: resolucao, crop });
     const perfil = createProfile2D({ width, depth, totalH, profTotalM, res: resolucao });
     const raizes = createRootAtlas();
     let celulaDestaque = -1;
+    const vista = createCamera();
+    const espelhadas = new Map();
+    function faceVista(parede, inverter) {
+        const face = perfil.faces.find(f => f.parede === parede);
+        if (!inverter) return face;
+        if (espelhadas.has(parede)) return { canvas: espelhadas.get(parede) };
+        espelhadas.set(parede, document.createElement('canvas'));
+        const canvas = espelhadas.get(parede);
+        canvas.width = perfil.FW; canvas.height = perfil.FH;
+        const ctx = canvas.getContext('2d');
+        ctx.translate(canvas.width, 0); ctx.scale(-1, 1); ctx.drawImage(face.canvas, 0, 0);
+        return { canvas };
+    }
 
     function atualizar({ sim, dia, classe, modo, lavoura, reg }) {
+        espelhadas.clear();
         drawRoots(raizes, { plants: lavoura.plants, reg, crop, sim, dia, width, depth, totalH, profTotalM });
         topo.pintar(sim, dia, classe, modo);
         perfil.pintar(sim, dia, classe, modo, raizes.canvas, topo.canvas);   // topo antes: a face lê a cor da beira
@@ -44,7 +59,7 @@ export function createDiorama({ width, depth, totalH, profTotalM, crop, resoluca
 
     // Contorno do bloco na tela: hexágono com os 6 cantos da silhueta (fundo do topo, laterais em cima
     // e embaixo, quina de baixo da frente) arredondados. Serve de recorte e de sombra de borda.
-    function contornoArredondado(ctx, cam) {
+    function contornoArredondado(ctx, cam, width, depth) {
         const W = width / 2, D = depth / 2, H = -totalH;
         const pts = [[-W, 0, -D], [W, 0, -D], [W, H, -D], [W, H, D], [-W, H, D], [-W, 0, D]].map(q => cam.proj(...q));
         const raio = RAIO_ARESTA * cam.escala * 1.3;
@@ -57,34 +72,43 @@ export function createDiorama({ width, depth, totalH, profTotalM, crop, resoluca
         return raio;
     }
 
-    function desenharBloco(ctx, cam) {
+    function desenharBloco(ctx, original) {
+        const q = original.quarto ?? 0;
+        const W = q % 2 ? depth : width, D = q % 2 ? width : depth;
+        Object.assign(vista, { escala: original.escala, ox: original.ox, oy: original.oy, dpr: original.dpr });
+        const cam = vista;
+        // Faces em coordenadas da vista: direita e esquerda; atlas permanece no mundo.
+        const escolhas = [[[0, false], [2, false]], [[3, false], [0, true]],
+            [[1, true], [3, true]], [[2, true], [1, false]]][q];
+        const faces = escolhas.map(([parede, inverter]) => faceVista(parede, inverter));
         const FW = perfil.FW, FH = perfil.FH, TR = topo.res;
         const ex = cam.eixoX(), ez = cam.eixoZ();
         const colB = [0, cam.escala * totalH / FH];
         ctx.save();
         ctx.setTransform(cam.dpr, 0, 0, cam.dpr, 0, 0);
-        contornoArredondado(ctx, cam);
+        contornoArredondado(ctx, cam, W, D);
         ctx.clip();
         // Face +X (frente direita): ao longo de z.
-        cam.aplicarPlano(ctx, [width / 2, 0, -depth / 2], [ez[0] * depth / FW, ez[1] * depth / FW], colB);
-        ctx.drawImage(perfil.faces[0].canvas, 0, 0);
+        cam.aplicarPlano(ctx, [W / 2, 0, -D / 2], [ez[0] * D / FW, ez[1] * D / FW], colB);
+        ctx.drawImage(faces[0].canvas, 0, 0);
         ctx.fillStyle = 'rgba(255, 244, 228, 0.05)';
         ctx.fillRect(0, 0, FW, FH);
         // Face +Z (frente esquerda): ao longo de x, mais escura.
-        cam.aplicarPlano(ctx, [-width / 2, 0, depth / 2], [ex[0] * width / FW, ex[1] * width / FW], colB);
-        ctx.drawImage(perfil.faces[1].canvas, 0, 0);
+        cam.aplicarPlano(ctx, [-W / 2, 0, D / 2], [ex[0] * W / FW, ex[1] * W / FW], colB);
+        ctx.drawImage(faces[1].canvas, 0, 0);
         ctx.fillStyle = 'rgba(28, 16, 6, 0.22)';
         ctx.fillRect(0, 0, FW, FH);
         // Topo.
-        cam.aplicarPlano(ctx, [-width / 2, 0, -depth / 2], [ex[0] * width / TR, ex[1] * width / TR], [ez[0] * depth / TR, ez[1] * depth / TR]);
+        const ax = original.eixoX(), az = original.eixoZ();
+        original.aplicarPlano(ctx, [-width / 2, 0, -depth / 2], [ax[0] * width / TR, ax[1] * width / TR], [az[0] * depth / TR, az[1] * depth / TR]);
         ctx.drawImage(topo.canvas, 0, 0);
 
         // Arestas arredondadas: sem traço de contorno; a curva liga topo, faces e quina.
-        desenharArredondado(ctx, cam);
+        desenharArredondado(ctx, cam, faces, W, D);
         const d = cam.dpr;
         ctx.setTransform(d, 0, 0, d, 0, 0);
         // Bordas da silhueta: sombra suave por dentro do recorte (a superfície "vira" para longe da vista).
-        const raio = contornoArredondado(ctx, cam);
+        const raio = contornoArredondado(ctx, cam, W, D);
         ctx.lineWidth = raio * 1.1;
         ctx.strokeStyle = 'rgba(30, 18, 8, 0.16)';
         ctx.stroke();
@@ -93,7 +117,7 @@ export function createDiorama({ width, depth, totalH, profTotalM, crop, resoluca
         ctx.stroke();
         ctx.restore();
         ctx.setTransform(d, 0, 0, d, 0, 0);
-        const p = (x, y, z) => cam.proj(x, y, z);
+        const p = (x, y, z) => original.proj(x, y, z);
 
         if (celulaDestaque >= 0) {
             const G = 32, i = celulaDestaque % G, j = (celulaDestaque / G) | 0;
@@ -125,7 +149,7 @@ export function createDiorama({ width, depth, totalH, profTotalM, crop, resoluca
     };
     const SEM_LUZ = { cor: [255, 255, 255], alfa: 0 };
 
-    function desenharArredondado(ctx, cam) {
+    function desenharArredondado(ctx, cam, faces, width, depth) {
         const FW = perfil.FW, FH = perfil.FH, r = RAIO_ARESTA;
         const rowsR = r / totalH * FH;                     // linhas da face cobertas pelo raio
         const colsR = r / width * FW;                      // colunas da face cobertas pelo raio
@@ -142,7 +166,7 @@ export function createDiorama({ width, depth, totalH, profTotalM, crop, resoluca
             const [xa, za] = ponto(ta), [xb, zb] = ponto(tb);
             const metade = i < N_FAIXAS / 2;
             // Primeira metade lê o fim da face +Z; segunda, o fim da face +X (colunas de trás para a frente).
-            const src = metade ? perfil.faces[1].canvas : perfil.faces[0].canvas;
+            const src = metade ? faces[1].canvas : faces[0].canvas;
             const u0 = metade ? i / (N_FAIXAS / 2) : (N_FAIXAS - i - 1) / (N_FAIXAS / 2);
             const u1 = metade ? (i + 1) / (N_FAIXAS / 2) : (N_FAIXAS - i) / (N_FAIXAS / 2);
             const c0 = FW - colsR + colsR * Math.min(u0, u1), w = Math.max(0.5, colsR * Math.abs(u1 - u0));
@@ -159,9 +183,9 @@ export function createDiorama({ width, depth, totalH, profTotalM, crop, resoluca
         // Beira do topo sobre cada face: do topo (θ = 0) para a face (θ = 90°).
         const ex = cam.eixoX(), ez = cam.eixoZ();
         const bordas = [
-            { face: perfil.faces[0], luz: LUZ.x, colA: [ez[0] * depth / FW, ez[1] * depth / FW],
+            { face: faces[0], luz: LUZ.x, colA: [ez[0] * depth / FW, ez[1] * depth / FW],
               ponto: th => [width / 2 - r + r * Math.sin(th), -r + r * Math.cos(th), -depth / 2] },
-            { face: perfil.faces[1], luz: LUZ.z, colA: [ex[0] * width / FW, ex[1] * width / FW],
+            { face: faces[1], luz: LUZ.z, colA: [ex[0] * width / FW, ex[1] * width / FW],
               ponto: th => [-width / 2, -r + r * Math.cos(th), depth / 2 - r + r * Math.sin(th)] }
         ];
         for (const b of bordas) {
@@ -185,10 +209,11 @@ export function createDiorama({ width, depth, totalH, profTotalM, crop, resoluca
     function tocarSolo(sx, sy, cam) {
         const t = cam.noPlanoY(sx, sy, 0);
         if (Math.abs(t.x) <= width / 2 && Math.abs(t.z) <= depth / 2) return { celula: celulaDe(t.x, t.z, width, depth), onde: 'topo' };
-        const fx = cam.noPlanoX(sx, sy, width / 2);
-        if (Math.abs(fx.z) <= depth / 2 && fx.y <= 0 && fx.y >= -totalH) return { celula: celulaDe(width / 2 - 1e-3, fx.z, width, depth), onde: 'face', prof: -fx.y };
-        const fz = cam.noPlanoZ(sx, sy, depth / 2);
-        if (Math.abs(fz.x) <= width / 2 && fz.y <= 0 && fz.y >= -totalH) return { celula: celulaDe(fz.x, depth / 2 - 1e-3, width, depth), onde: 'face', prof: -fz.y };
+        const sxFace = cam.eixoX()[1] > 0 ? 1 : -1, szFace = cam.eixoZ()[1] > 0 ? 1 : -1;
+        const fx = cam.noPlanoX(sx, sy, sxFace * width / 2);
+        if (Math.abs(fx.z) <= depth / 2 && fx.y <= 0 && fx.y >= -totalH) return { celula: celulaDe(sxFace * (width / 2 - 1e-3), fx.z, width, depth), onde: 'face', prof: -fx.y };
+        const fz = cam.noPlanoZ(sx, sy, szFace * depth / 2);
+        if (Math.abs(fz.x) <= width / 2 && fz.y <= 0 && fz.y >= -totalH) return { celula: celulaDe(fz.x, szFace * (depth / 2 - 1e-3), width, depth), onde: 'face', prof: -fz.y };
         return null;
     }
 

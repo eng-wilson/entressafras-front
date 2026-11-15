@@ -1,5 +1,5 @@
 // Raízes desenhadas nas faces de corte do diorama (atlas em canvas: uma faixa de 1024 x 512 por parede,
-// paredes 0 +X, 1 -X, 2 +Z, 3 -Z). Só as paredes visíveis na vista isométrica (+X e +Z) são pintadas.
+// paredes 0 +X, 1 -X, 2 +Z, 3 -Z). As quatro paredes são pintadas para permitir girar a vista.
 //
 // Desenho mínimo e legível: só as plantas da linha de borda, poucos eixos grossos por planta, cada planta
 // dentro da sua faixa (sem invadir a vizinha). O objetivo é ler o efeito do estresse, não a anatomia.
@@ -22,7 +22,6 @@ import { perfilCelula, CAMADA_M } from '../../simulation/season.js';
 import { proporcaoRaiz } from '../../domain/crops/proporcao-raiz.js';
 
 const LARG = 1024, ALT_PAREDE = 512;
-const PAREDES_VISIVEIS = [0, 2];
 const PASSO = 0.006;   // passo do traçado (m)
 
 const COR = {
@@ -44,7 +43,9 @@ export function createRootAtlas() {
 function paredesDaPlanta(p, nLinhas, nCols) {
     const out = [];
     if (p.col === nCols - 1) out.push(0);
+    if (p.col === 0) out.push(1);
     if (p.row === nLinhas - 1) out.push(2);
+    if (p.row === 0) out.push(3);
     return out;
 }
 
@@ -118,9 +119,9 @@ export function drawRoots(atlas, { plants, reg, crop, sim, dia, width, depth, to
             nodulosAtivos: reg[o + P.CRONICO + 4] < 0.4 && reg[o + P.AGUDO + 1] < 0.3
         };
         for (const w of paredes) {
-            const n = w === 0 ? nLinhas : nCols;
+            const n = w < 2 ? nLinhas : nCols;
             pl.meiaFaixa = 0.42 * larguraM / n;               // cada planta fica na sua faixa
-            const s = w === 0 ? p.pz / depth + 0.5 : p.px / width + 0.5;
+            const s = w < 2 ? p.pz / depth + 0.5 : p.px / width + 0.5;
             const x0 = s * LARG, y0 = w * ALT_PAREDE;
             const T = { X: v => x0 + v * pxH, Y: v => y0 + v * pxV };
             ctx.save();
