@@ -22,29 +22,45 @@ it('com menos de 2 culturas não simula', () => {
   expect(f).not.toHaveBeenCalled()
 })
 
-it('1ª chamada com sweep; mover datas usa sweep: false e mostra a prévia do sweep', async () => {
+it('1ª chamada com sweep; mover a 2ª mostra a prévia, mantém a faixa dela e recalcula a da 1ª', async () => {
   const f = vi.fn().mockImplementation(async () => ok())
   vi.stubGlobal('fetch', f)
   const { result, rerender } = renderHook(({ c }) => useSimulacao(base, c), { initialProps: { c: inicial } })
   await waitFor(() => expect(result.current.status).toBe('ok'))
   expect(corpo(f, 0).sweep).toBe(true)
-  expect(result.current.sweep).not.toBeNull()
+  expect(result.current.sweeps.every(Boolean)).toBe(true)
 
-  // A 2ª cultura no decêndio seguinte (1–10 mar), mesmo ciclo em dias: está no second_planting_sweep.
+  // A 2ª cultura no decêndio seguinte (1–10 mar), mesmo ciclo em dias: é um ponto do second_planting_sweep.
   const ponto = SIMULACAO_FIXTURE.second_planting_sweep!.points[1].crops[1]
   rerender({ c: [soja, sorgo(ponto.planting_date, ponto.harvest_date)] })
   expect(result.current.status).toBe('simulando')
   expect(result.current.previa?.crops[1].planting_date).toBe(ponto.planting_date)
+  expect(result.current.sweeps[1]).not.toBeNull() // a faixa da 2ª continua valendo
+  expect(result.current.sweeps[0]).toBeNull() // a da 1ª pressupunha o sorgo em 21/02
   await waitFor(() => expect(f).toHaveBeenCalledTimes(2))
-  expect(corpo(f, 1).sweep).toBe(false)
+  expect(corpo(f, 1).sweep).toBe(true)
+  await waitFor(() => expect(result.current.sweeps[0]).not.toBeNull())
 })
 
-it('mudar o ciclo pede o sweep de novo', async () => {
+it('mover a 1ª mantém a faixa dela e recalcula a da 2ª', async () => {
+  const f = vi.fn().mockImplementation(async () => ok())
+  vi.stubGlobal('fetch', f)
+  const { result, rerender } = renderHook(({ c }) => useSimulacao(base, c), { initialProps: { c: inicial } })
+  await waitFor(() => expect(result.current.status).toBe('ok'))
+  const p = SIMULACAO_FIXTURE.first_planting_sweep!.points[3].crops[0]
+  rerender({ c: [{ code: 1150, planting_date: p.planting_date, harvest_date: p.harvest_date }, inicial[1]] })
+  expect(result.current.sweeps[0]).not.toBeNull()
+  expect(result.current.sweeps[1]).toBeNull()
+  expect(result.current.previa?.crops[0].planting_date).toBe(p.planting_date)
+})
+
+it('mudar o ciclo invalida as duas faixas e pede o sweep de novo', async () => {
   const f = vi.fn().mockImplementation(async () => ok())
   vi.stubGlobal('fetch', f)
   const { result, rerender } = renderHook(({ c }) => useSimulacao(base, c), { initialProps: { c: inicial } })
   await waitFor(() => expect(result.current.status).toBe('ok'))
   rerender({ c: [soja, sorgo('2028-02-21', '2028-06-20')] })
+  expect(result.current.sweeps).toEqual([null, null])
   await waitFor(() => expect(f).toHaveBeenCalledTimes(2))
   expect(corpo(f, 1).sweep).toBe(true)
 })

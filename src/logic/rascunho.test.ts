@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { SIMULACAO_FIXTURE } from '../data/simulacaoFixture'
 import {
-  adicionar, catalogoRascunho, aplicarResposta, arrastar, chaveEstrutura, cheio, cicloDias, classeDoRisco, corrigir422, datasCultura,
+  adicionar, catalogoRascunho, aplicarResposta, arrastar, chaveFaixa, cheio, datasDe, cicloDias, classeDoRisco, corrigir422, datasCultura,
   diasSemCobertura, faixaDecendio, fimDecendio, inicioDecendio, faixaDoSweep, mensagemErro, nomeCultura, pedidoCulturas,
   piorClasse, pontoDoSweep, RASCUNHO_VAZIO, remover, seloRanking, textoLimite, tituloRascunho, traduzirCheck, trocar,
   type Rascunho,
@@ -28,7 +28,7 @@ describe('decêndios ↔ datas', () => {
   })
   it('conta o ciclo como o backend (plantio e colheita inclusos)', () => {
     expect(cicloDias(5, 17, ANO)).toBe(123) // 21/10 a 20/02
-    expect(datasCultura(base.culturas[0], ANO)).toBe('Plantio 21–31 out · colheita 11–20 fev')
+    expect(datasCultura(base.culturas[0], ANO)).toBe('Plantio 21 out · colheita 20 fev')
   })
 })
 
@@ -42,12 +42,20 @@ describe('nomes', () => {
 })
 
 describe('arrastar', () => {
-  it('mover a 1ª leva a 2ª junto e para no fim da safra', () => {
+  it('mover a 1ª não leva a 2ª; mantém o ciclo em dias e para antes do plantio da 2ª', () => {
     const r = arrastar(base, 0, 'mover', 3, ANO)
-    expect(r.rascunho.culturas.map(c => [c.s, c.e])).toEqual([[3, 15], [15, 26]])
-    const fim = arrastar(base, 0, 'mover', 20, ANO)
-    expect(fim.rascunho.culturas[1].e).toBe(36)
+    expect(datasDe(r.rascunho.culturas[0], ANO)).toEqual({ plantio: '2027-10-01', colheita: '2028-01-31', ciclo: 123 })
+    expect(r.rascunho.culturas[1]).toBe(base.culturas[1])
+    const tarde = arrastar(base, 0, 'mover', 8, ANO)
+    expect(tarde.rascunho).toBe(base) // 21/10 já é o último decêndio que colhe antes de 21/02
+    expect(tarde.motivo).toBe('seguinte')
+  })
+  it('a 2ª para no fim da safra; um clique sem mudar de decêndio não arredonda as datas', () => {
+    const fim = arrastar(base, 1, 'mover', 34, ANO)
+    expect(datasDe(fim.rascunho.culturas[1], ANO).colheita <= '2028-08-31').toBe(true)
     expect(fim.motivo).toBe('fim')
+    const exato = { ...base, culturas: [base.culturas[0], { ...base.culturas[1], plantio: '2028-02-23', ciclo: 111 }] }
+    expect(arrastar(exato, 1, 'mover', exato.culturas[1].s, ANO).rascunho).toBe(exato)
   })
   it('mover a 2ª para na colheita da 1ª', () => {
     const r = arrastar(base, 1, 'mover', 10, ANO)
@@ -99,11 +107,14 @@ describe('ações e pedido', () => {
     expect(r).toEqual({ culturas: [base.culturas[0]], sel: 0 })
     expect(remover(r, 0)).toEqual(RASCUNHO_VAZIO)
   })
-  it('a estrutura muda com a cultura ou o ciclo, não com o deslocamento', () => {
-    const a = chaveEstrutura(pedidoCulturas(base, ANO)!)
-    const movido = arrastar(base, 1, 'mover', 20, ANO).rascunho
-    expect(chaveEstrutura(pedidoCulturas(movido, ANO)!)).not.toBe('')
-    expect(chaveEstrutura(pedidoCulturas(trocar(base, 1, 8418), ANO)!)).not.toBe(a)
+  it('a faixa de uma cultura vale enquanto não mudam o ciclo dela e as datas da outra', () => {
+    const antes = pedidoCulturas(base, ANO)!
+    const movido = pedidoCulturas(arrastar(base, 1, 'mover', 20, ANO).rascunho, ANO)!
+    expect(chaveFaixa(movido, 1)).toBe(chaveFaixa(antes, 1))
+    expect(chaveFaixa(movido, 0)).not.toBe(chaveFaixa(antes, 0))
+    const ciclo = pedidoCulturas(arrastar(base, 1, 'colheita', 30, ANO).rascunho, ANO)!
+    expect(chaveFaixa(ciclo, 1)).not.toBe(chaveFaixa(antes, 1))
+    expect(chaveFaixa(pedidoCulturas(trocar(base, 1, 8418), ANO)!, 0)).not.toBe(chaveFaixa(antes, 0))
   })
 })
 
@@ -113,6 +124,9 @@ describe('resposta da API', () => {
     const enviado = pedidoCulturas(r, ANO)!
     const novo = aplicarResposta(r, enviado, SIMULACAO_FIXTURE)
     expect(novo.culturas.map(c => [c.s, c.e, c.refCiclo, c.plantioLivre])).toEqual([[5, 17, 123, false], [17, 28, 111, false]])
+    expect(pedidoCulturas(novo, ANO)).toEqual(SIMULACAO_FIXTURE.rotation.crops.map(c => ({
+      code: c.crop.eco_port_code, planting_date: c.planting_date, harvest_date: c.harvest_date,
+    })))
   })
   it('colheita depois de 31/ago vai para o fim da safra (L15)', () => {
     const r = adicionar(adicionar(RASCUNHO_VAZIO, 1150), 8418)
@@ -130,7 +144,7 @@ describe('resposta da API', () => {
     const r = { ...base, culturas: [{ ...base.culturas[0], e: 9, refCiclo: null }, base.culturas[1]] }
     const c = corrigir422(r, 'custom rotation: crop 1150 cycle of 31 days is outside 50%–150% of its reference cycle (100 days)', ANO)
     expect(c!.culturas[0].refCiclo).toBe(100)
-    expect(cicloDias(5, c!.culturas[0].e, ANO)).toBeGreaterThanOrEqual(50)
+    expect(datasDe(c!.culturas[0], ANO).ciclo).toBe(50)
     expect(corrigir422(r, 'custom rotation: unknown crop 1', ANO)).toBeNull()
   })
   it('lê status, ranking, janela e o ponto exato do sweep', () => {
@@ -183,18 +197,35 @@ describe('faixa de decêndios no calendário (mesma régua da barra)', () => {
     expect(f.pontos[23]).toMatchObject({ cls: 'risk', regional: false })
     expect(f.melhor).toBe(SIMULACAO_FIXTURE.second_planting_sweep!.best_decendio_idx)
   })
-  it('1ª cultura: a 2ª anda junto, vale a pior das duas', () => {
+  it('1ª cultura: a 2ª fica parada; vale o risco da própria 1ª', () => {
     const f = faixaDoSweep(SIMULACAO_FIXTURE, 0)!
-    const p12 = SIMULACAO_FIXTURE.first_planting_sweep!.points.find(p => p.decendio_idx === 12)!
-    expect(classeDoRisco(p12.crops[0].risk_percentage)).toBe('good')
-    expect(f.pontos[12].cls).toBe('risk')
-    expect(f.pontos[0]).toMatchObject({ cls: 'good', regional: false }) // soja cedo: risco baixo, fora da data usual
+    for (const p of SIMULACAO_FIXTURE.first_planting_sweep!.points) {
+      expect(p.crops[1].planting_date).toBe('2028-02-21')
+      expect(f.pontos[p.decendio_idx].cls).toBe(p.crops[0].temperature_ok ? classeDoRisco(p.crops[0].risk_percentage) : 'risk')
+    }
+    // 2ª cultura com 100% de risco em todos os pontos (girassol tarde): a faixa da 1ª não fica vermelha por ela.
+    const r = structuredClone(SIMULACAO_FIXTURE)
+    r.first_planting_sweep!.points.forEach(p => { p.crops[1].risk_percentage = 100 })
+    expect(faixaDoSweep(r, 0)!.pontos[5].cls).toBe('good')
   })
   it('temperatura fora dos limites reprova; sem sweep, sem faixa', () => {
     const r = structuredClone(SIMULACAO_FIXTURE)
     r.second_planting_sweep!.points[0].crops[1].temperature_ok = false
     expect(faixaDoSweep(r, 1)!.pontos[r.second_planting_sweep!.points[0].decendio_idx].cls).toBe('risk')
     expect(faixaDoSweep(null, 0)).toBeNull()
+  })
+  it('invariante: soltar num decêndio gera o pedido exato do ponto do sweep, e a barra fica da cor dele', () => {
+    for (const i of [0, 1]) {
+      const sw = i === 0 ? SIMULACAO_FIXTURE.first_planting_sweep! : SIMULACAO_FIXTURE.second_planting_sweep!
+      const f = faixaDoSweep(SIMULACAO_FIXTURE, i)!
+      for (const p of sw.points) {
+        const pedido = pedidoCulturas(arrastar(base, i, 'mover', p.decendio_idx, ANO).rascunho, ANO)!
+        expect(pedido).toEqual(p.crops.map(c => ({ code: c.code, planting_date: c.planting_date, harvest_date: c.harvest_date })))
+        // A rotação atual aparece nos dois sweeps: basta achar um ponto com as mesmas datas e o mesmo risco.
+        expect(pontoDoSweep(SIMULACAO_FIXTURE, pedido)?.crops.map(c => c.risk_percentage)).toEqual(p.crops.map(c => c.risk_percentage))
+        if (p.crops[i].temperature_ok) expect(f.pontos[p.decendio_idx].cls).toBe(classeDoRisco(p.crops[i].risk_percentage))
+      }
+    }
   })
   it('invariante: o decêndio tem a cor que a barra teria plantando ali', () => {
     const f = faixaDoSweep(SIMULACAO_FIXTURE, 1)!

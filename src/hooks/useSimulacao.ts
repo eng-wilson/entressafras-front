@@ -1,12 +1,13 @@
 // Simulação do rascunho pela API enquanto o agricultor edita (POST /api/rotations/simulate).
-// - Culturas ou ciclos mudaram: pedido com sweep (faixa de cores por decêndio, ~0,5 s com a célula quente).
-// - Só as datas andaram: pedido sem sweep (~50 ms), com debounce e cancelando o anterior.
-// - Enquanto a resposta não chega, `previa` traz o ponto exato do sweep, quando existe (mover a 1ª ou a 2ª).
+// - Cada cultura tem a sua faixa de cores (sweep), válida enquanto não mudam as culturas, o ciclo dela e as datas
+//   da outra (`chaveFaixa`). Alguma ficou inválida: pedido com sweep (~0,6 s com a célula quente).
+// - Senão, pedido sem sweep (~50 ms), com debounce e cancelando o anterior.
+// - Enquanto a resposta não chega, `previa` traz o ponto exato do sweep, quando existe (soltar num decêndio).
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { CustomCropInput, Ponto, Priorities, RotationSimulationResponse, SoilType, SweepPoint } from '../types'
 import { ErroRotacoes } from '../services/rotacoes'
 import { lerSimulacao, simularRotacao, type PedidoSimulacao } from '../services/simulacao'
-import { chaveEstrutura, pontoDoSweep } from '../logic/rascunho'
+import { chaveFaixa, pontoDoSweep } from '../logic/rascunho'
 
 /** Mesmo limite das recomendações; o rascunho só abre com a célula de clima já quente. */
 const TEMPO_LIMITE_MS = 180_000
@@ -23,8 +24,8 @@ export type EstadoSimulacao = {
   enviado: CustomCropInput[] | null
   /** `dados` corresponde ao pedido atual. */
   atual: boolean
-  /** Última resposta com sweep, das mesmas culturas e ciclos. */
-  sweep: RotationSimulationResponse | null
+  /** Resposta com o sweep válido de cada cultura (null enquanto a faixa dela é recalculada). */
+  sweeps: (RotationSimulationResponse | null)[]
   /** Resultado do sweep para as datas atuais, enquanto a resposta exata não chega. */
   previa: SweepPoint | null
   erro: ErroSimulacao | null
@@ -35,18 +36,21 @@ type Interno = {
   chave: string | null
   dados: RotationSimulationResponse | null
   enviado: CustomCropInput[] | null
-  sweep: { estrutura: string; dados: RotationSimulationResponse } | null
+  faixas: ({ chave: string; dados: RotationSimulationResponse } | null)[]
   erro: ErroSimulacao | null
 }
 
-const VAZIO: Interno = { chave: null, dados: null, enviado: null, sweep: null, erro: null }
+const VAZIO: Interno = { chave: null, dados: null, enviado: null, faixas: [], erro: null }
 
 export function useSimulacao(base: BaseSimulacao | null, culturas: CustomCropInput[] | null): EstadoSimulacao {
   const chaveBase = base
     ? `${base.ponto.lat},${base.ponto.lon},${base.solo ?? 'auto'},${base.ano},${JSON.stringify(base.prioridades ?? null)},${(base.historico ?? []).join('-')}`
     : null
   const chave = chaveBase && culturas ? `${chaveBase}|${JSON.stringify(culturas)}` : null
-  const estrutura = chaveBase && culturas ? `${chaveBase}|${chaveEstrutura(culturas)}` : null
+  const chavesFaixa = useMemo(
+    () => (chaveBase && culturas ? culturas.map((_, i) => `${chaveBase}|${chaveFaixa(culturas, i)}`) : null),
+    [chaveBase, culturas],
+  )
   const [tentativa, setTentativa] = useState(0)
   const [st, setSt] = useState<Interno>(VAZIO)
 
@@ -58,12 +62,14 @@ export function useSimulacao(base: BaseSimulacao | null, culturas: CustomCropInp
   }
 
   useEffect(() => {
-    if (!base || !culturas || !chave || !estrutura) return
-    const precisaSweep = st.sweep?.estrutura !== estrutura
+    if (!base || !culturas || !chave || !chavesFaixa) return
+    const precisaSweep = chavesFaixa.some((k, i) => st.faixas[i]?.chave !== k)
+    const faixasDe = (dados: RotationSimulationResponse, atuais: Interno['faixas']) =>
+      precisaSweep ? chavesFaixa.map(k => ({ chave: k, dados })) : atuais
     const pedido: PedidoSimulacao = { ...base, culturas, sweep: precisaSweep }
     const guardada = lerSimulacao(pedido)
     if (guardada) {
-      setSt(s => ({ ...s, chave, dados: guardada, enviado: culturas, erro: null, sweep: precisaSweep ? { estrutura, dados: guardada } : s.sweep }))
+      setSt(s => ({ ...s, chave, dados: guardada, enviado: culturas, erro: null, faixas: faixasDe(guardada, s.faixas) }))
       return
     }
     const ac = new AbortController()
@@ -76,7 +82,7 @@ export function useSimulacao(base: BaseSimulacao | null, culturas: CustomCropInp
       simularRotacao(pedido, ac.signal)
         .then(dados => {
           if (!ativo) return
-          setSt(s => ({ ...s, chave, dados, enviado: culturas, erro: null, sweep: precisaSweep ? { estrutura, dados } : s.sweep }))
+          setSt(s => ({ ...s, chave, dados, enviado: culturas, erro: null, faixas: faixasDe(dados, s.faixas) }))
         })
         .catch((e: unknown) => {
           if (!ativo) return
@@ -97,12 +103,17 @@ export function useSimulacao(base: BaseSimulacao | null, culturas: CustomCropInp
     setTentativa(n => n + 1)
   }, [])
 
-  const sweep = st.sweep && st.sweep.estrutura === estrutura ? st.sweep.dados : null
+  const s0 = chavesFaixa && st.faixas[0]?.chave === chavesFaixa[0] ? st.faixas[0].dados : null
+  const s1 = chavesFaixa && st.faixas[1]?.chave === chavesFaixa[1] ? st.faixas[1].dados : null
+  const sweeps = useMemo(() => [s0, s1], [s0, s1])
   const atual = !!chave && st.chave === chave && !!st.dados && JSON.stringify(st.enviado) === JSON.stringify(culturas)
-  const previa = useMemo(() => (atual ? null : pontoDoSweep(sweep, culturas)), [atual, sweep, culturas])
+  const previa = useMemo(
+    () => (atual ? null : sweeps.reduce<SweepPoint | null>((p, sw) => p ?? pontoDoSweep(sw, culturas), null)),
+    [atual, sweeps, culturas],
+  )
 
-  if (!culturas) return { status: 'incompleto', dados: null, enviado: null, atual: false, sweep: null, previa: null, erro: null, recarregar }
+  if (!culturas) return { status: 'incompleto', dados: null, enviado: null, atual: false, sweeps: [null, null], previa: null, erro: null, recarregar }
   const erro = st.chave === chave ? st.erro : null
   const status = erro ? 'erro' : atual ? 'ok' : 'simulando'
-  return { status, dados: st.dados, enviado: st.enviado, atual, sweep, previa, erro, recarregar }
+  return { status, dados: st.dados, enviado: st.enviado, atual, sweeps, previa, erro, recarregar }
 }

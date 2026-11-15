@@ -19,7 +19,7 @@ Base: `VITE_API_URL` (padrão `https://entressafras-backend-production.up.railwa
 | `GET /api/clima/decendios?lat&lon` | OK | Chuva, ET0 e temperatura por decêndio (NASA POWER) | 7 dias, 20 pontos, `entressafras.clima.decendios.v1` |
 | `GET /api/crops`, `/api/crops/{code}` | OK | Requisitos EcoCrop; Kc, estágios, raízes e Ky (FAO-56) | 7 dias, 20 culturas, `entressafras.culturas.v2` |
 | `POST /api/rotations/recommendations` | OK (≈25 s) | Rotações, ordem, risco, escalas 0–100, proteção do solo, solo usado, calendário | 1 dia, 20 pedidos, `entressafras.rotacoes.v2` |
-| `POST /api/rotations/simulate` | **Ainda não publicado** (só no backend local) | Rascunho "Nova rotação": risco, rank, checks, notas e faixa por decêndio (`sweep`) | — |
+| `POST /api/rotations/simulate` | **Ainda não publicado** (só no backend local) | Rascunho "Nova rotação": risco, rank, checks, notas e faixa por decêndio (`sweep`: cada um dos dois move só uma cultura, com o ciclo igual) | — |
 | `GET /api/crops?simulable=true` | Ainda não publicado | Menu de culturas do rascunho (as culturas com dados FAO-56) | — |
 | `GET /api/clima/diario` | Não usado | — | — |
 
