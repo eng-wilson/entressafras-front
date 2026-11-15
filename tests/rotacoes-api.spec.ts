@@ -82,7 +82,7 @@ test('comparação: consumo do ciclo calculado com a API no lugar da faixa ilust
   await expect(celulas.first()).toHaveText(/^~\d+ mm$/)
   await expect(page.locator('.ctab')).not.toContainText('450–800')
 
-  await page.getByRole('button', { name: 'Ver por safra' }).first().click()
+  await page.getByRole('button', { name: 'Por safra' }).first().click()
   await page.getByRole('button', { name: 'De onde vêm estes números' }).first().click()
   const memoria = page.getByRole('dialog', { name: /^De onde vêm os números/ })
   // Só campos da API, cada um com o caminho de origem (visível em desenvolvimento, ou ligando "Campos da API")
