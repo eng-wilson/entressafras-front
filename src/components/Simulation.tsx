@@ -19,12 +19,9 @@ import { useConjunto } from '../state/conjunto'
 import { normaisDoClima, quadroDoDecendio, rotacaoSim } from '../logic/talhaoSim'
 import { respostasDoLaudo } from '../logic/solo'
 import type { QuadroAgua } from '../logic/atencaoCiclo'
-import type { ResultadoRotacao } from '../sim/api'
 
 type Props = {
   quadrosAgua?: QuadroAgua[]
-  onResultado?: (r: ResultadoRotacao) => void
-  onErroSimulacao?: () => void
   idx: number
   /** Rotação selecionada (posição no conjunto de rotações). */
   rot: number
@@ -40,7 +37,7 @@ type Props = {
 }
 
 // memo: com o decêndio adiado (App.tsx), o React pode pular os renders intermediários desta árvore.
-export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp, quadrosAgua, onResultado, onErroSimulacao }: Props) {
+export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp, quadrosAgua }: Props) {
   const periodLabel = periodoLabel(idx)
   const periodo = climaDoPeriodo(clima.dados?.decendios ?? null, idx)
   const cargando = clima.status === 'carregando'
@@ -89,8 +86,6 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
         {/* A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela */}
         <section className="field cena" aria-label="Seu talhão" aria-hidden={cmp ? true : undefined} inert={!!cmp}>
           <IsoField
-            onResultado={onResultado}
-            onErroSimulacao={onErroSimulacao}
             sim={sim}
             pausado={!!cmp}
             cropName={cur.cultura}

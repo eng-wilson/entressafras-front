@@ -24,8 +24,6 @@ export type EntradaSim = {
 }
 
 type Props = {
-  onResultado?: (r: ResultadoRotacao) => void
-  onErroSimulacao?: () => void
   /** Nome da cultura na etiqueta; ausente fora das safras. */
   cropName?: string
   stageKey: string
@@ -43,7 +41,7 @@ type Props = {
 const ESPERA = 140
 const ESPERA_MAX = 700
 
-export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, pausado = false, alerta = null, onResultado, onErroSimulacao }: Props) {
+export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, pausado = false, alerta = null }: Props) {
   const fill = FILL[stageKey] ?? FILL.bare
   const pill = cropName
     ? cropName + ' · ' + stageName.toLowerCase()
@@ -100,7 +98,6 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, paus
     let valendo = true
     const mostrar = (resultado: ResultadoRotacao) => {
       if (!valendo) return   // resposta de um pedido que já foi trocado por outro
-      onResultado?.(resultado)
       try {
         cena.current ??= montarCena(el)
         const classe = CLASSES_SOLO[classeId] ?? CLASSES_SOLO.latossolo_vermelho
@@ -132,12 +129,11 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, paus
       simular(chave, { rotacao, ano, classeId, respostas, normais }).then(mostrar, e => {
         if (!valendo) return
         console.error('Falha ao simular o talhão', e)
-        onErroSimulacao?.()
         setEstado('erro')
       })
     }
     return () => { valendo = false }
-  }, [chave, ano, rotacao, respostas, normais, posicao, fracao, classeId, solo, soloChave, fonte, fonteChave, onResultado, onErroSimulacao])
+  }, [chave, ano, rotacao, respostas, normais, posicao, fracao, classeId, solo, soloChave, fonte, fonteChave])
 
   return (
     <div className="isow" data-simulacao={estado}>
