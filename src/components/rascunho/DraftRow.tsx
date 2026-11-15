@@ -133,7 +133,7 @@ export function DraftRow({ editor, catalogo, onSalvar, bloqueioSalvar }: Props) 
         ) : (
           <CropTrack
             rascunho={r} ano={ano} nomes={nomes} classes={leitura.classes} velho={leitura.velho}
-            onChange={editor.mudar} onSelect={i => { editor.selecionar(i); setPicker(null) }} onArrasto={setArrastando}
+            onChange={editor.mudar} onSelect={i => { editor.selecionar(i); setPicker(null) }} onArrasto={g => { setArrastando(!!g); editor.marcarArrasto(g) }}
             onRemover={i => editor.mudar(remover(r, i))}
           />
         )}

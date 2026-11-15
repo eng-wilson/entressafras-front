@@ -64,7 +64,7 @@
 | # | Spec diz | API faz | Impacto | Decisão |
 |---|---|---|---|---|
 | L1 | De 0 a N culturas ("adicionar até encher a safra") | Exatamente **2** (`crops` mín. 2, máx. 2) | Com 0, 1 ou 3+ culturas não há simulação | **Decidido:** máximo de 2. Com 0 ou 1: "Adicione a 2ª cultura para simular", barra `.b.none` e Salvar desabilitado. Com 2: "+ Cultura" desabilitado ("Máximo de 2 culturas por rotação") |
-| L2 | Janelas boa/atenção do ZARC → Bom/Atenção/Risco | `risk_percentage`; `in_calendar` (±30 dias do GGCMI) e `temperature_ok` no sweep | O vocabulário do spec fica sem fonte | Status = `classeAnos(risk_percentage)`, como na tela principal; `null` → "Sem dado". Cor do decêndio = `classeDoRisco(risk_percentage)` do ponto do sweep, a mesma régua da barra (1ª cultura: pior entre as duas, porque a 2ª anda junto; 2ª: a própria); `temperature_ok=false` → risco. `in_calendar` (±30 dias do GGCMI) vira sublinhado "data usual da região". Contorno no `best_decendio_idx`. **Correção (15/11/2026):** a 1ª versão pintava de verde `in_calendar && temperature_ok`, que não mede risco, e divergia da barra (soja 1–20/set com 10–13% de risco fora do calendário; sorgo 11–20/abr com 33% dentro dele). Erro do front, não do backend |
+| L2 | Janelas boa/atenção do ZARC → Bom/Atenção/Risco | `risk_percentage`; `in_calendar` (±30 dias do GGCMI) e `temperature_ok` no sweep | O vocabulário do spec fica sem fonte | Status = `classeAnos(risk_percentage)`, como na tela principal; `null` → "Sem dado". Cor do decêndio = `classeDoRisco(risk_percentage)` do ponto do sweep, a mesma régua da barra, sempre o risco da própria cultura (cada sweep move só ela; a outra fica nas datas atuais); `temperature_ok=false` → risco. `in_calendar` (±30 dias do GGCMI) vira sublinhado "data usual da região". Contorno no `best_decendio_idx`. **Correção (15/11/2026):** a 1ª versão pintava de verde `in_calendar && temperature_ok`, que não mede risco, e divergia da barra (soja 1–20/set com 10–13% de risco fora do calendário; sorgo 11–20/abr com 33% dentro dele). Erro do front, não do backend. **2ª correção (15/11/2026):** com B14, a 1ª cultura deixou de levar a 2ª; a regra "pior das duas" deixava a faixa da 1ª toda vermelha quando a 2ª tinha risco alto (girassol tarde: 100% em todos os pontos) |
 | L3 | Ciclo mín./máx. fixo por cultura; catálogo com 7 culturas | 422 fora de 50–150% da referência, que **não é exposta**. ~~`GET /crops` não filtra culturas sem FAO-56~~ **Resolvido:** `GET /crops?simulable=true` (22 culturas) | O arrasto pode gerar 422 | Adicionar ou trocar envia a colheita **sem data**, e a resposta dá o ciclo de referência. Limites = `[⌈0,5·ref⌉, ⌊1,5·ref⌋]` dias. Um 422 de ciclo informa a referência, e o rascunho se corrige sozinho. O menu usa `simulable=true`, com nomes em PT locais (`src/data/nomesCulturas.ts`) porque a API devolve em inglês |
 | L3b | — | `calendar.cycle_days` é o ciclo **enviado** (soja com datas: 123; sem datas: 100) | Não serve como referência quando há datas | Registrar a referência só quando a cultura vai sem datas |
 | L4 | Textos de limitação em PT | `checks` e `warnings` em **inglês, texto livre** | Tradução frágil | Mapear os 4 padrões conhecidos para PT; um texto não reconhecido aparece como "Alerta agronômico". Pedir checks estruturados ao backend |
@@ -73,7 +73,7 @@
 | L7 | Ranking só pelo status do clima | Ranking pelas `priorities` (`productivity`, `water_security`, `soil_protection`) | A Sidebar usa outro conjunto (`risco/agua/solo/prod`), e a recomendação não manda `priorities` | O `/simulate` usa os mesmos `location`, `soil_type` e `agricultural_year` da recomendação, sem `priorities`. A unificação fica como follow-up (§10.1 do spec) |
 | L8 | Safra 2026/27 | Sem `agricultural_year`, a API usa a próxima safra | As datas do mock não servem | Usar o ano do conjunto carregado (`conj.ano`) |
 | L9 | Tudo é instantâneo | Quente: 0,06 s / 0,64 s. **Fria: 309 s** | A 1ª chamada pode estourar o tempo | O rascunho só abre depois das recomendações (célula quente). Timeout de 20 s, "Simulando…" e "Não foi possível simular. Tentar de novo" |
-| L10 | Mover A não mexe em B | `first_planting_sweep` move **A e B juntas**; `second_planting_sweep` move só B; ciclo variável não tem sweep | O preview sem rede só é exato em alguns gestos | **Proposta:** mover o meio de A leva B junto (mudança no spec §5.2). Mover B: preview pelo sweep e confirmação ao soltar. Alças: `sweep: false` com debounce de 200 ms e a faixa redesenhada depois |
+| L10 | Mover A não mexe em B | `first_planting_sweep` move **A e B juntas**; `second_planting_sweep` move só B; ciclo variável não tem sweep | O preview sem rede só é exato em alguns gestos | **Resolvido (B14):** os dois sweeps movem só uma cultura. O rascunho guarda datas exatas (plantio + ciclo em dias, colheita = plantio + ciclo − 1, como o backend); mover o meio põe o plantio no 1º dia do decêndio e mantém o ciclo, então soltar gera exatamente o ponto do sweep (prévia na hora, igual à resposta). Cada faixa vale enquanto não mudam o ciclo dela e as datas da outra (`chaveFaixa`); senão o pedido sai com sweep. Alças mudam o ciclo: a faixa some durante o arrasto e volta recalculada |
 | L11 | Lacuna = decêndios × 10 dias | `soil_protection.living_cover_days` | Os números do spec são aproximados | Intervalo entre culturas em dias reais (datas do usuário). Dias sem cobertura na safra vêm da API |
 | L12 | `localStorage` [proposta] | `custom_rotations` no `/recommendations`, ranqueadas na mesma régua | — | **Decidido:** `localStorage` por talhão e safra, com as salvas enviadas em `custom_rotations` |
 | L13 | Culturas encostadas | `planting_b` deve ser > `harvest_a`; colheita de B depois de 31/ago só gera check | — | Plantio = 1º dia do decêndio, colheita = último dia do decêndio; encostadas passam |
@@ -97,13 +97,14 @@
 | B4 | Expor `reference_cycle_days`, `min_cycle_days` e `max_cycle_days` em `calendar` | Média | L3, L3b |
 | B5 | ~~`GET /crops?simulable=true`~~ **Feito** (22 culturas). Falta: nomes populares em PT (hoje em inglês: "soya bean", "bachanta") | Baixa | L3, L16 |
 | B6 | Calendário por posição na rotação (1ª/2ª safra) | Média | L15 |
-| B7 | Sweep que move só A e/ou varia o ciclo | Baixa | L10 |
+| B7 | Sweep que varia o ciclo (mover só A já resolvido em B14) | Baixa | L10 |
 | B8 | Cache do sweep | Baixa | — |
 | B9 | Mais de 3 `custom_rotations`, ou desempate definido | Baixa | L14 |
 | B10 | Critério de pragas além de "mesma família" | Baixa | L5 |
 | B11 | Rotações com N culturas | Futuro | L1 |
 | B12 | Explicar ou desempatar o rank de uma custom idêntica a uma recomendada (rank 4 para a cópia da nº 1) | Média | L17 |
 | B13 | Classe de risco agregada por ponto do sweep (ex.: `rotation_class`), para o front não repetir a régua `classeAnos` nem decidir sozinho "pior das duas" | Baixa | L2 |
+| B14 | `first_planting_sweep` move só a 1ª cultura (a 2ª fica nas datas pedidas; pula pontos com colheita da 1ª ≥ plantio da 2ª). Detalhes em `HANDOFF-BACKEND-SWEEP.md`. **Feito no backend e integrado no front (15/11/2026)** | Alta | L2, L10 |
 
 ### Frontend
 
@@ -139,7 +140,7 @@
 | Catálogo `simulable=true` | `src/services/culturas.ts`, `src/hooks/useCulturasSimulaveis.ts` |
 | Rotações salvas + `custom_rotations` (com fallback se o 422 vier delas) | `src/services/rotacoesSalvas.ts`, `src/services/rotacoes.ts`, `src/logic/rotacoesApi.ts` |
 | Interface | `src/components/rascunho/` (`DraftRow`, `CropTrack`, `CropPicker`, `DraftInspector`) |
-| Cores do calendário na mesma régua da barra (`faixaDoSweep`) | `src/logic/rascunho.ts`, `src/components/MonthStrip.tsx` |
+| Cores do calendário na mesma régua da barra (`faixaDoSweep`), datas exatas e arrasto igual ao sweep (`datasDe`, `comDatas`, `arrastar`, `chaveFaixa`) | `src/logic/rascunho.ts`, `src/hooks/useSimulacao.ts`, `src/components/MonthStrip.tsx` |
 
 ## 7. O que muda no `HANDOFF-SPEC.md`
 

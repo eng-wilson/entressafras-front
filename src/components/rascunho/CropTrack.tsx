@@ -1,8 +1,9 @@
 // Trilho de edição do rascunho: barras arrastáveis (meio move, pontas mudam plantio e colheita), alças que
-// também são sliders de teclado, lacunas sem cobertura e a dica de arrasto. Encaixa por decêndio.
+// também são sliders de teclado, lacunas sem cobertura e a dica de arrasto. Encaixa por decêndio, em datas exatas
+// (logic/rascunho.ts, arrastar): soltar num decêndio gera o mesmo pedido do ponto do sweep.
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import {
-  arrastar, diasEntre, faixaDecendio, fimDecendio, inicioDecendio, N_DEC, textoLimite,
+  arrastar, dataCurta, datasDe, diasEntre, faixaDecendio, N_DEC, textoLimite,
   type Classe, type Gesto, type Rascunho,
 } from '../../logic/rascunho'
 
@@ -15,8 +16,8 @@ type Props = {
   velho: boolean
   onChange: (r: Rascunho) => void
   onSelect: (i: number) => void
-  /** Avisa o início e o fim do arrasto (o menu Trocar/Remover some enquanto arrasta). */
-  onArrasto: (ativo: boolean) => void
+  /** Avisa o gesto no início do arrasto e null no fim (o menu Trocar/Remover e a faixa reagem). */
+  onArrasto: (gesto: Gesto | null) => void
   onRemover: (i: number) => void
 }
 
@@ -36,11 +37,16 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
     const { rascunho: r, motivo } = arrastar(base, i, gesto, alvo, ano)
     const c = r.culturas[i]
     const ponto = gesto === 'colheita' ? c.e : c.s
+    const d = datasDe(c, ano)
     const texto = motivo
       ? textoLimite(motivo, i, nomes, c)
-      : gesto === 'colheita' ? `Colheita: ${faixaDecendio(c.e - 1, ano)}` : `Plantio: ${faixaDecendio(c.s, ano)}`
+      : gesto === 'colheita' ? `Colheita: ${dataCurta(d.colheita)}` : `Plantio: ${dataCurta(d.plantio)}`
     setDica({ texto, x: ponto, limite: !!motivo })
-    if (r.culturas.some((x, j) => x.s !== rascunho.culturas[j]?.s || x.e !== rascunho.culturas[j]?.e)) onChange({ ...r, sel: i })
+    const mesmas = (j: number) => {
+      const a = datasDe(r.culturas[j], ano), b = rascunho.culturas[j] && datasDe(rascunho.culturas[j], ano)
+      return !!b && a.plantio === b.plantio && a.ciclo === b.ciclo
+    }
+    if (r.culturas.some((_, j) => !mesmas(j))) onChange({ ...r, sel: i })
   }
 
   function iniciar(e: PointerEvent<HTMLElement>, i: number, gesto: Gesto) {
@@ -52,7 +58,7 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
     e.currentTarget.setPointerCapture(e.pointerId)
     setAtivo(i)
     onSelect(i)
-    onArrasto(true)
+    onArrasto(gesto)
   }
   function mover(e: PointerEvent<HTMLElement>) {
     const a = arrasto.current
@@ -70,7 +76,7 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
     if (e.currentTarget.hasPointerCapture(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId)
     setAtivo(null)
     setDica(null)
-    onArrasto(false)
+    onArrasto(null)
   }
   const ponteiro = (i: number, gesto: Gesto) => ({
     onPointerDown: (e: PointerEvent<HTMLElement>) => iniciar(e, i, gesto),
@@ -107,7 +113,7 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
         const [cMin, cMax] = limites(i, 'colheita')
         return (
           <div key={i} className={`cb${sel ? ' sel' : ''}${ativo === i ? ' arrastando' : ''}`} style={{ left: pct(c.s), width: pct(c.e - c.s) }}
-            role="group" aria-label={`${nome}: plantio ${faixaDecendio(c.s, ano)}, colheita ${faixaDecendio(c.e - 1, ano)}`}>
+            role="group" aria-label={`${nome}: plantio ${dataCurta(datasDe(c, ano).plantio)}, colheita ${dataCurta(datasDe(c, ano).colheita)}`}>
             <div className={`b ${classes[i] ?? 'none'}${velho ? ' velho' : ''}`} title={nome} {...ponteiro(i, 'mover')}
               onClick={() => onSelect(i)}>
               <span className="bl">{nome}</span>
@@ -128,7 +134,7 @@ export function CropTrack({ rascunho, ano, nomes, classes, velho, onChange, onSe
       {cs.slice(1).map((b, k) => {
         const a = cs[k]
         if (b.s <= a.e) return null
-        const dias = diasEntre(fimDecendio(a.e - 1, ano), inicioDecendio(b.s, ano)) - 1
+        const dias = diasEntre(datasDe(a, ano).colheita, datasDe(b, ano).plantio) - 1
         return (
           <div key={`g${k}`} className="gap" role="note" style={{ left: pct(a.e), width: `calc(${pct(b.s - a.e)} - 2px)` }}
             title={`${dias} dias sem cobertura entre ${minuscula(nomes[k] ?? '')} e ${minuscula(nomes[k + 1] ?? '')}`}>

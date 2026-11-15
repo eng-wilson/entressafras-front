@@ -1,5 +1,5 @@
 // Resposta real reduzida de POST /api/rotations/simulate (Sorriso/MT, solo médio, safra 2027/28), verificada em 15/11/2026:
-// soja 21/10 → 20/02 e sorgo 21/02 → 10/06, com sweep. Só os campos que o front usa. Uso exclusivo em testes.
+// soja 21/10 → 20/02 e sorgo 21/02 → 10/06, com sweep (regravada com B14: o sweep da 1ª move só a soja). Só os campos que o front usa. Uso exclusivo em testes.
 import type { RotationSimulationResponse } from '../types'
 
 export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
@@ -23,7 +23,17 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           "common_names": [
             "soya bean",
             "soyabean",
-            "soybean"
+            "soybean",
+            "soya",
+            "sojaboon",
+            "sojaplant",
+            "sojaboontjie",
+            "fejao soja",
+            "soja",
+            "dadou",
+            "soia piini",
+            "bean - soya",
+            "Sojabohne"
           ],
           "family": "Magnoliopsida:Rosidae:Fabales:Leguminosae",
           "crop_cycle": {
@@ -95,7 +105,25 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           "common_names": [
             "bachanta",
             "broom-corn",
-            "chicken corn"
+            "chicken corn",
+            "cholam",
+            "durra",
+            "grain sorghum",
+            "great millet",
+            "guinea corn",
+            "ipwa",
+            "jawa",
+            "jola",
+            "jowar",
+            "kafir corn",
+            "kaoliang",
+            "mashila",
+            "milo",
+            "mtama",
+            "sorghum",
+            "sorgho",
+            "sorgo",
+            "Hirse"
           ],
           "family": "Liliopsida:Commelinidae:Cyperales:Gramineae",
           "crop_cycle": {
@@ -197,11 +225,11 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           },
           {
             "code": 48747,
-            "planting_date": "2028-01-02",
-            "harvest_date": "2028-04-21",
+            "planting_date": "2028-02-21",
+            "harvest_date": "2028-06-10",
             "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.0,
-            "in_calendar": false,
+            "estimated_yield_loss_pct": 0.7,
+            "in_calendar": true,
             "temperature_ok": true
           }
         ],
@@ -227,11 +255,11 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           },
           {
             "code": 48747,
-            "planting_date": "2028-01-12",
-            "harvest_date": "2028-05-01",
+            "planting_date": "2028-02-21",
+            "harvest_date": "2028-06-10",
             "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.0,
-            "in_calendar": false,
+            "estimated_yield_loss_pct": 0.7,
+            "in_calendar": true,
             "temperature_ok": true
           }
         ],
@@ -257,11 +285,11 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           },
           {
             "code": 48747,
-            "planting_date": "2028-01-22",
-            "harvest_date": "2028-05-11",
+            "planting_date": "2028-02-21",
+            "harvest_date": "2028-06-10",
             "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.0,
-            "in_calendar": false,
+            "estimated_yield_loss_pct": 0.7,
+            "in_calendar": true,
             "temperature_ok": true
           }
         ],
@@ -287,11 +315,11 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           },
           {
             "code": 48747,
-            "planting_date": "2028-02-01",
-            "harvest_date": "2028-05-21",
+            "planting_date": "2028-02-21",
+            "harvest_date": "2028-06-10",
             "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.1,
-            "in_calendar": false,
+            "estimated_yield_loss_pct": 0.7,
+            "in_calendar": true,
             "temperature_ok": true
           }
         ],
@@ -317,19 +345,19 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           },
           {
             "code": 48747,
-            "planting_date": "2028-02-11",
-            "harvest_date": "2028-05-31",
+            "planting_date": "2028-02-21",
+            "harvest_date": "2028-06-10",
             "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.4,
-            "in_calendar": false,
+            "estimated_yield_loss_pct": 1.2,
+            "in_calendar": true,
             "temperature_ok": true
           }
         ],
         "scores": {
-          "productivity": 99.3,
+          "productivity": 98.8,
           "water_security": 100.0,
           "soil_protection": 74.8,
-          "overall": 91.4
+          "overall": 91.2
         }
       },
       {
@@ -361,250 +389,10 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
           "soil_protection": 74.8,
           "overall": 91.3
         }
-      },
-      {
-        "decendio_idx": 6,
-        "label": "1-10 Nov",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2027-11-01",
-            "harvest_date": "2028-03-02",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.3,
-            "in_calendar": true,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-03-03",
-            "harvest_date": "2028-06-21",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 2.8,
-            "in_calendar": true,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 97.2,
-          "water_security": 100.0,
-          "soil_protection": 74.8,
-          "overall": 90.7
-        }
-      },
-      {
-        "decendio_idx": 7,
-        "label": "11-20 Nov",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2027-11-11",
-            "harvest_date": "2028-03-12",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.3,
-            "in_calendar": true,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-03-13",
-            "harvest_date": "2028-07-01",
-            "risk_percentage": 3.3,
-            "estimated_yield_loss_pct": 5.1,
-            "in_calendar": true,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 94.9,
-          "water_security": 96.7,
-          "soil_protection": 74.8,
-          "overall": 88.8
-        }
-      },
-      {
-        "decendio_idx": 8,
-        "label": "21-end Nov",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2027-11-21",
-            "harvest_date": "2028-03-22",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.4,
-            "in_calendar": true,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-03-23",
-            "harvest_date": "2028-07-11",
-            "risk_percentage": 3.3,
-            "estimated_yield_loss_pct": 7.9,
-            "in_calendar": true,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 92.1,
-          "water_security": 96.7,
-          "soil_protection": 74.8,
-          "overall": 87.9
-        }
-      },
-      {
-        "decendio_idx": 9,
-        "label": "1-10 Dec",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2027-12-01",
-            "harvest_date": "2028-04-01",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.4,
-            "in_calendar": false,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-04-02",
-            "harvest_date": "2028-07-21",
-            "risk_percentage": 16.7,
-            "estimated_yield_loss_pct": 11.3,
-            "in_calendar": true,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 88.7,
-          "water_security": 83.3,
-          "soil_protection": 74.8,
-          "overall": 82.3
-        }
-      },
-      {
-        "decendio_idx": 10,
-        "label": "11-20 Dec",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2027-12-11",
-            "harvest_date": "2028-04-11",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.4,
-            "in_calendar": false,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-04-12",
-            "harvest_date": "2028-07-31",
-            "risk_percentage": 36.7,
-            "estimated_yield_loss_pct": 17.3,
-            "in_calendar": true,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 82.7,
-          "water_security": 63.3,
-          "soil_protection": 74.8,
-          "overall": 73.6
-        }
-      },
-      {
-        "decendio_idx": 11,
-        "label": "21-end Dec",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2027-12-21",
-            "harvest_date": "2028-04-21",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.3,
-            "in_calendar": false,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-04-22",
-            "harvest_date": "2028-08-10",
-            "risk_percentage": 56.7,
-            "estimated_yield_loss_pct": 25.1,
-            "in_calendar": false,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 74.9,
-          "water_security": 43.3,
-          "soil_protection": 74.8,
-          "overall": 64.3
-        }
-      },
-      {
-        "decendio_idx": 12,
-        "label": "1-10 Jan",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2028-01-01",
-            "harvest_date": "2028-05-02",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.4,
-            "in_calendar": false,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-05-03",
-            "harvest_date": "2028-08-21",
-            "risk_percentage": 76.7,
-            "estimated_yield_loss_pct": 38.9,
-            "in_calendar": false,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 61.1,
-          "water_security": 23.3,
-          "soil_protection": 74.8,
-          "overall": 53.1
-        }
-      },
-      {
-        "decendio_idx": 13,
-        "label": "11-20 Jan",
-        "crops": [
-          {
-            "code": 1150,
-            "planting_date": "2028-01-11",
-            "harvest_date": "2028-05-12",
-            "risk_percentage": 0.0,
-            "estimated_yield_loss_pct": 0.6,
-            "in_calendar": false,
-            "temperature_ok": true
-          },
-          {
-            "code": 48747,
-            "planting_date": "2028-05-13",
-            "harvest_date": "2028-08-31",
-            "risk_percentage": 96.7,
-            "estimated_yield_loss_pct": 50.3,
-            "in_calendar": false,
-            "temperature_ok": true
-          }
-        ],
-        "scores": {
-          "productivity": 49.7,
-          "water_security": 3.3,
-          "soil_protection": 74.8,
-          "overall": 42.6
-        }
       }
     ],
-    "best_decendio_idx": 4,
-    "worst_decendio_idx": 13
+    "best_decendio_idx": 5,
+    "worst_decendio_idx": 0
   },
   "second_planting_sweep": {
     "moved_crop": "second",
@@ -893,6 +681,16 @@ export const SIMULACAO_FIXTURE: RotationSimulationResponse = {
   "warnings": [
     "Experimental method (simplified FAO-56 daily water balance with seasonal Ky, FAO-33); not validated against the official ZARC agricultural zoning.",
     "Soil water at the start of the simulation is assumed to be 20% of the available water capacity (hypothesis, not measured).",
-    "Climate comes from a NASA POWER grid cell of about 50 km; local rainfall can differ."
+    "Climate comes from a NASA POWER grid cell of about 50 km; local rainfall can differ.",
+    "Planting dates and cycle lengths come from the GGCMI Phase 3 crop calendar (0.5° grid, regional averages from national statistics or MIRCA2000/SAGE); FAO-56 stage proportions are stretched to that cycle. Your cultivar's cycle may differ.",
+    "Crops are pre-filtered by EcoCrop absolute temperature limits against the mean daily minimum/maximum over the cycle (coarse filter).",
+    "Rotations with near-zero risk are practically tied: their order changes with the initial soil water assumption (20%, 50% or 80% of capacity), so treat close ranks as equivalent.",
+    "Soil water comes from a generic texture class, not from the field; omit soil_type to estimate it from the location.",
+    "soil_protection is a planning index: 70 × share of the season with a planned living crop + 30 × share of crop transitions that change botanical family (heuristic weights). It is not a measurement of soil health nor a forecast of organic matter.",
+    "Rotations are ranked by the mean of the enabled priorities (productivity, water_security, soil_protection). Scores are absolute 0–100 scales (0 = worst possible, 100 = best possible) and do not depend on the priorities: productivity is the mean preserved yield and water_security the share of seasons without a critical loss, both for the worse of the two crops.",
+    "The soil_protection priority favors long cycles that keep the soil covered until late in the season, which usually carry more water risk; combine it with productivity or water_security.",
+    "Without crop_history only the A→B transition is counted; recommended rotations always change family, so the diversity part of soil_protection is always full.",
+    "No regional calendar for Pulses: FAO-56 reference cycle lengths and the default October–November planting window are used, not calibrated for the region.",
+    "Custom rotations are simulated as sent, without the recommendation filters (botanical family, temperature, regional calendar); issues are listed in their checks. Their rank is the position they would take among the recommended rotations. A one-crop rotation is ranked by the same indicators: the fallow after it lowers its soil_protection."
   ]
 }

@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import type { Ponto, SoilType } from '../types'
 import {
-  aplicarResposta, corrigir422, nomeCultura, pedidoCulturas, RASCUNHO_VAZIO, type Rascunho,
+  aplicarResposta, corrigir422, nomeCultura, pedidoCulturas, RASCUNHO_VAZIO, type Gesto, type Rascunho,
 } from '../logic/rascunho'
 import { useSimulacao, type EstadoSimulacao } from './useSimulacao'
 
@@ -19,12 +19,17 @@ export type EditorRascunho = {
   fechar: () => void
   mudar: (r: Rascunho) => void
   selecionar: (i: number | null) => void
+  /** Uma alça (plantio/colheita) está sendo arrastada: o ciclo muda e a faixa do calendário não vale. */
+  alca: boolean
+  /** Gesto de arrasto em curso (null ao soltar). */
+  marcarArrasto: (g: Gesto | null) => void
 }
 
 export function useRascunho(ponto: Ponto | null, solo: SoilType, ano: number): EditorRascunho {
   const [aberto, setAberto] = useState(false)
   const [rascunho, setRascunho] = useState<Rascunho>(RASCUNHO_VAZIO)
   const [editado, setEditado] = useState(false)
+  const [alca, setAlca] = useState(false)
 
   const pedido = useMemo(() => (aberto ? pedidoCulturas(rascunho, ano) : null), [aberto, rascunho, ano])
   const lat = ponto?.lat, lon = ponto?.lon
@@ -55,13 +60,14 @@ export function useRascunho(ponto: Ponto | null, solo: SoilType, ano: number): E
   }), [rascunho.culturas, sim.dados])
 
   return {
-    aberto, rascunho, editado, ano, nomes, sim,
+    aberto, rascunho, editado, ano, nomes, sim, alca,
+    marcarArrasto: g => setAlca(g === 'plantio' || g === 'colheita'),
     abrir: inicial => {
       setRascunho(inicial ?? RASCUNHO_VAZIO)
       setEditado(false)
       setAberto(true)
     },
-    fechar: () => { setAberto(false); setRascunho(RASCUNHO_VAZIO); setEditado(false) },
+    fechar: () => { setAberto(false); setRascunho(RASCUNHO_VAZIO); setEditado(false); setAlca(false) },
     mudar: r => { setRascunho(r); setEditado(true) },
     selecionar: i => setRascunho(r => ({ ...r, sel: i })),
   }

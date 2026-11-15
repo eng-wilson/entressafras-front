@@ -21,8 +21,7 @@ import { CatalogoCulturas } from './components/CatalogoCulturas'
 import { resiliencia } from './logic/resiliencia'
 import { diagnostico, periodoDecisivo } from './logic/diagnostico'
 import { estagioEm, estagios } from './logic/estagios'
-import { decendioDaData } from './logic/rotacoesApi'
-import { faixaDoSweep, type Rascunho } from './logic/rascunho'
+import { comDatas, diasEntre, faixaDoSweep, type Rascunho } from './logic/rascunho'
 import { soloDaTextura } from './services/rotacoes'
 import { guardarSalva, lerSalvas, MAX_SALVAS, proximoAnoAgricola, removerSalva, type RotacaoSalva } from './services/rotacoesSalvas'
 import { useRascunho } from './hooks/useRascunho'
@@ -54,13 +53,11 @@ function rascunhoDe(rot: ConjuntoRotacoes['rotacoes'][number], dados: RotationRe
     : dados.rotations.find(r => r.id === rot.id)
   if (!api) return { culturas: [], sel: null }
   return {
-    culturas: api.crops.map(c => ({
-      code: c.crop.eco_port_code,
-      s: decendioDaData(c.planting_date, ano),
-      e: Math.min(36, decendioDaData(c.harvest_date, ano) + 1),
-      refCiclo: null,
-      colheitaLivre: !rot.salva,
-    })),
+    // Datas exatas da API: soltar a cultura num decêndio colorido gera o mesmo pedido do ponto do sweep.
+    culturas: api.crops.map(c => comDatas(
+      { code: c.crop.eco_port_code, s: 0, e: 1, refCiclo: null, colheitaLivre: !rot.salva },
+      c.planting_date, diasEntre(c.planting_date, c.harvest_date) + 1, ano,
+    )),
     sel: 1,
   }
 }
@@ -146,8 +143,9 @@ export default function App() {
   const editor = useRascunho(talhao?.centro ?? null, soloDaTextura(textura), conj?.ano ?? anoAgricola)
   const catalogo = useCulturasSimulaveis(editor.aberto)
   const faixa = useMemo(
-    () => (editor.aberto && editor.rascunho.sel != null ? faixaDoSweep(editor.sim.sweep, editor.rascunho.sel) : null),
-    [editor.aberto, editor.rascunho.sel, editor.sim.sweep],
+    // Alça arrastada muda o ciclo: a faixa (que supõe o ciclo atual) some até o sweep novo chegar.
+    () => (editor.aberto && editor.rascunho.sel != null && !editor.alca ? faixaDoSweep(editor.sim.sweeps[editor.rascunho.sel] ?? null, editor.rascunho.sel) : null),
+    [editor.aberto, editor.rascunho.sel, editor.alca, editor.sim.sweeps],
   )
   const addBloqueio = salvas.length >= MAX_SALVAS ? `Você já tem ${MAX_SALVAS} rotações salvas. Remova uma para criar outra.` : null
   function abrirRascunho() {

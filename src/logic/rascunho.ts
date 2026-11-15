@@ -22,10 +22,17 @@ const DURACAO_PROVISORIA = 11
 
 export type CulturaRascunho = {
   code: number
-  /** Decêndio do plantio (0 = 1–10 set). */
+  /** Decêndio do plantio (0 = 1–10 set). Derivado de `plantio` quando ele existe: só para desenhar. */
   s: number
-  /** Decêndio seguinte ao da colheita (exclusivo). */
+  /** Decêndio seguinte ao da colheita (exclusivo). Derivado de `plantio` + `ciclo` quando existem. */
   e: number
+  /**
+   * Data exata do plantio (ISO). Com `ciclo`, é a fonte da verdade do pedido: a colheita é plantio + ciclo − 1,
+   * a mesma conta do backend. Assim, soltar num decêndio gera exatamente o ponto do sweep. Sem ela, vale `s`.
+   */
+  plantio?: string
+  /** Ciclo em dias (plantio e colheita inclusos). Sem ele, vale o intervalo `s`–`e`. */
+  ciclo?: number
   /** Ciclo de referência em dias (calendário regional), quando já conhecido. */
   refCiclo: number | null
   /** Plantio ainda não definido pelo usuário: vai sem data e a API usa o calendário regional. */
@@ -65,6 +72,23 @@ const dia = (iso: string) => Date.UTC(+iso.slice(0, 4), +iso.slice(5, 7) - 1, +i
 export const diasEntre = (a: string, b: string) => dia(b) - dia(a)
 /** Ciclo em dias, contando o plantio e a colheita (como o backend). */
 export const cicloDias = (s: number, e: number, ano: number) => diasEntre(inicioDecendio(s, ano), fimDecendio(e - 1, ano)) + 1
+/** Data ISO `n` dias depois de `iso`. */
+export const somarDias = (iso: string, n: number) => new Date((dia(iso) + n) * 86_400_000).toISOString().slice(0, 10)
+
+export type Datas = { plantio: string; colheita: string; ciclo: number }
+/** Datas exatas da cultura: as guardadas ou, sem elas, as dos decêndios `s`–`e`. */
+export function datasDe(c: CulturaRascunho, ano: number): Datas {
+  const plantio = c.plantio ?? inicioDecendio(c.s, ano)
+  const ciclo = c.ciclo ?? diasEntre(plantio, fimDecendio(c.e - 1, ano)) + 1
+  return { plantio, ciclo, colheita: somarDias(plantio, ciclo - 1) }
+}
+/** A cultura com estas datas exatas e os decêndios `s`/`e` recalculados para o desenho. */
+export function comDatas(c: CulturaRascunho, plantio: string, ciclo: number, ano: number): CulturaRascunho {
+  const colheita = somarDias(plantio, ciclo - 1)
+  const s = decendioDaData(plantio, ano)
+  const e = colheita > fimDecendio(N_DEC - 1, ano) ? N_DEC : decendioDaData(colheita, ano) + 1
+  return { ...c, plantio, ciclo, s, e: Math.max(e, s + 1) }
+}
 
 /** "21–31 out". */
 export function faixaDecendio(idx: number, ano: number): string {
@@ -72,9 +96,13 @@ export function faixaDecendio(idx: number, ano: number): string {
   const fim = +fimDecendio(idx, ano).slice(8)
   return `${ini}–${fim} ${MONTHS_SHORT[mesDoAno(idx)].toLowerCase()}`
 }
-/** "Plantio 21–31 out · colheita 11–20 fev". */
-export const datasCultura = (c: CulturaRascunho, ano: number) =>
-  `Plantio ${faixaDecendio(c.s, ano)} · colheita ${faixaDecendio(c.e - 1, ano)}`
+/** "21 out". */
+export const dataCurta = (iso: string) => `${+iso.slice(8, 10)} ${MONTHS_SHORT[(+iso.slice(5, 7) + 3) % 12].toLowerCase()}`
+/** "Plantio 21 out · colheita 20 fev" (datas exatas, as que vão para a API). */
+export function datasCultura(c: CulturaRascunho, ano: number): string {
+  const d = datasDe(c, ano)
+  return `Plantio ${dataCurta(d.plantio)} · colheita ${dataCurta(d.colheita)}`
+}
 
 // ---------- Nomes ----------
 const maiuscula = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
@@ -123,50 +151,59 @@ const definido = (c: CulturaRascunho): CulturaRascunho => ({ ...c, plantioLivre:
 const trocarEm = (cs: CulturaRascunho[], i: number, c: CulturaRascunho) => cs.map((x, j) => (j === i ? c : x))
 
 /**
- * Aplica um gesto de arrasto com o alvo em decêndios (plantio ou mover: novo `s`; colheita: novo `e`).
- * As culturas nunca se sobrepõem. Mover a 1ª leva a 2ª junto, mantendo o intervalo: é o mesmo movimento do
- * `first_planting_sweep` da API, então o resultado ao vivo é exato (L10).
+ * Aplica um gesto de arrasto com o alvo em decêndios (plantio ou mover: novo `s`; colheita: novo `e`), em datas
+ * exatas, com a mesma conta do sweep da API:
+ * - mover: plantio no 1º dia do decêndio, ciclo igual. Cada cultura se move sozinha (a 1ª não leva a 2ª), como
+ *   o `first_planting_sweep` e o `second_planting_sweep`; por isso o resultado é exatamente um ponto do sweep;
+ * - plantio: plantio no 1º dia do decêndio, colheita igual (o ciclo muda);
+ * - colheita: colheita no último dia do decêndio, plantio igual (o ciclo muda).
+ * As culturas nunca se sobrepõem (colheita da 1ª antes do plantio da 2ª) e tudo termina até 31/ago.
+ * Alvo igual ao decêndio atual não mexe nas datas (um clique não arredonda nada).
  */
 export function arrastar(r: Rascunho, i: number, gesto: Gesto, alvo: number, ano: number): ResultadoArrasto {
   const cs = r.culturas
   const c = cs[i]
   if (!c) return { rascunho: r, motivo: null }
-  const ant = cs[i - 1], seg = cs[i + 1]
-  let motivo: MotivoLimite | null = null
-  const limitar = (v: number, lo: number, hi: number, mLo: MotivoLimite, mHi: MotivoLimite) => {
-    if (v < lo) { motivo = mLo; return lo }
-    if (v > hi) { motivo = mHi; return hi }
-    return v
-  }
-
-  if (gesto === 'mover') {
-    if (i === 0) {
-      const ultimo = cs[cs.length - 1]
-      const d = limitar(alvo - c.s, -c.s, N_DEC - ultimo.e, 'inicio', 'fim')
-      return { rascunho: { ...r, culturas: cs.map(x => definido({ ...x, s: x.s + d, e: x.e + d })) }, motivo }
-    }
-    const d = limitar(alvo - c.s, (ant ? ant.e : 0) - c.s, (seg ? seg.s : N_DEC) - c.e, ant ? 'anterior' : 'inicio', seg ? 'seguinte' : 'fim')
-    return { rascunho: { ...r, culturas: trocarEm(cs, i, definido({ ...c, s: c.s + d, e: c.e + d })) }, motivo }
-  }
-
+  const atual = gesto === 'colheita' ? c.e : c.s
+  if (alvo === atual) return { rascunho: r, motivo: null }
+  const d = datasDe(c, ano)
+  const ant = cs[i - 1] ? datasDe(cs[i - 1], ano) : null
+  const seg = cs[i + 1] ? datasDe(cs[i + 1], ano) : null
+  const fimSafra = fimDecendio(N_DEC - 1, ano)
   const [min, max] = faixaCiclo(c)
-  if (gesto === 'plantio') {
-    // Menor s: depois da anterior e com ciclo até o máximo. Maior s: ciclo no mínimo e ao menos 1 decêndio.
-    let lo = ant ? ant.e : 0, mLo: MotivoLimite = ant ? 'anterior' : 'inicio'
-    while (lo < c.e - 1 && cicloDias(lo, c.e, ano) > max) { lo++; mLo = 'cicloMax' }
-    let hi = c.e - 1, mHi: MotivoLimite = 'cicloMin'
-    while (hi > lo && cicloDias(hi, c.e, ano) < min) hi--
-    const s = limitar(alvo, lo, hi, mLo, mHi)
-    return { rascunho: { ...r, culturas: trocarEm(cs, i, definido({ ...c, s })) }, motivo }
+
+  const candidato = (k: number): { plantio: string; ciclo: number } => {
+    if (gesto === 'mover') return { plantio: inicioDecendio(k, ano), ciclo: d.ciclo }
+    if (gesto === 'plantio') return { plantio: inicioDecendio(k, ano), ciclo: diasEntre(inicioDecendio(k, ano), d.colheita) + 1 }
+    return { plantio: d.plantio, ciclo: diasEntre(d.plantio, fimDecendio(k - 1, ano)) + 1 }
+  }
+  const falha = (k: number): MotivoLimite | null => {
+    const { plantio, ciclo } = candidato(k)
+    if (ciclo < 1) return 'cicloMin'
+    const colheita = somarDias(plantio, ciclo - 1)
+    if (ant && plantio <= ant.colheita) return 'anterior'
+    if (seg && colheita >= seg.plantio) return 'seguinte'
+    if (colheita > fimSafra) return 'fim'
+    if (gesto !== 'mover' && ciclo < min) return 'cicloMin'
+    if (gesto !== 'mover' && ciclo > max) return 'cicloMax'
+    return null
   }
 
-  let lo = c.s + 1
-  const mLo: MotivoLimite = 'cicloMin'
-  while (lo < N_DEC && cicloDias(c.s, lo, ano) < min) lo++
-  let hi = seg ? seg.s : N_DEC, mHi: MotivoLimite = seg ? 'seguinte' : 'fim'
-  while (hi > lo && cicloDias(c.s, hi, ano) > max) { hi--; mHi = 'cicloMax' }
-  const e = limitar(alvo, lo, Math.max(lo, hi), mLo, mHi)
-  return { rascunho: { ...r, culturas: trocarEm(cs, i, definido({ ...c, e })) }, motivo }
+  const ks = gesto === 'colheita' ? Array.from({ length: N_DEC }, (_, k) => k + 1) : Array.from({ length: N_DEC }, (_, k) => k)
+  const validos = ks.filter(k => !falha(k))
+  if (!validos.length) return { rascunho: r, motivo: null }
+  const lo = validos[0], hi = validos[validos.length - 1]
+  let k = alvo
+  let motivo: MotivoLimite | null = null
+  if (k < lo) { k = lo; motivo = lo > ks[0] ? falha(lo - 1) : gesto === 'colheita' ? 'cicloMin' : 'inicio' }
+  else if (k > hi) { k = hi; motivo = hi < ks[ks.length - 1] ? falha(hi + 1) : 'fim' }
+  else if (falha(k)) {
+    motivo = falha(k)
+    k = validos.reduce((m, v) => (Math.abs(v - alvo) < Math.abs(m - alvo) ? v : m), lo)
+  }
+  if (k === atual) return { rascunho: r, motivo }
+  const { plantio, ciclo } = candidato(k)
+  return { rascunho: { ...r, culturas: trocarEm(cs, i, definido(comDatas(c, plantio, ciclo, ano))) }, motivo }
 }
 
 /** Texto da dica laranja de limite. `nomes` na ordem das culturas. */
@@ -196,7 +233,7 @@ export function adicionar(r: Rascunho, code: number): Rascunho {
 export function trocar(r: Rascunho, i: number, code: number): Rascunho {
   const c = r.culturas[i]
   if (!c || c.code === code) return r
-  const nova: CulturaRascunho = { code, s: c.s, e: c.e, refCiclo: null, plantioLivre: c.plantioLivre, colheitaLivre: true }
+  const nova: CulturaRascunho = { code, s: c.s, e: c.e, plantio: c.plantio, refCiclo: null, plantioLivre: c.plantioLivre, colheitaLivre: true }
   return { culturas: trocarEm(r.culturas, i, nova), sel: i }
 }
 
@@ -211,23 +248,27 @@ export const cheio = (r: Rascunho) =>
   r.culturas.length >= MAX_CULTURAS || (r.culturas.length > 0 && r.culturas[r.culturas.length - 1].e >= N_DEC)
 
 // ---------- Pedido e resposta ----------
-/** Culturas do pedido; null com menos de 2 (a API só simula 2). */
+/** Culturas do pedido (datas exatas); null com menos de 2 (a API só simula 2). */
 export function pedidoCulturas(r: Rascunho, ano: number): CustomCropInput[] | null {
   if (r.culturas.length !== MAX_CULTURAS) return null
-  return r.culturas.map(c => ({
-    code: c.code,
-    ...(c.plantioLivre ? {} : { planting_date: inicioDecendio(c.s, ano) }),
-    ...(c.plantioLivre || c.colheitaLivre ? {} : { harvest_date: fimDecendio(c.e - 1, ano) }),
-  }))
+  return r.culturas.map(c => {
+    if (c.plantioLivre) return { code: c.code }
+    const d = datasDe(c, ano)
+    return c.colheitaLivre ? { code: c.code, planting_date: d.plantio } : { code: c.code, planting_date: d.plantio, harvest_date: d.colheita }
+  })
 }
 
-/** Culturas e ciclos: quando mudam, a faixa do sweep precisa ser recalculada. */
-export const chaveEstrutura = (cs: CustomCropInput[]) =>
-  cs.map(c => `${c.code}:${c.planting_date && c.harvest_date ? diasEntre(c.planting_date, c.harvest_date) : '-'}`).join('|')
+const cicloDoPedido = (c: CustomCropInput) => (c.planting_date && c.harvest_date ? diasEntre(c.planting_date, c.harvest_date) + 1 : '-')
+/**
+ * O que a faixa (sweep) da cultura `i` pressupõe: as culturas, o ciclo dela e as datas da outra. Mudou, a faixa
+ * precisa ser recalculada. Mover a própria cultura `i` não muda a chave: a faixa dela continua valendo.
+ */
+export const chaveFaixa = (cs: CustomCropInput[], i: number) =>
+  cs.map((c, j) => (j === i ? `${c.code}:${cicloDoPedido(c)}` : `${c.code}:${c.planting_date ?? '-'}:${c.harvest_date ?? '-'}`)).join('|')
 
 /**
- * Leva para o rascunho as datas que a API resolveu para as culturas enviadas sem data (e o ciclo de
- * referência). Encaixa nos decêndios sem sobreposição; uma colheita depois de 31/ago vai para o fim da safra (L15).
+ * Leva para o rascunho as datas exatas que a API resolveu para as culturas enviadas sem data (e o ciclo de
+ * referência). Uma colheita depois de 31/ago vai para o fim da safra (L15).
  */
 export function aplicarResposta(r: Rascunho, enviado: CustomCropInput[], resp: RotationSimulationResponse): Rascunho {
   if (r.culturas.length !== resp.rotation.crops.length) return r
@@ -240,17 +281,18 @@ export function aplicarResposta(r: Rascunho, enviado: CustomCropInput[], resp: R
     if (!c.plantioLivre && !c.colheitaLivre && !(pedidoSemColheita && !c.refCiclo)) return c
     const api = resp.rotation.crops[i]
     mudou = true
-    const s = c.plantioLivre ? decendioDaData(api.planting_date, ano) : c.s
+    const atual = datasDe(c, ano)
+    const plantio = c.plantioLivre ? api.planting_date : atual.plantio
     const passou = api.harvest_date > fimSafra
-    const e = c.colheitaLivre ? (passou ? N_DEC : decendioDaData(api.harvest_date, ano) + 1) : c.e
+    const ciclo = c.colheitaLivre ? diasEntre(plantio, passou ? fimSafra : api.harvest_date) + 1 : atual.ciclo
     return {
-      ...c, s, e,
+      ...comDatas(c, plantio, ciclo, ano),
       refCiclo: pedidoSemColheita ? api.calendar.cycle_days : c.refCiclo,
       plantioLivre: false, colheitaLivre: false, ajustado: c.colheitaLivre ? passou : c.ajustado,
     }
   })
   if (!mudou) return r
-  // Encaixe: a 2ª começa no decêndio seguinte à colheita da 1ª, e cada barra tem ao menos 1 decêndio.
+  // Desenho: a barra da 2ª não invade o decêndio da colheita da 1ª (as datas exatas não mudam).
   for (let i = 1; i < culturas.length; i++) {
     const a = culturas[i - 1], b = culturas[i]
     if (b.s < a.e) culturas[i] = { ...b, s: a.e, e: Math.max(b.e, a.e + 1) }
@@ -275,23 +317,23 @@ export function corrigir422(r: Rascunho, mensagem: string, ano: number): Rascunh
   if (colheita) {
     const a = r.culturas[0]
     if (!a || !a.colheitaLivre || a.plantioLivre) return null
-    const ref = diasEntre(inicioDecendio(a.s, ano), colheita[1]) + 1
-    return ajustarCiclo({ ...r, culturas: trocarEm(r.culturas, 0, { ...a, refCiclo: ref, colheitaLivre: false, e: decendioDaData(colheita[1], ano) + 1 }) }, 0, ano)
+    const { plantio } = datasDe(a, ano)
+    const ref = diasEntre(plantio, colheita[1]) + 1
+    return ajustarCiclo({ ...r, culturas: trocarEm(r.culturas, 0, { ...comDatas(a, plantio, ref, ano), refCiclo: ref, colheitaLivre: false }) }, 0, ano)
   }
   return null
 }
 
-/** Coloca o ciclo da cultura `i` dentro da faixa e do espaço até a vizinha; null se não couber. */
+/** Coloca o ciclo da cultura `i` (em dias) dentro da faixa e do espaço até a vizinha; null se não couber. */
 function ajustarCiclo(r: Rascunho, i: number, ano: number): Rascunho | null {
   const c = r.culturas[i]
   const [min, max] = faixaCiclo(c)
-  const teto = r.culturas[i + 1]?.s ?? N_DEC
-  let e = Math.min(c.e, teto)
-  while (e < teto && cicloDias(c.s, e, ano) < min) e++
-  while (e > c.s + 1 && cicloDias(c.s, e, ano) > max) e--
-  const dias = cicloDias(c.s, e, ano)
-  if (dias < min || dias > max) return null
-  return { ...r, culturas: trocarEm(r.culturas, i, { ...c, e, colheitaLivre: false }) }
+  const d = datasDe(c, ano)
+  const seg = r.culturas[i + 1] ? datasDe(r.culturas[i + 1], ano) : null
+  const limite = seg ? somarDias(seg.plantio, -1) : fimDecendio(N_DEC - 1, ano)
+  const ciclo = Math.min(Math.max(d.ciclo, min), max, diasEntre(d.plantio, limite) + 1)
+  if (ciclo < min || ciclo > max) return null
+  return { ...r, culturas: trocarEm(r.culturas, i, comDatas({ ...c, colheitaLivre: false }, d.plantio, ciclo, ano)) }
 }
 
 // ---------- Leitura da simulação ----------
@@ -335,9 +377,8 @@ export type FaixaCalendario = { pontos: Record<number, PontoFaixa>; melhor: numb
 
 /**
  * Cores dos decêndios no calendário para a cultura `i`, pelo sweep da API, com a MESMA régua da barra:
- * pintar de verde significa que, plantando ali, a barra fica verde.
- * - 1ª cultura: o sweep move as duas juntas, então vale a pior das duas (é o status da rotação).
- * - 2ª cultura: a 1ª fica fixa; vale o risco da 2ª.
+ * pintar de verde significa que, plantando ali (e soltando a barra), a barra dela fica verde. Cada sweep move só
+ * a cultura `i` e deixa a outra nas datas atuais, como o arrasto; vale o risco da própria cultura.
  * Temperatura fora dos limites da cultura reprova o plantio. Decêndios fora do sweep (a rotação passaria de
  * 31/ago) ficam sem cor.
  */
@@ -347,9 +388,7 @@ export function faixaDoSweep(resp: RotationSimulationResponse | null, i: number)
   const pontos: Record<number, PontoFaixa> = {}
   for (const p of sw.points) {
     const c = p.crops[i]
-    const propria = classeDoRisco(c.risk_percentage)
-    const base = i === 0 ? piorClasse(p.crops.map(x => classeDoRisco(x.risk_percentage))).cls : propria
-    pontos[p.decendio_idx] = { cls: c.temperature_ok ? base : 'risk', regional: c.in_calendar, temperaturaOk: c.temperature_ok }
+    pontos[p.decendio_idx] = { cls: c.temperature_ok ? classeDoRisco(c.risk_percentage) : 'risk', regional: c.in_calendar, temperaturaOk: c.temperature_ok }
   }
   return { pontos, melhor: sw.best_decendio_idx }
 }
@@ -362,7 +401,7 @@ export const posicaoRanking = (rank: number, entre: number) => `${rank}º de ${e
 export function diasSemCobertura(r: Rascunho, ano: number): number {
   let total = 0
   for (let i = 1; i < r.culturas.length; i++) {
-    total += Math.max(0, diasEntre(fimDecendio(r.culturas[i - 1].e - 1, ano), inicioDecendio(r.culturas[i].s, ano)) - 1)
+    total += Math.max(0, diasEntre(datasDe(r.culturas[i - 1], ano).colheita, datasDe(r.culturas[i], ano).plantio) - 1)
   }
   return total
 }
@@ -387,7 +426,6 @@ export function traduzirCheck(check: string, nomesApi: string[], nomes: string[]
   return { titulo: 'Alerta agronômico', texto: check }
 }
 
-const dataCurta = (iso: string) => `${+iso.slice(8, 10)} ${MONTHS_SHORT[(+iso.slice(5, 7) + 3) % 12].toLowerCase()}`
 
 /** Erro da simulação em português. `nomePorCodigo` dá o nome exibido de cada cultura. */
 export function mensagemErro(motivo: string, detalhe: string, nomePorCodigo: (code: number) => string): string {

@@ -104,19 +104,20 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
               )
             })}
           </div>
-          {sel != null && sim.sweep && (
+          {sel != null && r.culturas.length === MAX_CULTURAS && (sim.sweeps[sel] && !editor.alca ? (
             <>
               <p className="hint">
                 <span className="zsw" /><span className="zsw warn" /><span className="zsw risk" />
                 <span>
-                  Cores no calendário: risco de plantar {nomeSel} em cada decêndio
-                  {sel === 0 && nomes[1] ? `, com ${minuscula(nomes[1])} acompanhando (vale a pior das duas)` : nomes[0] ? `, com ${minuscula(nomes[0])} nas datas atuais` : ''}.
-                  A mesma régua da barra.
+                  Cores no calendário: risco de plantar {nomeSel} em cada decêndio, com {minuscula(nomes[1 - sel] ?? '')} nas
+                  datas atuais. Soltando a barra ali, ela fica dessa cor.
                 </span>
               </p>
               <p className="hint"><span className="zreg" aria-hidden="true">1</span><span>Sublinhado: data usual de plantio na região (±30 dias).</span></p>
             </>
-          )}
+          ) : sim.status !== 'erro' && (
+            <p className="hint">{editor.alca ? 'Mudando o ciclo: as cores do calendário voltam ao soltar.' : 'Recalculando as cores do calendário…'}</p>
+          ))}
         </div>
       )}
 
@@ -149,7 +150,7 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
 
       <span className="sr-only" aria-live="polite">{anuncio}</span>
       <p className="foot">
-        Arraste as pontas da barra para mudar plantio e colheita, ou o meio para mover a cultura (a 1ª leva a 2ª junto).
+        Arraste as pontas da barra para mudar plantio e colheita, ou o meio para mover a cultura sem mudar o ciclo.
         Pelo teclado: Tab até a ponta, setas mudam um decêndio, Shift+setas movem a cultura.
         Simulação da API Entressafras (balanço hídrico FAO-56 simplificado, não validado com o ZARC).
       </p>
