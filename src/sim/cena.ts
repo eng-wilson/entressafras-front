@@ -5,15 +5,18 @@
 import css from '../../simulacao/styles/componente.css?inline'
 import { createTalhao, type Talhao } from './api.js'
 
-export type Cena = Pick<Talhao, 'mostrar' | 'dia' | 'restaurar' | 'destruir'>
+export type Cena = Pick<Talhao, 'mostrar' | 'dia' | 'restaurar' | 'pausar' | 'preparar' | 'destruir'>
 
-export function montarCena(container: HTMLElement, altura: number): Cena {
+/** A cena ocupa o container inteiro: a altura vem do CSS do app (.cena .iso-sim), e o canvas acompanha. */
+export function montarCena(container: HTMLElement): Cena {
   const host = document.createElement('div')
-  host.style.setProperty('--simulacao-altura', `${altura}px`)
+  host.style.height = '100%'
+  host.style.setProperty('--simulacao-altura', '0px')
   const raiz = host.attachShadow({ mode: 'open' })
   const estilo = document.createElement('style')
   // Ajuste do app: zoom no alto, à direita, com o mesmo material dos widgets da cena (canvas.css).
   estilo.textContent = css + `
+    .fgrid, .fgrid > .isow { height: 100%; min-height: 0; }
     .talhao-zoom {
       top: 12px; bottom: auto; border-radius: 14px;
       background: rgba(255,255,255,.72); -webkit-backdrop-filter: blur(20px) saturate(180%); backdrop-filter: blur(20px) saturate(180%);
@@ -38,7 +41,7 @@ export function montarCena(container: HTMLElement, altura: number): Cena {
   let talhao: Talhao
   try {
     // A etiqueta do estágio do app ocupa o topo: a etiqueta de clima do canvas ficaria atrás dela.
-    talhao = createTalhao(raiz.querySelector('canvas')!, { rotuloClima: false })
+    talhao = createTalhao(raiz.querySelector('canvas')!, { rotuloClima: false, resolucao: 512 })
   } catch (e) {
     host.remove()
     throw e
@@ -47,6 +50,8 @@ export function montarCena(container: HTMLElement, altura: number): Cena {
     mostrar: o => talhao.mostrar(o),
     dia: d => talhao.dia(d),
     restaurar: () => talhao.restaurar(),
+    pausar: p => talhao.pausar(p),
+    preparar: c => talhao.preparar(c),
     destruir() {
       talhao.destruir()
       host.remove()

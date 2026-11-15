@@ -16,7 +16,8 @@ const SAL = [236, 236, 228];
 export function createSurface2D({ width, depth, res = 1024, crop }) {
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = res;
-    const ctx = canvas.getContext('2d');
+    // profile2d lê a borda deste canvas a cada dia (amostrarBordaTopo): na CPU a leitura não sincroniza com a GPU.
+    const ctx = canvas.getContext('2d', { willReadFrequently: true });
     const img = ctx.createImageData(res, res);
     const N = res * res;
 

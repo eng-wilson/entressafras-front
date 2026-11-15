@@ -61,12 +61,16 @@ export type Talhao = {
   dia(d: number): void
   zoom(fator: number): void
   restaurar(): void
+  /** true para de desenhar (cena escondida); false retoma. */
+  pausar(p: boolean): void
+  /** Cria antes a cena de uma cultura (id da simulação), sem mostrá-la. */
+  preparar(cultura: string): void
   redimensionar(): void
   destruir(): void
 }
 
 /** O canvas precisa de tamanho CSS; botões de zoom opcionais em `.talhao-zoom` no mesmo pai. */
-export function createTalhao(canvas: HTMLCanvasElement, opcoes?: { rotuloClima?: boolean }): Talhao
+export function createTalhao(canvas: HTMLCanvasElement, opcoes?: { rotuloClima?: boolean; resolucao?: number }): Talhao
 export const CLASSES_SOLO: Record<string, ClasseSolo>
 /** Catálogo de culturas da simulação, por id. */
 export const CULTURAS: Record<string, { id: string; nome: string; cicloDias: number }>

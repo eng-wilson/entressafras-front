@@ -20,21 +20,22 @@ const alturaPlantas = crop => Math.max(0.9, (crop?.morfologia.alturaMax[1] ?? 1.
 const MODO = { solo: { tipo: 'real' }, planta: { modo: 'real', ganho: 1 } };
 
 // opcoes.rotuloClima: false = sem a etiqueta de clima desenhada no topo do canvas.
-export function createTalhao(canvas, { rotuloClima = true } = {}) {
+// opcoes.resolucao: lado, em pixels, das texturas do solo (topo e perfil), repintadas a cada dia; padrão 1024.
+export function createTalhao(canvas, { rotuloClima = true, resolucao = 1024 } = {}) {
     const ctx = canvas.getContext('2d');
     const cam = createCamera();
     const cenas = new Map();     // cultura → { lavoura, diorama }
     const sims = new Map();      // chave da corrida → resultado de simulateRotacao
     let atual = null;            // { cena, sim, crop, classe, dia }
     let larg = 0, alt = 0, sujo = true;
-    let destruido = false, quadroId = null;
+    let destruido = false, quadroId = null, pausado = false;
     const eventos = new AbortController();
     const ouvir = (alvo, tipo, fn, opcoes = {}) => alvo?.addEventListener(tipo, fn, { ...opcoes, signal: eventos.signal });
 
     function cenaDe(crop) {
         if (!cenas.has(crop.id)) {
             const lavoura = createLavoura(crop, { width: WIDTH, depth: DEPTH });
-            const diorama = createDiorama({ width: WIDTH, depth: DEPTH, totalH: TOTAL_H, profTotalM: PROF_VISIVEL_M, crop });
+            const diorama = createDiorama({ width: WIDTH, depth: DEPTH, totalH: TOTAL_H, profTotalM: PROF_VISIVEL_M, crop, resolucao });
             const cena = { lavoura, diorama };
             cenas.set(crop.id, cena);
             if (crop.sprites.arte) lavoura.sprites.carregarArte().then(n => { if (n) { lavoura.compositor.limpar(); sujo = true; } });
@@ -139,7 +140,7 @@ export function createTalhao(canvas, { rotuloClima = true } = {}) {
     function quadro() {
         if (destruido) return;
         quadroId = requestAnimationFrame(quadro);
-        if (!atual || !larg) return;
+        if (!atual || !larg || pausado) return;
         if (sujo) { sujo = false; aplicar(); } else atual.cena.lavoura.processarFila(8);
         const d = cam.dpr;
         ctx.setTransform(d, 0, 0, d, 0, 0);
@@ -180,6 +181,11 @@ export function createTalhao(canvas, { rotuloClima = true } = {}) {
             if (dia !== atual.dia) { atual.dia = dia; sujo = true; }
         },
         redimensionar,
+        // Para de desenhar enquanto a cena não aparece (o último quadro fica no canvas); retomar redesenha.
+        pausar(p) { pausado = !!p; if (!pausado) sujo = true; },
+        // Cria antes a cena de outra cultura (texturas estáticas do solo e lavoura), para a troca de safra
+        // não pagar esse custo na hora. Chamar quando o navegador estiver ocioso.
+        preparar(cultura) { const crop = CULTURAS[cultura]; if (crop && !destruido) cenaDe(crop); },
         zoom: ajustarZoom,
         restaurar: restaurarZoom,
         destruir() {

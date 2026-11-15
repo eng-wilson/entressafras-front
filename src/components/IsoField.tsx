@@ -30,13 +30,18 @@ type Props = {
   stageName: string
   periodLabel: string
   sim: EntradaSim | null
+  /** Cena escondida (modo Comparação): continua montada, sem desenhar. */
+  pausado?: boolean
   /** Decêndio dentro de um período crítico: nível, motivo curto e o problema que pode acontecer. */
   alerta?: { cls: 'good' | 'warn' | 'risk'; rotulo: string; texto: string } | null
 }
 
-const ALTURA = 400
 
-export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, alerta = null }: Props) {
+/** Pausa na navegação (ms) antes de aplicar o dia; e o intervalo máximo entre aplicações numa varredura longa. */
+const ESPERA = 140
+const ESPERA_MAX = 700
+
+export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, pausado = false, alerta = null }: Props) {
   const fill = FILL[stageKey] ?? FILL.bare
   const pill = cropName
     ? cropName + ' · ' + stageName.toLowerCase()
@@ -48,6 +53,26 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, aler
 
   // A cena vive enquanto o componente estiver montado: guarda o cache das simulações e dos sprites.
   useEffect(() => () => { cena.current?.destruir(); cena.current = null }, [])
+  useEffect(() => { cena.current?.pausar(pausado) }, [pausado])
+
+  // Com a cena pronta, cria no tempo ocioso as cenas das outras culturas da rotação (uma por vez): cruzar
+  // de uma safra para a outra no calendário não paga a criação das texturas na hora.
+  const culturas = useMemo(() => [...new Set(sim?.rotacao.safras.map(s => s.cultura) ?? [])].join('|'), [sim?.rotacao])
+  useEffect(() => {
+    if (estado !== 'pronta' || !culturas) return
+    const fila = culturas.split('|')
+    const ocioso = window.requestIdleCallback ?? ((f: () => void) => window.setTimeout(f, 200))
+    const cancelar = window.cancelIdleCallback ?? window.clearTimeout
+    let id = 0
+    const proxima = () => {
+      const c = fila.shift()
+      if (!c) return
+      cena.current?.preparar(c)
+      id = ocioso(proxima)
+    }
+    id = ocioso(proxima)
+    return () => cancelar(id)
+  }, [estado, culturas])
 
   // Ano agrícola do conjunto de rotações (2027 = set/2027 a ago/2028): semente do clima sintético da cena.
   const ano = useConjunto().ano
@@ -65,6 +90,8 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, aler
   const classeId = sim?.classeId ?? ''
   // Chave da simulação: o que muda o resultado. Trocar só o decêndio (posicao, fracao) não simula de novo.
   const chave = rotacao ? `${JSON.stringify(rotacao)}|${ano}|${classeId}|${soloChave}|${fonteChave}` : ''
+  // Último dia aplicado à cena: trocar só o dia dentro da mesma safra é adiado enquanto o calendário é varrido.
+  const aplicado = useRef<{ chave: string; posicao: number; quando: number } | null>(null)
   useEffect(() => {
     if (!host.current || !rotacao || !respostas || !normais || !solo || !fonte) return
     const el = host.current
@@ -72,12 +99,13 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, aler
     const mostrar = (resultado: ResultadoRotacao) => {
       if (!valendo) return   // resposta de um pedido que já foi trocado por outro
       try {
-        cena.current ??= montarCena(el, ALTURA)
+        cena.current ??= montarCena(el)
         const classe = CLASSES_SOLO[classeId] ?? CLASSES_SOLO.latossolo_vermelho
         const safra = cena.current.mostrar({
           rotacao, ano, posicao, classe, classeId, solo, soloChave, fonte, fonteChave, resultado,
         })
         cena.current.dia(fracao * safra.cicloDias)
+        aplicado.current = { chave, posicao, quando: performance.now() }
         setEstado('pronta')
       } catch (e) {
         // Sem canvas 2D ou ResizeObserver (navegador antigo, jsdom): fica só a etiqueta.
@@ -85,10 +113,18 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, aler
         setEstado('erro')
       }
     }
-    // Já simulada: mostra na hora (o slider não espera). Senão o worker simula e a cena anterior fica na tela.
+    // Já simulada. Aplicar um dia novo custa caro (texturas do solo, raízes e sintomas das plantas vão de novo
+    // para a GPU): com o calendário sendo varrido, só a mesma safra mudando de dia, espera a navegação parar
+    // (ESPERA) e, numa varredura longa, aplica no máximo a cada ESPERA_MAX. Clique isolado e troca de safra: na hora.
     const pronto = simulado(chave)
-    if (pronto) mostrar(pronto)
-    else {
+    if (pronto) {
+      const a = aplicado.current
+      const soDia = !!cena.current && a?.chave === chave && a.posicao === posicao
+      const desde = a ? performance.now() - a.quando : Infinity
+      if (!soDia || desde > ESPERA_MAX) { mostrar(pronto); return () => { valendo = false } }
+      const t = window.setTimeout(() => mostrar(pronto), Math.min(ESPERA, ESPERA_MAX - desde))
+      return () => { valendo = false; window.clearTimeout(t) }
+    } else {
       setEstado(e => (e === 'pronta' ? 'simulando' : e))
       simular(chave, { rotacao, ano, classeId, respostas, normais }).then(mostrar, e => {
         if (!valendo) return
@@ -106,7 +142,6 @@ export function IsoField({ cropName, stageKey, stageName, periodLabel, sim, aler
         ref={host}
         role="group"
         aria-label={`Talhão em ${periodLabel}: ${pill}`}
-        style={{ minHeight: ALTURA }}
       />
       {estado === 'preparando' && <div className="iso-sim-msg" aria-hidden="true">Preparando a simulação…</div>}
       {estado === 'simulando' && <div className="iso-sim-tag" role="status">Simulando a rotação…</div>}
