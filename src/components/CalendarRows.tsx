@@ -4,6 +4,7 @@ import { classeAnos, rotationStatus } from '../logic/status'
 import type { Resiliencia } from '../logic/resiliencia'
 import { textoCritico, type Diagnostico, type PeriodoCritico } from '../logic/diagnostico'
 import { useConjunto } from '../state/conjunto'
+import { COR_ROT } from '../logic/aptidao'
 
 // Barra com rótulo = safra (na ordem de safras da rotação) e ganha a cor da própria resiliência; sem rótulo = pousio.
 const minuscula = (t: string) => t.charAt(0).toLowerCase() + t.slice(1)
@@ -21,6 +22,11 @@ type Props = {
   rascunho?: ReactNode
   /** Remove uma rotação salva pelo agricultor (tag "Nova"). */
   onRemoverSalva?: (id: string) => void
+  /**
+   * Modo Comparação: as mesmas linhas, com uma caixa na cor da rotação (a mesma dos cards e do mapa) para marcar o
+   * que comparar. Clicar na linha marca ou desmarca; o cursor do decêndio some (a comparação vale para o ciclo todo).
+   */
+  cmp?: { sel: number[]; onToggle: (rot: number) => void }
 }
 
 /** Trecho da barra (em % da largura dela) ocupado pelo período crítico, pela janela real da safra em decêndios. */
@@ -29,7 +35,7 @@ function trecho(p: PeriodoCritico, de: number, ate: number) {
   return { left: `${((p.de - de) / n * 100).toFixed(2)}%`, width: `${((p.ate - p.de + 1) / n * 100).toFixed(2)}%` }
 }
 
-export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverSalva }: Props) {
+export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverSalva, cmp }: Props) {
   const { rotacoes: ROTATIONS } = useConjunto()
   const rpos = useMemo(() => rankRotations(ROTATIONS), [ROTATIONS])
   const statuses = useMemo(
@@ -58,22 +64,38 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
         const isLast = rpos[ri] === ROTATIONS.length - 1
         const criticos = diags?.[ri].criticos ?? []
         const nome = rot.ct.c1, depois = minuscula(rot.ct.c2)
+        const marcada = !!cmp?.sel.includes(ri)
+        // Na comparação, a linha marca para comparar; no calendário, seleciona a rotação.
+        const acionar = () => (cmp ? cmp.onToggle(ri) : onSel(ri))
 
         return (
           <div
             key={rot.id}
-            className={`row rsel${rot.salva ? ' saved' : ''}${ri === sel ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
+            className={`row rsel${rot.salva ? ' saved' : ''}${!cmp && ri === sel ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
             role="listitem"
-            onClick={() => onSel(ri)}
+            onClick={acionar}
           >
             <div className="rh">
+              {cmp && (
+                <label className={`ct-ck${marcada ? ' on' : ''}`} style={{ color: COR_ROT[rot.cor] }} onClick={e => e.stopPropagation()}>
+                  <input
+                    type="checkbox"
+                    checked={marcada}
+                    disabled={marcada && cmp.sel.length === 1}
+                    onChange={() => cmp.onToggle(ri)}
+                    aria-label={`Comparar ${nome} depois ${depois}`}
+                  />
+                </label>
+              )}
               <span className="rk">{rank}</span>
               <button
                 type="button"
                 className="nm nm-b"
-                aria-pressed={ri === sel}
-                aria-label={`${nome} depois ${depois}${diags?.[ri].decisivo ? `. Selecionar e ver o período que mais pesa: ${diags[ri].decisivo!.rotulo}` : '. Selecionar'}`}
-                onClick={e => { e.stopPropagation(); onSel(ri) }}
+                aria-pressed={cmp ? marcada : ri === sel}
+                aria-label={cmp
+                  ? `${nome} depois ${depois}. ${marcada ? 'Tirar da comparação' : 'Comparar'}`
+                  : `${nome} depois ${depois}${diags?.[ri].decisivo ? `. Selecionar e ver o período que mais pesa: ${diags[ri].decisivo!.rotulo}` : '. Selecionar'}`}
+                onClick={e => { e.stopPropagation(); acionar() }}
               >
                 {nome} <span className="then">depois</span> {depois}
               </button>
@@ -145,7 +167,7 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
                 )
               })}
               {/* Cursor do decêndio simulado, só na rotação selecionada (mesma escala das barras: 36 decêndios) */}
-              {ri === sel && (
+              {!cmp && ri === sel && (
                 <span className="tl-cur" aria-hidden="true" style={{ left: `${(idx / 36 * 100).toFixed(3)}%` }} />
               )}
             </div>

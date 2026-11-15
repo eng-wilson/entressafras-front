@@ -64,7 +64,7 @@ test('sem textura informada, não manda solo e a lateral mostra o solo estimado 
   await expect(page.locator('.side')).toContainText('Argiloso (estimado)')
 })
 
-test('comparação: consumo do ciclo calculado com a API no lugar da faixa ilustrativa; solo superficial do SoilGrids na memória', async ({ page }) => {
+test('comparação: mesmas linhas do calendário, consumo no "Por safra" e solo superficial na memória', async ({ page }) => {
   await comTalhaoSalvo(page)
   await page.route(/\/api\/clima\/decendios/, r => r.fulfill({ json: CLIMA_T07 }))
   await page.route(/\/api\/rotations\/recommendations/, r => {
@@ -78,11 +78,12 @@ test('comparação: consumo do ciclo calculado com a API no lugar da faixa ilust
   })
   await page.goto('/')
   await page.getByRole('button', { name: 'Comparação' }).click()
-  const celulas = page.locator('.ctab .ct-wn')
-  await expect(celulas.first()).toHaveText(/^~\d+ mm$/)
-  await expect(page.locator('.ctab')).not.toContainText('450–800')
+  // Sem tabela própria: as linhas são as do calendário, sem a faixa de meses
+  await expect(page.locator('.rlist .row')).toHaveCount(4)
+  await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveCount(0)
 
   await page.getByRole('button', { name: 'Por safra' }).first().click()
+  await expect(page.getByRole('dialog').first()).toContainText(/~\d+ mm no ciclo/)
   await page.getByRole('button', { name: 'De onde vêm estes números' }).first().click()
   const memoria = page.getByRole('dialog', { name: /^De onde vêm os números/ })
   // Só campos da API, cada um com o caminho de origem (visível em desenvolvimento, ou ligando "Campos da API")

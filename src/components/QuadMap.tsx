@@ -143,7 +143,7 @@ export function QuadMap({ sel, pr, res }: Props) {
   const resumo = dados
     .map(d => `${d.i + 1}. ${nomeRot(rots[d.i])}: ${ORDEM.map(k => `${NOME[k]} ${faixaOu(k, d.a[k], d.rot).rotulo.toLowerCase()}`).join(', ')}`)
     .join('; ')
-  // A seleção continua na tabela de comparação: o botão leva o foco até ela.
+  // A seleção fica nas linhas das rotações, abaixo: o botão leva o foco até elas.
   const escolher = () => {
     const quadro = document.getElementById('rotation-board')
     quadro?.scrollIntoView({ block: 'nearest' })
@@ -270,12 +270,12 @@ export function QuadMap({ sel, pr, res }: Props) {
           {porSafra != null && res?.rotacoes[porSafra] && (
             <PorSafra r={rots[porSafra]} rot={res.rotacoes[porSafra]} num={porSafra + 1} onFechar={() => setPorSafra(null)} />
           )}
-          {sel.length < 2 && <p className="qm-hint">Marque mais uma rotação na tabela para comparar.</p>}
+          {sel.length < 2 && <p className="qm-hint">Marque mais uma rotação na lista abaixo para comparar.</p>}
           <button type="button" className="qm-escolher" onClick={escolher}>
             <svg viewBox="0 0 16 16" aria-hidden="true">
               <path d="M8 3v10M3 8h10" fill="none" stroke="currentColor" strokeWidth={1.7} strokeLinecap="round" />
             </svg>
-            Escolher rotações na tabela
+            Escolher rotações na lista
           </button>
         </div>
       </div>

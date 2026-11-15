@@ -6,7 +6,6 @@ import type { Diagnostico } from '../logic/diagnostico'
 import { RotationsHeader } from './RotationsHeader'
 import { MonthStrip } from './MonthStrip'
 import { CalendarRows } from './CalendarRows'
-import { CompareTable } from './CompareTable'
 
 type Props = {
   decendios: Decendio[] | null
@@ -29,9 +28,10 @@ type Props = {
 }
 
 // Estrutura fiel à referência:
-//   .board > .mstrip + .cal(.months) + .rlist/.ctab
+//   .board > .mstrip + .cal(.months) + .rlist
 // O .cal contém apenas .months (com slider absoluto dentro).
-// O .rlist / .ctab são irmãos de .cal, NÃO filhos.
+// O .rlist é irmão de .cal, NÃO filho. Na Comparação, as mesmas linhas do calendário, com caixas para marcar: os
+// pontos fortes e fracos ficam nos cards da comparação, acima.
 export function Rotations({ idx, mode, onIdx, onMode, decendios, sel, onToggleSel, res, rot, onRot, diags, onAdd, addBloqueio, rascunho, faixa, onRemoverSalva }: Props) {
   return (
     <div id="rotation-board" className="board" tabIndex={-1} aria-label="Calendário e comparação das rotações">
@@ -42,11 +42,8 @@ export function Rotations({ idx, mode, onIdx, onMode, decendios, sel, onToggleSe
           <MonthStrip idx={idx} onIdx={onIdx} decendios={decendios} diag={!rascunho ? diags?.[rot] ?? null : null} faixa={rascunho ? faixa : null} />
         </div>
       )}
-      {mode === 'cal' ? (
-        <CalendarRows res={res} sel={rot} onSel={onRot} diags={diags} idx={idx} rascunho={rascunho} onRemoverSalva={onRemoverSalva} />
-      ) : (
-        <CompareTable sel={sel} onToggleSel={onToggleSel} res={res} />
-      )}
+      <CalendarRows res={res} sel={rot} onSel={onRot} diags={diags} idx={idx} rascunho={mode === 'cal' ? rascunho : undefined}
+        onRemoverSalva={onRemoverSalva} cmp={mode === 'cmp' ? { sel, onToggle: onToggleSel } : undefined} />
     </div>
   )
 }

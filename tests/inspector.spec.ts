@@ -27,10 +27,11 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
   // O cursor está longe da fase antes de ir à comparação.
   await page.getByRole('slider', { name: 'Arraste para simular um período' }).fill('0')
   await insp.getByRole('button', { name: 'Comparar alternativas' }).click()
-  const tabela = page.getByRole('table', { name: 'Comparação das rotações' })
-  await expect(tabela).toBeVisible()
-  await expect(tabela.getByRole('checkbox', { name: 'Mostrar Soja → Milho safrinha no mapa' })).toBeChecked()
-  await expect(tabela.getByRole('checkbox', { name: 'Mostrar Soja → Milheto no mapa' })).toBeChecked()
+  // Na comparação, as mesmas linhas do calendário com caixas para marcar o que comparar
+  const tabela = page.getByRole('checkbox', { name: /^Comparar / })
+  await expect(tabela).toHaveCount(4)
+  await expect(page.getByRole('checkbox', { name: 'Comparar Soja depois milho safrinha' })).toBeChecked()
+  await expect(page.getByRole('checkbox', { name: 'Comparar Soja depois milheto' })).toBeChecked()
   await expect(page.locator('#rotation-board')).toBeFocused()
   // Na comparação, o calendário some: o período simulado não muda nada nela.
   await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveCount(0)
@@ -126,6 +127,6 @@ test('painel acessível em celular, tablet e texto ampliado', async ({ page }, t
   await page.evaluate(() => { document.documentElement.style.fontSize = '200%' })
   expect(await insp.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true)
   await insp.getByRole('button', { name: 'Comparar alternativas' }).click()
-  await expect(page.getByRole('table', { name: 'Comparação das rotações' })).toBeVisible()
+  await expect(page.getByRole('checkbox', { name: /^Comparar / }).first()).toBeVisible()
   await expect(page.locator('#rotation-board')).toBeFocused()
 })
