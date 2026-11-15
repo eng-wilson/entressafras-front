@@ -75,9 +75,11 @@ export function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp 
         </div>
       )}
       <div className="trio-g">
-        {cmp ? <QuadMap sel={cmp.sel} pr={cmp.pr} res={cmp.res} /> : (
-        // A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela
-        <section className="field cena" aria-label="Seu talhão">
+        {/* O mapa vem antes da cena: assim não herda o border-left de `.trio-g > * + *` */}
+        {cmp && <QuadMap sel={cmp.sel} pr={cmp.pr} res={cmp.res} />}
+        {/* A cena ocupa o campo inteiro; chuva, umidade e temperatura do decêndio flutuam sobre ela.
+            No modo Comparação ela só fica escondida: desmontar destruiria o canvas, o cache de sprites e o zoom. */}
+        <section className="field cena" aria-label="Seu talhão" hidden={!!cmp}>
           <IsoField
             sim={sim}
             cropName={cur.cultura}
@@ -100,7 +102,6 @@ export function Simulation({ idx, rot, talhao, fases, diag, clima, cultura, cmp 
             </div>
           </div>
         </section>
-        )}
       </div>
     </section>
   )
