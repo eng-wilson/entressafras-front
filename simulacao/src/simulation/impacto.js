@@ -57,6 +57,12 @@ export function serieDoDia(E, ctx) {
     for (const X of COMPONENTES) dano[X] = Float32Array.from(atribDia[X]);
     return {
         dia: ctx.dia, t, fase: f.codigo, faseNome: f.nome,
+        erosaoU: E.erosaoDia.reduce((s, v) => s + v, 0) / E.NC,
+        deposicaoU: E.deposicaoDia.reduce((s, v) => s + v, 0) / E.NC,
+        sedimentoMovelU: E.sedimento.reduce((s, v) => s + v, 0) / E.NC,
+        sedimentoExportadoU: E.exportacaoSedimentoDia / E.NC,
+        nutrientesExportados: Object.fromEntries(Object.entries(E.exportacaoNutrientesDia).map(([n, v]) => [n, v / E.NC])),
+        espessuraAU: E.espA.reduce((s, v) => s + v, 0) / E.NC,
         chuva: ctx.clima.chuva, tmax: ctx.clima.tmax, tmin: ctx.clima.tmin, et0: ctx.clima.et0,
         ks: ks / n, umidade: um / n, cobertura: cob,
         // Balanço hídrico da cultura (FAO-56): ETc = ET0 · Kc (demanda) e ETa = ET0 · Kc · Ks (o que transpirou).

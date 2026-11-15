@@ -17,8 +17,11 @@ export const PARAMS = {
         escoamento: { pesoTrafego: 0.5, base: 0.02, expoente: 3 }
     },
 
-    // Fenologia (por fração do ciclo; graus-dia entram aqui depois).
+    // Fenologia térmica didática; modo 'dias' preserva o comportamento histórico.
     fenologia: {
+        modo: 'graus-dia',
+        referenciaC: 24.5,            // referência didática para converter cicloDias em soma térmica
+        tetoC: 35,                    // temperatura média acima deste teto não acelera o ciclo
         emergencia: 0.03,              // t a partir do qual a planta existe
         raizInicialM: 0.05,            // profundidade da raiz na emergência
         raizJanela: [0.0, 0.6],        // t em que a raiz vai de 0 ao máximo da cultura
@@ -67,6 +70,8 @@ export const PARAMS = {
     gleizacao: { ganhoDia: 0.004 },
 
     superficie: {
+        erosao: { ativa: true, chuvaMinMm: 12.7, taxaUPorMm: 0.00001, maxDiaU: 0.002,
+            deposicaoFracao: .4, enriquecimento: 1.5 },
         crosta: { chuvaMinMm: 8, chuvaEscalaMm: 120, protecaoBio: 0.5, recuperacaoBio: 0.002 },
         rachadura: { fatorPmp: 1.05, sobe: 0.07, chuvaFechaMm: 5, fecha: 0.5 },
         temperatura: { descobertoC: 20, efeitoUmidade: 0.6, dosselC: 3 }

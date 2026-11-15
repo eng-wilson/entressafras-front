@@ -38,8 +38,16 @@ export function criarHeranca({ anterior, diasEntressafra, fracaoUmida = 1 }) {
         const fSeca = Es.decomposicaoSeca ?? 1;
         const diasDecomp = diasEntressafra * (fracaoUmida + (1 - fracaoUmida) * fSeca);
 
+        E.exportacaoSedimento = A.exportacaoSedimento;
+        E.exportacaoNutrientes = { ...A.exportacaoNutrientes };
         for (let c = 0; c < NC; c++) {
             const base = c * L;
+            E.espA[c] = A.espA[c]; // erosão acumulada não se recompõe ao trocar de safra
+            E.sedimento[c] = A.sedimento[c];
+            for (const n of NUTRIENTES) {
+                E.nutrientesSedimento[n][c] = A.nutrientesSedimento[n][c];
+                E.nutrientesDepositados[n][c] = A.nutrientesDepositados[n][c];
+            }
 
             // Palhada: a antiga decompõe durante a safra e o intervalo; a nova vem do resíduo.
             const velha = A.palhada[c] * Math.pow(0.5, (anterior.cicloDias + diasDecomp) / 90);
