@@ -1,12 +1,12 @@
 // Rotações recomendadas para o talhão ativo: cache primeiro, depois a API; "Tentar de novo" ignora o cache.
 import { useCallback, useEffect, useState } from 'react'
-import type { Ponto, RotationRecommendations, Textura } from '../types'
+import type { CustomCropInput, Ponto, RotationRecommendations, Textura } from '../types'
 import {
   ErroRotacoes, apagarRotacoes, chaveRotacoes, guardarRotacoes, lerRotacoes, recomendarRotacoes, soloDaTextura,
 } from '../services/rotacoes'
 
-/** Cobre o cold start do backend; depois disso vira erro de rede com "Tentar de novo". */
-const TEMPO_LIMITE_MS = 20_000
+/** Cobre a primeira carga de um local novo (POWER + SoilGrids + SMAP levam 1–3 min); depois disso vira erro de rede com "Tentar de novo". */
+const TEMPO_LIMITE_MS = 180_000
 
 export type EstadoRotacoes =
   | { status: 'carregando'; dados: null }
@@ -15,10 +15,16 @@ export type EstadoRotacoes =
 
 const CARREGANDO: EstadoRotacoes = { status: 'carregando', dados: null }
 
-export function useRotacoes(p: Ponto | null, textura: Textura | null): EstadoRotacoes & { recarregar: () => void } {
+/** Rotações salvas pelo agricultor, enviadas em custom_rotations com o ano agrícola das datas delas. */
+export type SalvasDoPedido = { ano: number; custom: CustomCropInput[][] } | null
+
+export function useRotacoes(p: Ponto | null, textura: Textura | null, salvas: SalvasDoPedido = null): EstadoRotacoes & { recarregar: () => void } {
   const lat = p?.lat, lon = p?.lon
   const solo = soloDaTextura(textura)
-  const chave = lat !== undefined && lon !== undefined ? chaveRotacoes({ ponto: { lat, lon }, solo }) : null
+  // Sem salvas, o pedido fica como antes (ano padrão da API, mesma chave de cache).
+  const extra = salvas?.custom.length ? { ano: salvas.ano, custom: salvas.custom } : {}
+  const extraJson = JSON.stringify(extra)
+  const chave = lat !== undefined && lon !== undefined ? chaveRotacoes({ ponto: { lat, lon }, solo, ...extra }) : null
   const [tentativa, setTentativa] = useState(0)
   const [resposta, setResposta] = useState<{ chave: string | null; estado: EstadoRotacoes }>(() => {
     const c = chave ? lerRotacoes(chave) : null
@@ -36,7 +42,7 @@ export function useRotacoes(p: Ponto | null, textura: Textura | null): EstadoRot
     const ac = new AbortController()
     const timer = setTimeout(() => ac.abort(), TEMPO_LIMITE_MS)
     let ativo = true
-    recomendarRotacoes({ ponto: { lat, lon }, solo }, ac.signal)
+    recomendarRotacoes({ ponto: { lat, lon }, solo, ...JSON.parse(extraJson) }, ac.signal)
       .then(dados => {
         if (!ativo) return
         guardarRotacoes(chave, dados)
@@ -49,7 +55,7 @@ export function useRotacoes(p: Ponto | null, textura: Textura | null): EstadoRot
       })
       .finally(() => clearTimeout(timer))
     return () => { ativo = false; clearTimeout(timer); ac.abort() }
-  }, [chave, lat, lon, solo, tentativa])
+  }, [chave, lat, lon, solo, extraJson, tentativa])
 
   const recarregar = useCallback(() => {
     if (chave) apagarRotacoes(chave)

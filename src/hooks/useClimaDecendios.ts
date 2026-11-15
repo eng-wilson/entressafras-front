@@ -3,8 +3,8 @@ import { useCallback, useEffect, useState } from 'react'
 import type { EstadoClima, Ponto } from '../types'
 import { ErroClima, apagarCache, chaveClima, climaDecendios, gravarCache, lerCache } from '../services/clima'
 
-/** Cobre o cold start do backend; depois disso vira erro de rede com "Tentar de novo". */
-const TEMPO_LIMITE_MS = 20_000
+/** Cobre a primeira carga de um local novo (POWER + SoilGrids + SMAP levam 1–3 min); depois disso vira erro de rede com "Tentar de novo". */
+const TEMPO_LIMITE_MS = 180_000
 
 const CARREGANDO: EstadoClima = { status: 'carregando', dados: null }
 
