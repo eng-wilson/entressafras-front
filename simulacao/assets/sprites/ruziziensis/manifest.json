@@ -1,0 +1,220 @@
+{
+  "sprites": {
+    "E_normal_0": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        45,
+        87
+      ],
+      "resolucao": 661
+    },
+    "E_normal_1": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        45,
+        87
+      ],
+      "resolucao": 661
+    },
+    "E_normal_2": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        45,
+        87
+      ],
+      "resolucao": 661
+    },
+    "PER_normal_0": {
+      "cor": "arte-PER.png",
+      "dados": "arte-PER.dados.png",
+      "ancora": [
+        121,
+        190
+      ],
+      "resolucao": 864
+    },
+    "PER_normal_1": {
+      "cor": "arte-PER.png",
+      "dados": "arte-PER.dados.png",
+      "ancora": [
+        121,
+        190
+      ],
+      "resolucao": 864
+    },
+    "PER_normal_2": {
+      "cor": "arte-PER.png",
+      "dados": "arte-PER.dados.png",
+      "ancora": [
+        121,
+        190
+      ],
+      "resolucao": 864
+    },
+    "TAP_normal_0": {
+      "cor": "arte-TAP.png",
+      "dados": "arte-TAP.dados.png",
+      "ancora": [
+        163,
+        322
+      ],
+      "resolucao": 696
+    },
+    "TAP_normal_1": {
+      "cor": "arte-TAP.png",
+      "dados": "arte-TAP.dados.png",
+      "ancora": [
+        163,
+        322
+      ],
+      "resolucao": 696
+    },
+    "TAP_normal_2": {
+      "cor": "arte-TAP.png",
+      "dados": "arte-TAP.dados.png",
+      "ancora": [
+        163,
+        322
+      ],
+      "resolucao": 696
+    },
+    "AL_normal_0": {
+      "cor": "arte-TAP.png",
+      "dados": "arte-TAP.dados.png",
+      "ancora": [
+        163,
+        322
+      ],
+      "resolucao": 481
+    },
+    "AL_normal_1": {
+      "cor": "arte-TAP.png",
+      "dados": "arte-TAP.dados.png",
+      "ancora": [
+        163,
+        322
+      ],
+      "resolucao": 481
+    },
+    "AL_normal_2": {
+      "cor": "arte-TAP.png",
+      "dados": "arte-TAP.dados.png",
+      "ancora": [
+        163,
+        322
+      ],
+      "resolucao": 481
+    },
+    "FL_normal_cheia_0": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        139,
+        535
+      ],
+      "resolucao": 794
+    },
+    "FL_normal_cheia_1": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        139,
+        535
+      ],
+      "resolucao": 794
+    },
+    "FL_normal_cheia_2": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        139,
+        535
+      ],
+      "resolucao": 794
+    },
+    "SEM_normal_cheia_0": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "SEM_normal_cheia_1": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "SEM_normal_cheia_2": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "DES_normal_0": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "DES_normal_1": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "DES_normal_2": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "PAL_normal_0": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "PAL_normal_1": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    },
+    "PAL_normal_2": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        133,
+        536
+      ],
+      "resolucao": 796
+    }
+  }
+}

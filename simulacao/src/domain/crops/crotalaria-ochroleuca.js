@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 export default criarCultura({
-    id: 'crotalaria_ochroleuca', nome: 'Crotalária ochroleuca', archetype: 'leguminosa_arbustiva', cicloDias: 120,
+    id: 'crotalaria_ochroleuca', nome: 'Crotalária ochroleuca', archetype: 'leguminosa_arbustiva', cicloDias: 120, arte: true, adaptarArte: true,
     plantio: { linhas: 6, plantasPorLinha: 6, margem: .45, semente: 7103 }, alturaMax: [.9, 1.2], folhasFinal: 13, comprFolha: .2,
     tipoFolha: 'trifoliolada', tipoFruto: 'vagem_inflada', tamFruto: .055, raiz: 'pivotante', raizProfMax: 1.2, fixaN: true, ramosMax: 6, vagensMax: 14,
     fases: [

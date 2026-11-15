@@ -1,0 +1,220 @@
+{
+  "sprites": {
+    "E_normal_0": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        40,
+        148
+      ],
+      "resolucao": 1117
+    },
+    "E_normal_1": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        40,
+        148
+      ],
+      "resolucao": 1117
+    },
+    "E_normal_2": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        40,
+        148
+      ],
+      "resolucao": 1117
+    },
+    "PER_normal_0": {
+      "cor": "arte-PER.png",
+      "dados": "arte-PER.dados.png",
+      "ancora": [
+        133,
+        355
+      ],
+      "resolucao": 1277
+    },
+    "PER_normal_1": {
+      "cor": "arte-PER.png",
+      "dados": "arte-PER.dados.png",
+      "ancora": [
+        133,
+        355
+      ],
+      "resolucao": 1277
+    },
+    "PER_normal_2": {
+      "cor": "arte-PER.png",
+      "dados": "arte-PER.dados.png",
+      "ancora": [
+        133,
+        355
+      ],
+      "resolucao": 1277
+    },
+    "TOU_normal_0": {
+      "cor": "arte-TOU.png",
+      "dados": "arte-TOU.dados.png",
+      "ancora": [
+        148,
+        625
+      ],
+      "resolucao": 967
+    },
+    "TOU_normal_1": {
+      "cor": "arte-TOU.png",
+      "dados": "arte-TOU.dados.png",
+      "ancora": [
+        148,
+        625
+      ],
+      "resolucao": 967
+    },
+    "TOU_normal_2": {
+      "cor": "arte-TOU.png",
+      "dados": "arte-TOU.dados.png",
+      "ancora": [
+        148,
+        625
+      ],
+      "resolucao": 967
+    },
+    "AL_normal_0": {
+      "cor": "arte-TOU.png",
+      "dados": "arte-TOU.dados.png",
+      "ancora": [
+        148,
+        625
+      ],
+      "resolucao": 703
+    },
+    "AL_normal_1": {
+      "cor": "arte-TOU.png",
+      "dados": "arte-TOU.dados.png",
+      "ancora": [
+        148,
+        625
+      ],
+      "resolucao": 703
+    },
+    "AL_normal_2": {
+      "cor": "arte-TOU.png",
+      "dados": "arte-TOU.dados.png",
+      "ancora": [
+        148,
+        625
+      ],
+      "resolucao": 703
+    },
+    "FL_normal_cheia_0": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        154,
+        824
+      ],
+      "resolucao": 922
+    },
+    "FL_normal_cheia_1": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        154,
+        824
+      ],
+      "resolucao": 922
+    },
+    "FL_normal_cheia_2": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        154,
+        824
+      ],
+      "resolucao": 922
+    },
+    "SEM_normal_cheia_0": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "SEM_normal_cheia_1": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "SEM_normal_cheia_2": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "DES_normal_cheia_0": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "DES_normal_cheia_1": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "DES_normal_cheia_2": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "PAL_normal_0": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "PAL_normal_1": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    },
+    "PAL_normal_2": {
+      "cor": "arte-SEM.png",
+      "dados": "arte-SEM.dados.png",
+      "ancora": [
+        152,
+        825
+      ],
+      "resolucao": 924
+    }
+  }
+}

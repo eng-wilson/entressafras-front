@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 export default criarCultura({
-    id: 'crotalaria_spectabilis', nome: 'Crotalária spectabilis', archetype: 'leguminosa_arbustiva', cicloDias: 115,
+    id: 'crotalaria_spectabilis', nome: 'Crotalária spectabilis', archetype: 'leguminosa_arbustiva', cicloDias: 115, arte: true, adaptarArte: true,
     plantio: { linhas: 6, plantasPorLinha: 6, margem: .45, semente: 7102 }, alturaMax: [.72, .98], folhasFinal: 12, comprFolha: .23,
     tipoFolha: 'simples', tipoFruto: 'vagem_inflada', tamFruto: .065, raiz: 'pivotante', raizProfMax: 1.1, fixaN: true, ramosMax: 7, vagensMax: 15,
     fases: [

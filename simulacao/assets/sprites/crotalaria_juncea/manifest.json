@@ -1,0 +1,166 @@
+{
+  "sprites": {
+    "E_normal_0": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        75,
+        143
+      ],
+      "resolucao": 1012
+    },
+    "E_normal_1": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        75,
+        143
+      ],
+      "resolucao": 1012
+    },
+    "E_normal_2": {
+      "cor": "arte-E.png",
+      "dados": "arte-E.dados.png",
+      "ancora": [
+        75,
+        143
+      ],
+      "resolucao": 1012
+    },
+    "V_normal_0": {
+      "cor": "arte-V.png",
+      "dados": "arte-V.dados.png",
+      "ancora": [
+        126,
+        537
+      ],
+      "resolucao": 656
+    },
+    "V_normal_1": {
+      "cor": "arte-V.png",
+      "dados": "arte-V.dados.png",
+      "ancora": [
+        126,
+        537
+      ],
+      "resolucao": 656
+    },
+    "V_normal_2": {
+      "cor": "arte-V.png",
+      "dados": "arte-V.dados.png",
+      "ancora": [
+        126,
+        537
+      ],
+      "resolucao": 656
+    },
+    "FL_normal_0": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        150,
+        969
+      ],
+      "resolucao": 621
+    },
+    "FL_normal_1": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        150,
+        969
+      ],
+      "resolucao": 621
+    },
+    "FL_normal_2": {
+      "cor": "arte-FL.png",
+      "dados": "arte-FL.dados.png",
+      "ancora": [
+        150,
+        969
+      ],
+      "resolucao": 621
+    },
+    "VAG_normal_cheia_0": {
+      "cor": "arte-VAG.png",
+      "dados": "arte-VAG.dados.png",
+      "ancora": [
+        152,
+        969
+      ],
+      "resolucao": 621
+    },
+    "VAG_normal_cheia_1": {
+      "cor": "arte-VAG.png",
+      "dados": "arte-VAG.dados.png",
+      "ancora": [
+        152,
+        969
+      ],
+      "resolucao": 621
+    },
+    "VAG_normal_cheia_2": {
+      "cor": "arte-VAG.png",
+      "dados": "arte-VAG.dados.png",
+      "ancora": [
+        152,
+        969
+      ],
+      "resolucao": 621
+    },
+    "ROL_normal_cheia_0": {
+      "cor": "arte-MAT.png",
+      "dados": "arte-MAT.dados.png",
+      "ancora": [
+        159,
+        969
+      ],
+      "resolucao": 621
+    },
+    "ROL_normal_cheia_1": {
+      "cor": "arte-MAT.png",
+      "dados": "arte-MAT.dados.png",
+      "ancora": [
+        159,
+        969
+      ],
+      "resolucao": 621
+    },
+    "ROL_normal_cheia_2": {
+      "cor": "arte-MAT.png",
+      "dados": "arte-MAT.dados.png",
+      "ancora": [
+        159,
+        969
+      ],
+      "resolucao": 621
+    },
+    "PAL_normal_0": {
+      "cor": "arte-MAT.png",
+      "dados": "arte-MAT.dados.png",
+      "ancora": [
+        159,
+        969
+      ],
+      "resolucao": 621
+    },
+    "PAL_normal_1": {
+      "cor": "arte-MAT.png",
+      "dados": "arte-MAT.dados.png",
+      "ancora": [
+        159,
+        969
+      ],
+      "resolucao": 621
+    },
+    "PAL_normal_2": {
+      "cor": "arte-MAT.png",
+      "dados": "arte-MAT.dados.png",
+      "ancora": [
+        159,
+        969
+      ],
+      "resolucao": 621
+    }
+  }
+}
