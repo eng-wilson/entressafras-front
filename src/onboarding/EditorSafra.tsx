@@ -9,18 +9,26 @@ type K = 'c1' | 'c2'
 const TITULO: Record<K, string> = { c1: '1ª safra · verão', c2: '2ª safra · safrinha' }
 const SC: Record<K, 'sc1' | 'sc2'> = { c1: 'sc1', c2: 'sc2' }
 
-type Props = { valor: RegistroSafra; onMudar: (r: RegistroSafra) => void }
+/** Safra seguinte já registrada: a cultura dela vira a 1ª sugestão ("igual a 2025/26"). */
+export type ReferenciaSafra = { safra: string; registro: RegistroSafra }
+type Props = { valor: RegistroSafra; onMudar: (r: RegistroSafra) => void; referencia?: ReferenciaSafra | null }
 
 function IconeCultura({ v }: { v: string }) {
   return <Icone id={v === NAO_PLANTEI ? 'c-fallow' : 'i-leaf'} className="ic hs-ci" />
 }
 
+/** Sugestões do campo: a cultura da safra de referência primeiro, depois as comuns na região. */
+function sugeridas(k: K, ref: ReferenciaSafra | null | undefined): string[] {
+  const daRef = ref?.registro[k]
+  return daRef ? [daRef, ...SUGESTOES[k].filter(v => v !== daRef)] : [...SUGESTOES[k]]
+}
+
 /** Seções da lista: sugeridas + grupos do catálogo, filtradas pelo termo. */
-function secoes(k: K, termo: string): [string, string[]][] {
+function secoes(k: K, termo: string, ref?: ReferenciaSafra | null): [string, string[]][] {
   const t = norm(termo.trim())
   const casa = (v: string) => !t || norm(nomeCultura(v)).includes(t)
   const grupos: [string, string[]][] = [
-    ['Sugeridas', [...SUGESTOES[k]]],
+    ['Sugeridas', sugeridas(k, ref)],
     ...(k === 'c2' ? [['Sem cultura', [NAO_PLANTEI]] as [string, string[]]] : []),
     ...GRUPOS_CULTURA,
   ]
@@ -29,7 +37,7 @@ function secoes(k: K, termo: string): [string, string[]][] {
     .filter(([, l]) => l.length > 0)
 }
 
-export function EditorSafra({ valor: reg, onMudar }: Props) {
+export function EditorSafra({ valor: reg, onMudar, referencia = null }: Props) {
   const uid = useId()
   const [q, setQ] = useState<Record<K, string>>({ c1: '', c2: '' })
   const [aberto, setAberto] = useState<K | null>(null)
@@ -56,7 +64,7 @@ export function EditorSafra({ valor: reg, onMudar }: Props) {
     if (e.key === 'Enter') {
       e.preventDefault()
       const termo = q[k].trim()
-      const primeira = secoes(k, termo)[0]?.[1][0]
+      const primeira = secoes(k, termo, referencia)[0]?.[1][0]
       if (primeira) escolher(k, primeira)
       else if (termo) escolher(k, outra(termo))
     }
@@ -87,13 +95,14 @@ export function EditorSafra({ valor: reg, onMudar }: Props) {
     }
     const listaId = `${uid}-${k}-lista`
     const termo = q[k].trim()
-    const secs = aberto === k ? secoes(k, q[k]) : []
+    const secs = aberto === k ? secoes(k, q[k], referencia) : []
     return (
       <>
         <div className="hs-sug" role="group" aria-label={`Sugestões para ${TITULO[k]}`}>
-          {SUGESTOES[k].map(s => (
+          {sugeridas(k, referencia).map(s => (
             <button key={s} className="hs-pill" type="button" onClick={() => escolher(k, s)}>
               <IconeCultura v={s} />{nomeCultura(s)}
+              {referencia?.registro[k] === s && <small>igual a {referencia.safra}</small>}
             </button>
           ))}
         </div>
@@ -121,7 +130,7 @@ export function EditorSafra({ valor: reg, onMudar }: Props) {
                   {vs.map(v => (
                     <button key={v} className="hs-di" type="button" role="option" aria-selected={false} onClick={() => escolher(k, v)}>
                       <IconeCultura v={v} />{nomeCultura(v)}
-                      {titulo === 'Sugeridas' && <small>Comum na região</small>}
+                      {titulo === 'Sugeridas' && <small>{referencia?.registro[k] === v ? `Em ${referencia.safra}` : 'Comum na região'}</small>}
                     </button>
                   ))}
                 </div>

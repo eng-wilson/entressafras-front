@@ -25,7 +25,7 @@ const culturasRot = a => a.rotacoes?.rotations?.flatMap(r => r.crops.map(c => c.
  * (não serve). `emUso`: o front já consome o valor da API. `precisa`: o que falta do backend enquanto não é real.
  */
 export const DADOS = [
-  { dado: 'Chuva, ET0 e temperatura por decêndio', front: 'Indicadores do decêndio, resiliência', emUso: true,
+  { dado: 'Chuva, ET0 e temperatura por decêndio', front: 'Indicadores do decêndio, resiliência, chuva no ano (lateral)', emUso: true,
     servido: a => (a.decendios?.decendios?.length === 36 ? 'real' : null), precisa: '—' },
   { dado: 'Requisitos das culturas (EcoCrop)', front: 'Temperatura, catálogo "Dados das culturas"', emUso: true,
     servido: a => (a.cultura?.eco_port_code === SOJA ? 'real' : null), precisa: '—' },
@@ -53,7 +53,7 @@ export const DADOS = [
     servido: () => null, precisa: 'Produtividade e preço por cultura e região, com data' },
   { dado: 'Efeito da sequência no solo e nas pragas', front: '`src/data/perfis.ts` (mock)', emUso: false,
     servido: () => null, precisa: 'Efeito agronômico por sequência de culturas' },
-  { dado: 'Umidade do solo atual', front: 'Mock na lateral e no indicador de solo', emUso: false,
+  { dado: 'Umidade do solo atual', front: 'Mock no indicador de umidade da cena', emUso: false,
     servido: () => null, precisa: 'Leitura atual com data, origem e unidade' },
   { dado: 'Previsão do tempo', front: 'Fora do escopo atual', emUso: false,
     servido: () => null, precisa: 'Fonte de previsão com horizonte e data de emissão' },

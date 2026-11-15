@@ -18,6 +18,12 @@ export function chuvaDoMes(decendios: Decendio[] | null, m: number): number | nu
   return somaOuNull(idxDoMes(m).map(i => decendios[i]?.chuva_media))
 }
 
+/** Chuva do ano agrícola = soma dos 36 decêndios; null se faltar qualquer um (nunca soma parcial). */
+export function chuvaDoAno(decendios: Decendio[] | null): number | null {
+  if (!decendios || decendios.length !== 36) return null
+  return somaOuNull(decendios.map(d => d.chuva_media))
+}
+
 /** Chuva dos 12 meses, de setembro a agosto. */
 export const chuvaMeses = (decendios: Decendio[] | null): (number | null)[] =>
   Array.from({ length: 12 }, (_, m) => chuvaDoMes(decendios, m))

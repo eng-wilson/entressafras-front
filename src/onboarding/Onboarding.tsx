@@ -1,10 +1,12 @@
 // Primeiro acesso e edição do talhão (portado de entressafras/src/components/onboarding.js):
 //   vazio    mapa sem talhão e o convite "Marque seu primeiro talhão";
 //   desenho  cliques no mapa marcam os cantos (Desfazer, Cancelar, Concluir com 3 cantos ou mais);
-//   janela   etapas Talhão → Solo → Rotação (na edição: Talhão → Solo).
+//   janela   etapas Talhão → Solo → Rotação (na edição: Talhão → Solo);
+//   lista    (modo talhoes) os talhões salvos no mapa: escolher outro ou desenhar um novo.
 import './onboarding.css'
 import { useEffect, useState, type FormEvent } from 'react'
 import { latLngBounds, type Map as LMap } from 'leaflet'
+import { fmtCoord, fmtHaCurto } from '../logic/geo'
 import type { Contorno, DadosTalhao, Talhao } from '../types'
 import { areaHa, centroide } from '../logic/geo'
 import { buscar } from '../services/geocoding'
@@ -15,7 +17,7 @@ import { Icone } from './Icone'
 import { JanelaPassos } from './JanelaPassos'
 import { MapaTalhao, type Camada } from './MapaTalhao'
 
-export type ModoOnboarding = 'novo' | 'editar' | 'redesenhar'
+export type ModoOnboarding = 'novo' | 'editar' | 'redesenhar' | 'talhoes'
 
 type Props = {
   modo: ModoOnboarding
@@ -24,22 +26,31 @@ type Props = {
   onConcluir: (d: DadosTalhao) => void
   /** Ausente no primeiro acesso: não há para onde voltar. */
   onCancelar?: () => void
+  /** Modo talhoes: todos os talhões salvos e a troca do ativo. */
+  talhoes?: Talhao[]
+  onEscolher?: (id: string) => void
 }
 
-type Tela = 'vazio' | 'desenho' | 'janela'
+type Tela = 'vazio' | 'desenho' | 'janela' | 'lista'
 
-export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
-  const [tela, setTela] = useState<Tela>(modo === 'novo' ? 'vazio' : modo === 'redesenhar' ? 'desenho' : 'janela')
+const telaInicial = (modo: ModoOnboarding): Tela =>
+  modo === 'novo' ? 'vazio' : modo === 'redesenhar' ? 'desenho' : modo === 'talhoes' ? 'lista' : 'janela'
+
+export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [], onEscolher }: Props) {
+  const [tela, setTela] = useState<Tela>(telaInicial(modo))
   const [pontos, setPontos] = useState<Contorno>(modo === 'editar' && talhao ? talhao.contorno : [])
   const [camada, setCamada] = useState<Camada>('mapa')
   const [mapa, setMapa] = useState<LMap | null>(null)
   const [aviso, setAviso] = useState('')
   const [busca, setBusca] = useState('')
 
-  // Enquadra o talhão em edição; no primeiro acesso tenta a localização do navegador (Rio Verde se negar).
+  // Enquadra o talhão em edição (ou todos, na escolha); no primeiro acesso tenta a localização do navegador.
   useEffect(() => {
     if (!mapa) return
-    if (talhao?.contorno.length) {
+    const todos = modo === 'talhoes' ? talhoes.flatMap(t => t.contorno) : []
+    if (todos.length) {
+      mapa.fitBounds(latLngBounds(todos), { padding: [80, 80], maxZoom: 16 })
+    } else if (talhao?.contorno.length) {
       mapa.fitBounds(latLngBounds(talhao.contorno), { padding: [80, 80], maxZoom: 16 })
     } else if (modo === 'novo' && 'geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -48,12 +59,12 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
         { timeout: 8000 },
       )
     }
-  }, [mapa, talhao, modo])
+  }, [mapa, talhao, modo, talhoes])
 
   function cancelarDesenho() {
     setPontos([])
     if (modo === 'redesenhar') onCancelar?.()
-    else setTela('vazio')
+    else setTela(modo === 'talhoes' ? 'lista' : 'vazio')
   }
   function concluirDesenho() {
     if (pontos.length < 3) return
@@ -71,7 +82,7 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
   function cancelarJanela() {
     if (modo === 'editar') { onCancelar?.(); return }
     setPontos([])
-    setTela('vazio')
+    setTela(modo === 'talhoes' ? 'lista' : 'vazio')
   }
 
   useEffect(() => {
@@ -79,6 +90,7 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
       if (e.key !== 'Escape') return
       if (tela === 'desenho') cancelarDesenho()
       else if (tela === 'janela') cancelarJanela()
+      else if (tela === 'lista') onCancelar?.()
     }
     window.addEventListener('keydown', tecla)
     return () => window.removeEventListener('keydown', tecla)
@@ -101,7 +113,8 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
   }
   function comecarDesenho() { setPontos([]); setAviso(''); setTela('desenho') }
 
-  const subtitulo = modo === 'novo' ? 'Nenhum talhão ainda' : talhao?.nome ?? ''
+  const subtitulo = modo === 'novo' ? 'Nenhum talhão ainda'
+    : modo === 'talhoes' ? `${talhoes.length} ${talhoes.length === 1 ? 'talhão' : 'talhões'}` : talhao?.nome ?? ''
   return (
     <div className="ob">
       <div className="ob-win">
@@ -123,8 +136,8 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
               <Icone id="i-search" />
               <input type="search" placeholder="Buscar local" aria-label="Buscar local no mapa" value={busca} onChange={e => setBusca(e.target.value)} />
             </form>
-            {modo === 'novo' && tela === 'vazio' && (
-              <button className="ob-btn ob-pri" type="button" onClick={comecarDesenho}><Icone id="i-pencil" />Desenhar talhão</button>
+            {((modo === 'novo' && tela === 'vazio') || tela === 'lista') && (
+              <button className="ob-btn ob-pri" type="button" onClick={comecarDesenho}><Icone id="i-pencil" />{tela === 'lista' ? 'Novo talhão' : 'Desenhar talhão'}</button>
             )}
             {onCancelar && (
               <button className="ob-tb" type="button" onClick={onCancelar} aria-label="Voltar às sugestões" title="Voltar às sugestões"><Icone id="i-x" /></button>
@@ -138,6 +151,9 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
             fechado={tela === 'janela'}
             desenhando={tela === 'desenho'}
             fundo={modo === 'redesenhar' ? talhao?.contorno : null}
+            talhoes={modo === 'talhoes' && tela !== 'janela'
+              ? talhoes.map(t => ({ id: t.id, nome: t.nome, contorno: t.contorno, ativo: t.id === talhao?.id })) : []}
+            onEscolher={tela === 'lista' ? onEscolher : undefined}
             onPonto={p => setPontos(ps => [...ps, p])}
             onMapa={setMapa}
           />
@@ -145,6 +161,25 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar }: Props) {
             <HudDesenho pontos={pontos} onDesfazer={() => setPontos(ps => ps.slice(0, -1))} onCancelar={cancelarDesenho} onConcluir={concluirDesenho} />
           )}
           {tela === 'vazio' && <EstadoVazio onDesenhar={comecarDesenho} onExemplo={() => onConcluir(dadosExemplo())} />}
+          {tela === 'lista' && (
+            <section className="ob-lista" aria-labelledby="ob-lista-t">
+              <h2 id="ob-lista-t">Seus talhões</h2>
+              <p className="ob-cinza ob-peq">Escolha um talhão aqui ou no mapa.</p>
+              <ul>
+                {talhoes.map(t => (
+                  <li key={t.id}>
+                    <button type="button" className={`ob-lt${t.id === talhao?.id ? ' on' : ''}`} aria-current={t.id === talhao?.id ? 'true' : undefined}
+                      onClick={() => onEscolher?.(t.id)}>
+                      <span className="ob-lt-n">{t.nome}<small>{t.local || fmtCoord(t.centro)}</small></span>
+                      <span className="ob-lt-a">{fmtHaCurto(t.areaHa)}</span>
+                      {t.id === talhao?.id && <Icone id="i-check" />}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <button className="ob-btn" type="button" onClick={comecarDesenho}><Icone id="i-plus" />Desenhar novo talhão</button>
+            </section>
+          )}
           <div className="ob-mctl" style={{ right: 16, bottom: 32 }}>
             <button type="button" onClick={() => mapa?.zoomIn()} aria-label="Aproximar"><Icone id="i-plus" /></button>
             <span />

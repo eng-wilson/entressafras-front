@@ -113,13 +113,13 @@ Paridade visual: os goldens de `tests/ui-parity.spec.ts` retratam as 4 rotaçõe
 ## Cobertura dos dados pelo backend
 
 <!-- dados-backend:inicio -->
-_Gerada por `npm run dados:status` em 14/11/2026, consultando a API ao vivo. Não editar à mão: ajuste `scripts/dados-backend.mjs`._
+_Gerada por `npm run dados:status` em 15/11/2026, consultando a API ao vivo. Não editar à mão: ajuste `scripts/dados-backend.mjs`._
 
 Resumo: 7 reais em uso, 0 servidos sem uso no front, 2 MOCK no backend, 4 pendentes.
 
 | Dado | Situação | Onde o front usa | O que falta do backend |
 |---|---|---|---|
-| Chuva, ET0 e temperatura por decêndio | ✅ Real, em uso | Indicadores do decêndio, resiliência | — |
+| Chuva, ET0 e temperatura por decêndio | ✅ Real, em uso | Indicadores do decêndio, resiliência, chuva no ano (lateral) | — |
 | Requisitos das culturas (EcoCrop) | ✅ Real, em uso | Temperatura, catálogo "Dados das culturas" | — |
 | Kc por cultura | ✅ Real, em uso | Consumo de água (Kc × ET0) na resiliência | — |
 | Rotações recomendadas (culturas) | ✅ Real, em uso | As rotações da tela | — |
@@ -130,7 +130,7 @@ Resumo: 7 reais em uso, 0 servidos sem uso no front, 2 MOCK no backend, 4 penden
 | Risco hídrico por cultura | 🟠 Servido, mas MOCK no backend | Selo de clima, resiliência no mapa, período crítico (única fonte; sem conta no front) | Risco calculado (`method: FAO56_SIMPLIFIED_KY`) |
 | Produtividade e preço por cultura | ⬜ Pendente no backend | `src/data/perfis.ts` (mock) | Produtividade e preço por cultura e região, com data |
 | Efeito da sequência no solo e nas pragas | ⬜ Pendente no backend | `src/data/perfis.ts` (mock) | Efeito agronômico por sequência de culturas |
-| Umidade do solo atual | ⬜ Pendente no backend | Mock na lateral e no indicador de solo | Leitura atual com data, origem e unidade |
+| Umidade do solo atual | ⬜ Pendente no backend | Mock no indicador de umidade da cena | Leitura atual com data, origem e unidade |
 | Previsão do tempo | ⬜ Pendente no backend | Fora do escopo atual | Fonte de previsão com horizonte e data de emissão |
 <!-- dados-backend:fim -->
 

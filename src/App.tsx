@@ -1,8 +1,10 @@
 import { useClimaDecendios } from './hooks/useClimaDecendios'
 import { AvisoClima } from './components/AvisoClima'
 import { useEffect, useMemo, useState } from 'react'
-import type { AppState, DadosTalhao, EstadoTalhoes, Talhao } from './types'
-import { Sidebar } from './components/Sidebar'
+import type { AppState, DadosTalhao, EstadoTalhoes, Historico, Talhao } from './types'
+import { Sidebar, type AcaoTalhao } from './components/Sidebar'
+import { SoloModal } from './components/SoloModal'
+import { HistoricoModal } from './components/HistoricoModal'
 import { Simulation } from './components/Simulation'
 import { Rotations } from './components/Rotations'
 import { Inspector } from './components/Inspector'
@@ -41,6 +43,8 @@ export default function App() {
   const [campos, setCampos] = useState<EstadoTalhoes>(carregar)
   const [edicao, setEdicao] = useState<Exclude<ModoOnboarding, 'novo'> | null>(null)
   const [verCulturas, setVerCulturas] = useState(false)
+  // Folha aberta sobre a tela principal (solo ou histórico), sem voltar ao onboarding.
+  const [folha, setFolha] = useState<'solo' | 'historico' | null>(null)
   // Rotações marcadas no modo Comparação (posições no conjunto): começa com a atual (ou a 1ª) e mais uma
   const [cmpSel, setCmpSel] = useState<number[]>([0, 1])
   const toggleCmp = (i: number) =>
@@ -101,19 +105,38 @@ export default function App() {
     return () => { vivo = false }
   }, [pId, pLat, pLon])
 
+  /** Atualiza o talhão ativo; contorno novo pede outra consulta do nome da cidade. */
+  function atualizar(d: DadosTalhao) {
+    if (!talhao) return
+    const atualizado: Talhao = {
+      ...talhao, ...d,
+      classe: classeDaTextura(d.textura),
+      local: mesmoContorno(talhao.contorno, d.contorno) ? talhao.local : undefined,
+    }
+    setCampos(c => ({ ...c, talhoes: c.talhoes.map(t => (t.id === talhao.id ? atualizado : t)) }))
+  }
+  const salvarHistorico = (historico: Historico | null) => {
+    if (talhao) setCampos(c => ({ ...c, talhoes: c.talhoes.map(t => (t.id === talhao.id ? { ...t, historico } : t)) }))
+  }
+  function acao(a: AcaoTalhao) {
+    if (a === 'redesenhar') setEdicao('redesenhar')
+    else setFolha(a)
+  }
+  function escolher(id: string) {
+    setCampos(c => ({ ...c, ativo: id }))
+    setEdicao(null)
+  }
+
   function concluir(d: DadosTalhao) {
-    if (talhao && edicao) {
-      const atualizado: Talhao = {
-        ...talhao, ...d,
-        classe: classeDaTextura(d.textura),
-        local: mesmoContorno(talhao.contorno, d.contorno) ? talhao.local : undefined,
-      }
-      setCampos(c => ({ ...c, talhoes: c.talhoes.map(t => (t.id === talhao.id ? atualizado : t)) }))
+    // Na escolha de talhões, concluir o desenho cria um talhão novo.
+    if (talhao && edicao && edicao !== 'talhoes') {
+      atualizar(d)
       setEdicao(null)
       return
     }
     const novo: Talhao = { ...d, id: novoId(), classe: classeDaTextura(d.textura) }
     setCampos(c => ({ talhoes: [...c.talhoes, novo], ativo: novo.id }))
+    setEdicao(null)
   }
 
   if (!talhao || edicao) {
@@ -124,6 +147,8 @@ export default function App() {
         talhao={talhao}
         onConcluir={concluir}
         onCancelar={talhao ? () => setEdicao(null) : undefined}
+        talhoes={campos.talhoes}
+        onEscolher={escolher}
       />
     )
   }
@@ -141,7 +166,7 @@ export default function App() {
           Como funciona
         </button>
       </header>
-      <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} onEditar={setEdicao} />
+      <Sidebar pr={state.pr} onToggle={togglePr} talhao={talhao} clima={clima} onAcao={acao} onTrocar={() => setEdicao('talhoes')} />
       <main className="main">
         {clima.status === 'erro' && <AvisoClima onRecarregar={clima.recarregar} />}
         {cultura.status === 'erro' && <div className="aviso" role="alert">Os requisitos da cultura não carregaram. <button className="link" type="button" onClick={cultura.recarregar}>Tentar de novo</button></div>}
@@ -163,6 +188,15 @@ export default function App() {
         </>}
       </main>
       {pronto && <Inspector rotIdx={state.rot} diag={diags?.[state.rot] ?? null} clima={clima.dados} res={res} onVerDados={() => setVerCulturas(true)} />}
+      {folha === 'solo' && (
+        <SoloModal talhao={talhao} onCancelar={() => setFolha(null)}
+          onSalvar={d => { atualizar(d); setFolha(null) }}
+          onMudarLocal={() => { setFolha(null); setEdicao('redesenhar') }} />
+      )}
+      {folha === 'historico' && (
+        <HistoricoModal talhao={talhao} onCancelar={() => setFolha(null)}
+          onSalvar={h => { salvarHistorico(h); setFolha(null) }} />
+      )}
       {verCulturas && <CatalogoCulturas inicial={culturaAtual ?? 'soja'} onFechar={() => setVerCulturas(false)} />}
     </div>
     </ConjuntoContext.Provider>

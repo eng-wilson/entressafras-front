@@ -1,5 +1,6 @@
+import type { Decendio } from '../types'
 import { describe, it, expect } from 'vitest'
-import { chuvaDoMes, chuvaMeses, climaDoPeriodo, somaOuNull } from './clima'
+import { chuvaDoAno, chuvaDoMes, chuvaMeses, climaDoPeriodo, somaOuNull } from './clima'
 import { climaDeMock } from '../data/climaFixture'
 import { THIS_RAIN, TMAX, TMIN } from '../data/mock'
 
@@ -45,5 +46,19 @@ describe('climaDoPeriodo', () => {
   it('entrada null → tudo null', () => {
     const p = climaDoPeriodo(null, 10)
     expect(Object.values(p).every(v => v === null)).toBe(true)
+  })
+})
+
+describe('chuvaDoAno', () => {
+  const dec = (chuva: number | null) => ({ chuva_media: chuva }) as unknown as Decendio
+  it('soma os 36 decêndios', () => {
+    expect(chuvaDoAno(Array.from({ length: 36 }, () => dec(40)))).toBe(1440)
+  })
+  it('um decêndio sem dado deixa o ano sem dado', () => {
+    expect(chuvaDoAno(Array.from({ length: 36 }, (_, i) => dec(i === 7 ? null : 40)))).toBeNull()
+  })
+  it('sem clima ou com decêndios faltando, sem dado', () => {
+    expect(chuvaDoAno(null)).toBeNull()
+    expect(chuvaDoAno(Array.from({ length: 35 }, () => dec(40)))).toBeNull()
   })
 })

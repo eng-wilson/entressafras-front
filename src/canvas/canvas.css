@@ -496,6 +496,15 @@
   .item-btn{width:100%;text-align:left;border-radius:10px}
   .item-btn:hover{background:rgba(0,0,0,.03)}
   .item-btn:focus-visible{outline:3px solid rgba(30,122,60,.4);outline-offset:-3px}
+  /* Cabeçalho da seção com ação à direita (trocar de talhão) e chevron das linhas que abrem algo. */
+  .sec-h{display:flex;align-items:center;justify-content:space-between;margin:0 0 6px}
+  .sec-h h3{margin:0 0 0 10px}
+  .sec-a{width:32px;height:32px;display:grid;place-items:center;border:0;border-radius:8px;background:none;color:var(--tint,#1E7A3C);cursor:pointer}
+  .sec-a:hover{background:rgba(30,122,60,.1)}
+  .sec-a:focus-visible{outline:3px solid rgba(30,122,60,.4);outline-offset:0}
+  .sec-a .ic{width:18px;height:18px}
+  .item-btn .v{display:inline-flex;align-items:center;gap:6px}
+  .item-btn .chev{font-size:17px;line-height:1;color:var(--label3,#C7C7CC)}
 
 .aviso { background: #FFF1DB; color: #9A5B00; border-radius: 10px; margin-bottom: 12px; padding: 12px 16px; }
 .aviso .link { margin-left: 8px; }

@@ -1,0 +1,28 @@
+/* Régua de anos do histórico (HistoricoModal.tsx), portada de entressafras-v1/src/styles/historico.css. */
+.hs-years { position: relative; display: flex; gap: 4px; overflow-x: auto; padding: 2px 2px 4px; }
+.hs-yr { position: relative; flex: 0 0 104px; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px 4px 8px; border: 0; border-radius: 12px; background: none; font: inherit; color: inherit; cursor: pointer; }
+.hs-yr:focus-visible { outline: 2px solid var(--tint, #1E7A3C); outline-offset: -2px; }
+.hs-yr::before { content: ""; position: absolute; top: 27px; left: -4px; right: -4px; height: 2px; background: #D1D1D6; z-index: 0; }
+.hs-yr.first::before { left: 50%; }
+.hs-yr.last::before { right: 50%; }
+.hs-yr .node { position: relative; z-index: 1; width: 44px; height: 44px; border-radius: 22px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; box-shadow: 0 0 0 1.5px #D1D1D6; }
+.hs-yr .node i { display: block; width: 24px; height: 5px; border-radius: 3px; background: #E5E5EA; }
+.hs-yr .node i.on { background: var(--tint, #1E7A3C); }
+.hs-yr .node .ic { width: 18px; height: 18px; }
+.hs-yr .y { font-weight: 600; font-size: 14px; }
+.hs-yr .s { font-size: 11px; color: rgba(60, 60, 67, .6); }
+.hs-yr.sel .node { box-shadow: 0 0 0 3px var(--tint, #1E7A3C); }
+.hs-yr.sel .y { color: var(--tint, #1E7A3C); }
+.hs-yr.mais .node { background: #F2F2F7; box-shadow: none; border: 1.5px dashed rgba(30, 122, 60, .6); color: var(--tint, #1E7A3C); }
+.hs-yr.mais .y { color: var(--tint, #1E7A3C); font-size: 13px; }
+.hs-yr.fut { cursor: default; }
+.hs-yr.fut .node { background: #F2F2F7; box-shadow: none; border: 1.5px dashed #C7C7CC; }
+.hs-yr.fut .y, .hs-yr.fut .s { color: rgba(60, 60, 67, .6); }
+.hs-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 12px 0; }
+.hs-cab h3 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -.01em; }
+.hs-nota { font-size: 12px; color: rgba(60, 60, 67, .6); }
+.hs-copy { min-height: 44px; padding: 0 12px; border: 0; border-radius: 10px; background: #E3F5E8; color: #14672F; font: inherit; font-weight: 600; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.hs-copy .ic { width: 14px; height: 14px; }
+.hs-fim { display: flex; justify-content: flex-end; margin-top: 16px; }
+.hs-cta { height: 48px; padding: 0 20px; border: 0; border-radius: 12px; background: var(--tint, #1E7A3C); color: #fff; font: inherit; font-size: 15px; font-weight: 600; display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.hs-cta .ic { width: 16px; height: 16px; }

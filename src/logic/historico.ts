@@ -16,6 +16,13 @@ export const rotuloSafra = (y: number) => `${y}/${String((y + 1) % 100).padStart
 /** Ano agrícola de julho a junho: de julho em diante, a safra que começa neste ano é a que se planeja agora. */
 export const safraPlanejada = (hoje = new Date()) => (hoje.getMonth() >= 6 ? hoje.getFullYear() : hoje.getFullYear() - 1)
 export const ultimaSafra = (hoje = new Date()) => safraPlanejada(hoje) - 1
+/** Ano de início de um rótulo de safra: '2024/25' → 2024. */
+export const anoDaSafra = (rotulo: string) => parseInt(rotulo.slice(0, 4), 10)
+/** As duas safras do ano registradas. */
+export const completo = (r: RegistroSafra | null | undefined) => !!(r && r.c1 && r.c2)
+/** Situação de um ano no histórico: as duas safras, só uma ou nenhuma. */
+export const statusSafra = (r: RegistroSafra | null | undefined) =>
+  completo(r) ? 'Completa' : r && (r.c1 || r.c2) ? '1 de 2' : 'Vazia'
 
 export const ehOutra = (v: string | null | undefined): v is string => typeof v === 'string' && v.startsWith('outra:')
 export const outra = (nome: string) => `outra:${nome.trim()}`

@@ -1,6 +1,6 @@
 import 'leaflet/dist/leaflet.css'
 import type { Map as LMap } from 'leaflet'
-import { CircleMarker, MapContainer, Polygon, Polyline, TileLayer, useMapEvents } from 'react-leaflet'
+import { CircleMarker, MapContainer, Polygon, Polyline, TileLayer, Tooltip, useMapEvents } from 'react-leaflet'
 import type { Contorno } from '../types'
 import { VISTA_INICIAL } from './exemplo'
 
@@ -20,6 +20,9 @@ type Props = {
   desenhando: boolean
   /** Contorno atual do talhão em edição, mostrado esmaecido atrás do novo desenho. */
   fundo?: Contorno | null
+  /** Talhões salvos (modo de escolha): contornos clicáveis, o ativo em destaque. */
+  talhoes?: { id: string; nome: string; contorno: Contorno; ativo: boolean }[]
+  onEscolher?: (id: string) => void
   onPonto: (p: [number, number]) => void
   onMapa: (m: LMap | null) => void
 }
@@ -29,7 +32,7 @@ function Cliques({ ativo, onPonto }: { ativo: boolean; onPonto: Props['onPonto']
   return null
 }
 
-export function MapaTalhao({ camada, pontos, fechado, desenhando, fundo, onPonto, onMapa }: Props) {
+export function MapaTalhao({ camada, pontos, fechado, desenhando, fundo, talhoes = [], onEscolher, onPonto, onMapa }: Props) {
   const c = CAMADAS[camada]
   const traco = { color: VERDE, weight: 3, fillColor: VERDE }
   return (
@@ -42,6 +45,13 @@ export function MapaTalhao({ camada, pontos, fechado, desenhando, fundo, onPonto
     >
       <TileLayer key={camada} url={c.url} attribution={c.attribution} maxZoom={19} />
       <Cliques ativo={desenhando} onPonto={onPonto} />
+      {talhoes.filter(t => t.contorno.length >= 3).map(t => (
+        <Polygon key={t.id} positions={t.contorno} interactive={!desenhando && !!onEscolher}
+          pathOptions={{ color: VERDE, weight: t.ativo ? 3 : 2, fillColor: VERDE, fillOpacity: t.ativo ? 0.28 : 0.1, dashArray: t.ativo ? undefined : '6 4' }}
+          eventHandlers={{ click: () => onEscolher?.(t.id) }}>
+          <Tooltip permanent direction="center" className="ob-tt">{t.nome}</Tooltip>
+        </Polygon>
+      ))}
       {fundo && fundo.length >= 3 && (
         <Polygon positions={fundo} pathOptions={{ color: VERDE, weight: 2, dashArray: '4 4', fillColor: VERDE, fillOpacity: 0.06, opacity: 0.6 }} interactive={false} />
       )}
