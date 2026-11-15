@@ -31,3 +31,12 @@ dist-ssr
 /playwright/.auth/
 
 .env
+
+# Impeccable: generated local files
+/.impeccable/live/
+/.impeccable/critique/
+/.impeccable/hook.*.json
+/.impeccable/config.local.json
+
+# Scratch directories
+simulacao/scratch/

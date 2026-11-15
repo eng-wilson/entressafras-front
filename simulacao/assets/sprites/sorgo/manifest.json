@@ -1,0 +1,247 @@
+{
+  "sprites": {
+    "E_normal_0": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        63,
+        220
+      ],
+      "resolucao": 1609
+    },
+    "E_normal_1": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        63,
+        220
+      ],
+      "resolucao": 1609
+    },
+    "E_normal_2": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        63,
+        220
+      ],
+      "resolucao": 1609
+    },
+    "F3_normal_0": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        63,
+        220
+      ],
+      "resolucao": 828
+    },
+    "F3_normal_1": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        63,
+        220
+      ],
+      "resolucao": 828
+    },
+    "F3_normal_2": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        63,
+        220
+      ],
+      "resolucao": 828
+    },
+    "F5_normal_0": {
+      "cor": "F5.png",
+      "dados": "F5.dados.png",
+      "ancora": [
+        147,
+        408
+      ],
+      "resolucao": 788
+    },
+    "F5_normal_1": {
+      "cor": "F5.png",
+      "dados": "F5.dados.png",
+      "ancora": [
+        147,
+        408
+      ],
+      "resolucao": 788
+    },
+    "F5_normal_2": {
+      "cor": "F5.png",
+      "dados": "F5.dados.png",
+      "ancora": [
+        147,
+        408
+      ],
+      "resolucao": 788
+    },
+    "FB_normal_0": {
+      "cor": "F5.png",
+      "dados": "F5.dados.png",
+      "ancora": [
+        147,
+        408
+      ],
+      "resolucao": 347
+    },
+    "FB_normal_1": {
+      "cor": "F5.png",
+      "dados": "F5.dados.png",
+      "ancora": [
+        147,
+        408
+      ],
+      "resolucao": 347
+    },
+    "FB_normal_2": {
+      "cor": "F5.png",
+      "dados": "F5.dados.png",
+      "ancora": [
+        147,
+        408
+      ],
+      "resolucao": 347
+    },
+    "EMB_normal_0": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        125,
+        678
+      ],
+      "resolucao": 546
+    },
+    "EMB_normal_1": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        125,
+        678
+      ],
+      "resolucao": 546
+    },
+    "EMB_normal_2": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        125,
+        678
+      ],
+      "resolucao": 546
+    },
+    "FL_normal_0": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        125,
+        678
+      ],
+      "resolucao": 546
+    },
+    "FL_normal_1": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        125,
+        678
+      ],
+      "resolucao": 546
+    },
+    "FL_normal_2": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        125,
+        678
+      ],
+      "resolucao": 546
+    },
+    "GL_normal_0": {
+      "cor": "GP.png",
+      "dados": "GP.dados.png",
+      "ancora": [
+        118,
+        709
+      ],
+      "resolucao": 571
+    },
+    "GL_normal_1": {
+      "cor": "GP.png",
+      "dados": "GP.dados.png",
+      "ancora": [
+        118,
+        709
+      ],
+      "resolucao": 571
+    },
+    "GL_normal_2": {
+      "cor": "GP.png",
+      "dados": "GP.dados.png",
+      "ancora": [
+        118,
+        709
+      ],
+      "resolucao": 571
+    },
+    "GP_normal_0": {
+      "cor": "GP.png",
+      "dados": "GP.dados.png",
+      "ancora": [
+        118,
+        709
+      ],
+      "resolucao": 571
+    },
+    "GP_normal_1": {
+      "cor": "GP.png",
+      "dados": "GP.dados.png",
+      "ancora": [
+        118,
+        709
+      ],
+      "resolucao": 571
+    },
+    "GP_normal_2": {
+      "cor": "GP.png",
+      "dados": "GP.dados.png",
+      "ancora": [
+        118,
+        709
+      ],
+      "resolucao": 571
+    },
+    "M_normal_0": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        118,
+        714
+      ],
+      "resolucao": 575
+    },
+    "M_normal_1": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        118,
+        714
+      ],
+      "resolucao": 575
+    },
+    "M_normal_2": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        118,
+        714
+      ],
+      "resolucao": 575
+    }
+  }
+}

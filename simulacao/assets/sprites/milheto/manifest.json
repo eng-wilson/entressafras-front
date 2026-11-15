@@ -1,0 +1,247 @@
+{
+  "sprites": {
+    "E_normal_0": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        37,
+        158
+      ],
+      "resolucao": 1154
+    },
+    "E_normal_1": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        37,
+        158
+      ],
+      "resolucao": 1154
+    },
+    "E_normal_2": {
+      "cor": "E.png",
+      "dados": "E.dados.png",
+      "ancora": [
+        37,
+        158
+      ],
+      "resolucao": 1154
+    },
+    "PER_normal_0": {
+      "cor": "PER.png",
+      "dados": "PER.dados.png",
+      "ancora": [
+        109,
+        276
+      ],
+      "resolucao": 814
+    },
+    "PER_normal_1": {
+      "cor": "PER.png",
+      "dados": "PER.dados.png",
+      "ancora": [
+        109,
+        276
+      ],
+      "resolucao": 814
+    },
+    "PER_normal_2": {
+      "cor": "PER.png",
+      "dados": "PER.dados.png",
+      "ancora": [
+        109,
+        276
+      ],
+      "resolucao": 814
+    },
+    "AL_normal_0": {
+      "cor": "PER.png",
+      "dados": "PER.dados.png",
+      "ancora": [
+        109,
+        276
+      ],
+      "resolucao": 324
+    },
+    "AL_normal_1": {
+      "cor": "PER.png",
+      "dados": "PER.dados.png",
+      "ancora": [
+        109,
+        276
+      ],
+      "resolucao": 324
+    },
+    "AL_normal_2": {
+      "cor": "PER.png",
+      "dados": "PER.dados.png",
+      "ancora": [
+        109,
+        276
+      ],
+      "resolucao": 324
+    },
+    "EMB_normal_0": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        118,
+        567
+      ],
+      "resolucao": 480
+    },
+    "EMB_normal_1": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        118,
+        567
+      ],
+      "resolucao": 480
+    },
+    "EMB_normal_2": {
+      "cor": "EMB.png",
+      "dados": "EMB.dados.png",
+      "ancora": [
+        118,
+        567
+      ],
+      "resolucao": 480
+    },
+    "VELA_normal_0": {
+      "cor": "VELA.png",
+      "dados": "VELA.dados.png",
+      "ancora": [
+        122,
+        676
+      ],
+      "resolucao": 569
+    },
+    "VELA_normal_1": {
+      "cor": "VELA.png",
+      "dados": "VELA.dados.png",
+      "ancora": [
+        122,
+        676
+      ],
+      "resolucao": 569
+    },
+    "VELA_normal_2": {
+      "cor": "VELA.png",
+      "dados": "VELA.dados.png",
+      "ancora": [
+        122,
+        676
+      ],
+      "resolucao": 569
+    },
+    "G_normal_0": {
+      "cor": "VELA.png",
+      "dados": "VELA.dados.png",
+      "ancora": [
+        122,
+        676
+      ],
+      "resolucao": 569
+    },
+    "G_normal_1": {
+      "cor": "VELA.png",
+      "dados": "VELA.dados.png",
+      "ancora": [
+        122,
+        676
+      ],
+      "resolucao": 569
+    },
+    "G_normal_2": {
+      "cor": "VELA.png",
+      "dados": "VELA.dados.png",
+      "ancora": [
+        122,
+        676
+      ],
+      "resolucao": 569
+    },
+    "M_normal_0": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "M_normal_1": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "M_normal_2": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "DES_normal_0": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "DES_normal_1": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "DES_normal_2": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "PAL_normal_0": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "PAL_normal_1": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    },
+    "PAL_normal_2": {
+      "cor": "M.png",
+      "dados": "M.dados.png",
+      "ancora": [
+        115,
+        673
+      ],
+      "resolucao": 567
+    }
+  }
+}

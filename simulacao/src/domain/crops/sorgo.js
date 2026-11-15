@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 export default criarCultura({
-    id: 'sorgo', nome: 'Sorgo', archetype: 'graminea_colmo', cicloDias: 115,
+    id: 'sorgo', nome: 'Sorgo', archetype: 'graminea_colmo', cicloDias: 115, arte: true, adaptarArte: true,
     plantio: { linhas: 7, plantasPorLinha: 8, margem: .4, semente: 3101 }, alturaMax: [.95, 1.28], folhasFinal: 9, comprFolha: .5,
     inflorescencia: 'panicula_compacta',
     raizProfMax: 1.25, morfologia: { espigasMax: 0, probSegundaEspiga: 0, ramosPendao: 13, palhasPorEspiga: 0, nosColmo: 8 },

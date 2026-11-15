@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 export default criarCultura({
-    id: 'algodao', nome: 'Algodão', archetype: 'malvacea', cicloDias: 160,
+    id: 'algodao', nome: 'Algodão', archetype: 'malvacea', cicloDias: 160, arte: true, adaptarArte: true,
     plantio: { linhas: 6, plantasPorLinha: 6, margem: .5, semente: 8101 }, alturaMax: [.9, 1.18], folhasFinal: 12, comprFolha: .25,
     tipoFolha: 'palmada', tipoFruto: 'capulho', tamFruto: .06, raiz: 'pivotante', raizProfMax: 1.3, ramosMax: 7, frutosMax: 12,
     fases: [

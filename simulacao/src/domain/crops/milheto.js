@@ -1,6 +1,6 @@
 import { criarCultura } from './base.js';
 export default criarCultura({
-    id: 'milheto', nome: 'Milheto', archetype: 'graminea_colmo', cicloDias: 95,
+    id: 'milheto', nome: 'Milheto', archetype: 'graminea_colmo', cicloDias: 95, arte: true, adaptarArte: true,
     plantio: { linhas: 8, plantasPorLinha: 8, margem: .35, semente: 3203 }, alturaMax: [.9, 1.22], folhasFinal: 8, comprFolha: .46,
     inflorescencia: 'vela',
     raizProfMax: 1.3, morfologia: { espigasMax: 0, probSegundaEspiga: 0, ramosPendao: 16, palhasPorEspiga: 0, nosColmo: 7 },

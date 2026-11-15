@@ -460,6 +460,11 @@ Feito:
 - **Etapa 7:** trigo, arroz, brizantha (arquivo com Marandu, Piatã, Paiaguás) e ruziziensis usam pintor de touceira. Dessecação e palhada nos dados das coberturas.
 - **Etapa 8:** três crotalárias e algodão usam pintores de leguminosa arbustiva e malvácea, incluindo racemos, vagens, capulhos.
 - Seletor de cultura no painel; `?cultura=<id>` abre cultura direto.
+- **Arte de Sorgo, Milheto e Algodão:**
+  - Pranchas de progressão de 5 fases geradas e salvas em `assets/sprites/<cultura>/`.
+  - Recortes transparentes com colos calibrados e máscaras de dados automáticas via `spriteDeImagens` (`mascaraDaCor`).
+  - Manifestos cobrindo todas as fases fenológicas da cultura e variantes normais, com adaptação geométrica contínua para estresses hídricos (`enrolada`, `murcha`) e estados reprodutivos (`parcial`, `abortada`).
+  - Scripts de preparação e validação em `scripts/preparar-<cultura>.mjs`: verificados carregamento, combinações de postura/espiga/variante, visualização em lavoura 7x7 e resposta a sintomas por pixel.
 - **Arte do arroz (parcial):**
   - Prancha de progressão e cinco recortes transparentes (`PL`, `PER`, `EMB`, `FL`, `M`) em `assets/sprites/arroz/`. Máscaras derivadas da própria cor; âncoras e resoluções calibradas por fase.
   - Manifesto cobre três variantes normais das sete fases (21 entradas). EMB reusado para IP, FL para GP. Sorteio de variante não mistura arte e procedural no talhão saudável.
@@ -474,6 +479,6 @@ Pendente:
 - Salinidade existe no estado, mas nenhum cenário usa.
 - Valores calibrados para visualização, não para previsão agronômica.
 - Clima e solo ainda sintéticos. Troca por dados reais (NASA POWER, Open-Meteo, SoilGrids, laudo) em [INTEGRACAO_DADOS_EXTERNOS.md](INTEGRACAO_DADOS_EXTERNOS.md).
-- Milho, soja, feijão e trigo já têm arte aplicada por manifesto, com pares `cor` + `dados`. Arroz tem cinco recortes iniciais. Pendente: completar combinações do arroz e recortes finais das demais culturas. Sprites sem par final continuam vindo do pintor procedural.
+- Milho, soja, feijão, trigo, arroz, sorgo, milheto e algodão já têm arte aplicada por manifesto, com pares `cor` + `dados`. Pendente: completar combinações do arroz e recortes finais das demais culturas de cobertura (braquiárias e crotalárias), que continuam vindo do pintor procedural.
 - Exportador dos sprites procedurais para PNG (base para artista pintar por cima).
 - Troca de dia leva ~150 ms no Edge headless sem GPU (pintura do topo e das faces). Imagens com sintomas e sprites novos calculados aos poucos, a cada quadro.
