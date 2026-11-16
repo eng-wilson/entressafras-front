@@ -84,7 +84,7 @@ export const periodoDecisivo = (d: Diagnostico | null): number | null => d?.deci
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
 
 /** Frequência do problema, pela API: "risco hídrico de 30% (API), maior déficit de água nesta fase". */
-const frequencia = (p: PeriodoCritico) => t('risco hídrico de {pct}% (API), maior déficit de água nesta fase', { pct: pctFmt(p.pct) })
+const frequencia = (p: PeriodoCritico) => t('risco hídrico de {pct}%, maior déficit de água nesta fase', { pct: pctFmt(p.pct) })
 
 /** "Milho safrinha, floração e enchimento de grãos (21 abr a 31 mai): risco hídrico de 30% (API), ..." */
 export const textoCritico = (p: PeriodoCritico): string =>
@@ -131,4 +131,4 @@ export const criticoEm = (d: Diagnostico | null, idx: number): PeriodoCritico | 
 
 /** Legenda do chip: o problema da fase e com que frequência faltou água nela. */
 export const legendaCritico = (p: PeriodoCritico): string =>
-  t('{problema} Risco hídrico de {pct}% (API), com o maior déficit de água nesta fase.', { problema: t(PROBLEMA_FASE[p.fase]), pct: pctFmt(p.pct) })
+  t('{problema} Risco hídrico de {pct}%, com o maior déficit de água nesta fase.', { problema: t(PROBLEMA_FASE[p.fase]), pct: pctFmt(p.pct) })

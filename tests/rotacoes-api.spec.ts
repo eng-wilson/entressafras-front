@@ -27,7 +27,10 @@ test('envia solo, histórico e prioridades; ligar uma prioridade reordena pela A
   await page.goto('/')
 
   const nomes = page.locator('.rlist .nm-b')
-  await expect(nomes.first()).toContainText('milheto')
+  // A rotação atual do talhão (soja → milho safrinha) vem primeiro; depois a ordem da API
+  await expect(nomes.first()).toHaveText('Soja depois milho safrinha')
+  await expect(page.locator('.rlist .row').first().locator('.tag-atual')).toHaveText('Seu último plantio')
+  await expect(nomes.nth(1)).toContainText('milheto')
   // T-07: argiloso informado, histórico soja → milho; padrão da lateral = padrão da API (faturamento desligado)
   expect(pedidos[0]).toMatchObject({
     soil_type: 'clayey', crop_history: [1150, 2175],
@@ -40,7 +43,8 @@ test('envia solo, histórico e prioridades; ligar uma prioridade reordena pela A
 
   await page.getByRole('switch', { name: 'Resiliência climática' }).click()
   await page.getByRole('switch', { name: 'Saúde do solo' }).click()
-  await expect(nomes.first()).toContainText('algodão')
+  await expect(nomes.first()).toHaveText('Soja depois milho safrinha')
+  await expect(nomes.nth(1)).toContainText('algodão')
   // Sempre as quatro chaves: a API completaria uma ausente com o padrão
   expect(pedidos.at(-1)!.priorities).toEqual({ water_security: 0, productivity: 1, soil_protection: 0, revenue: 0 })
   // A rotação selecionada continua a mesma, agora em outra posição
@@ -88,7 +92,7 @@ test('comparação: mesmas linhas do calendário, faturamento da API no card, co
   await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveCount(0)
   // Faturamento da API (US$/ha, com a perda hídrica) dentro do eixo Faturamento, só no card de quem tem o dado
   const cards = page.locator('.qm-card')
-  await expect(cards.first().locator('.qm-fat')).toContainText('Faturamento com perda hídrica')
+  await expect(cards.first().locator('.qm-fat')).toContainText('/ha com perda hídrica')
   await expect(cards.first().locator('.qm-fat')).toContainText(/US\$\s?1\.300\/ha/)
   await expect(cards.nth(1).locator('.qm-fat')).toHaveCount(0)
 
@@ -96,13 +100,13 @@ test('comparação: mesmas linhas do calendário, faturamento da API no card, co
   await expect(page.getByRole('dialog').first()).toContainText(/~\d+ mm no ciclo/)
   await page.getByRole('button', { name: 'De onde vêm estes números' }).first().click()
   const memoria = page.getByRole('dialog', { name: /^De onde vêm os números/ })
-  // Só campos da API, cada um com o caminho de origem (visível em desenvolvimento, ou ligando "Campos da API")
+  // Só campos da API, cada um com o caminho de origem (visível em desenvolvimento, ou ligando "Valores calculados")
   await expect(memoria).toContainText('Solo superficial (só exibição)')
   await expect(memoria.getByRole('row', { name: /Carbono orgânico/ })).toContainText('14,2 g/kg')
   await expect(memoria).toContainText('organic_carbon_g_per_kg = 14.2')
   await expect(memoria).toContainText('.crop.risk')
   await expect(memoria).not.toContainText('Kc × ET0')
-  await memoria.getByLabel('Campos da API').uncheck()
+  await memoria.getByLabel('Valores calculados').uncheck()
   await expect(memoria).not.toContainText('organic_carbon_g_per_kg')
 })
 
@@ -119,6 +123,6 @@ test('solo de um ponto distante: alerta curto no painel e todos os avisos da API
   const insp = page.getByRole('complementary', { name: 'Detalhe da rotação selecionada' })
   await expect(insp.getByRole('note')).toHaveText('Solo estimado de um ponto a 1.695 km do talhão. Informe a textura se não for parecida.')
   await insp.locator('[data-inspector-open="sources"]').click()
-  await expect(insp.getByRole('heading', { name: 'Avisos da API' })).toBeVisible()
+  await expect(insp.getByRole('heading', { name: 'Avisos sobre os dados' })).toBeVisible()
   await expect(insp.locator('.insp-avisos')).toContainText('1694.6 km away')
 })

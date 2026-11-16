@@ -94,7 +94,7 @@ export function DraftRow({ editor, catalogo, onSalvar, bloqueioSalvar }: Props) 
         </div>
         {leitura.ranking && (
           <span className={`rankb${leitura.ranking.recomendada ? '' : ' fora'}`} style={leitura.velho ? { opacity: .55 } : undefined}
-            title={t('Posição entre {n} rotações comparadas pela API: {pos}', { n: leitura.ranking.entre, pos: posicaoRanking(leitura.ranking.rank, leitura.ranking.entre) })}>
+            title={t('Posição entre {n} rotações comparadas: {pos}', { n: leitura.ranking.entre, pos: posicaoRanking(leitura.ranking.rank, leitura.ranking.entre) })}>
             {seloRanking(leitura.ranking.rank, leitura.ranking.recomendada)}
           </span>
         )}

@@ -18,6 +18,7 @@ import { JanelaPassos } from './JanelaPassos'
 import { MapaTalhao, type Camada } from './MapaTalhao'
 import { t, type Idioma } from '../i18n'
 import { SeletorIdioma } from '../components/SeletorIdioma'
+import { SimboloMarca } from '../components/SimboloMarca'
 
 export type ModoOnboarding = 'novo' | 'editar' | 'redesenhar' | 'talhoes'
 
@@ -123,7 +124,7 @@ export function Onboarding({ modo, talhao, onConcluir, onCancelar, talhoes = [],
     <div className="ob">
       <div className="ob-win">
         <header className="ob-bar">
-          <div className="ob-brand"><span className="ob-logo"><Icone id="i-leaf" /></span><span>Field Shift</span></div>
+          <div className="ob-brand"><span className="ob-logo"><SimboloMarca /></span><span>entressafras</span></div>
           <div className="ob-tit">
             <div className="ob-t">{modo === 'redesenhar' ? t('Redesenhar talhão') : t('Talhões')}</div>
             <div className="ob-st">{subtitulo}</div>

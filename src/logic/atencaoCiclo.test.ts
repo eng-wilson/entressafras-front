@@ -10,7 +10,7 @@ const conj = conjuntoDaApi(ROTACOES_FIXTURE)
 const res = resiliencia(null, null, conj.rotacoes.map(r => r.safras))
 const panorama = (i: number) => atencaoCiclo(res.rotacoes[i], conj.rotacoes[i].safras)
 
-describe('atendimento à demanda por fase (API)', () => {
+describe('atendimento à demanda por fase', () => {
   it('cada decêndio da safra lê o ISNA médio da fase em que está, sem cálculo local', () => {
     const p = panorama(2) // soja → milho safrinha
     const milho = res.rotacoes[2].safras[1]
@@ -62,7 +62,7 @@ describe('atendimento à demanda por fase (API)', () => {
   it('marca provisório quando o servidor avisa MOCK, inclusive no widget', () => {
     expect(panorama(0).provisorio).toBe(true)
     expect(soilGauge(0.5, true, true).unit).toContain('provisório')
-    expect(soilGauge(0.5, true).unit).toBe('ETa ÷ ETc · fase, média da API')
+    expect(soilGauge(0.5, true).unit).toBe('ETa ÷ ETc · fase, média histórica')
   })
 
   it('limiares de apresentação: crítico abaixo de 45%, atenção até 55%', () => {

@@ -167,7 +167,7 @@ export function DraftInspector({ editor }: { editor: EditorRascunho }) {
       <p className="foot">
         {t('Arraste as pontas da barra para mudar plantio e colheita, ou o meio para mover a cultura sem mudar o ciclo.')}{' '}
         {t('Pelo teclado: Tab até a ponta, setas mudam um decêndio, Shift+setas movem a cultura.')}{' '}
-        {t('Simulação da API Entressafras (balanço hídrico FAO-56 simplificado, ainda não validado em campo).')}
+        {t('Simulação com balanço hídrico FAO-56 simplificado, ainda não validado em campo.')}
       </p>
     </aside>
   )

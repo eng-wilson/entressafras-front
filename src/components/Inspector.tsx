@@ -27,10 +27,10 @@ const PARAMETROS: { k: Eixo; api: 'water_security' | 'soil_protection' | 'produc
 ]
 /** O que cada prioridade significa (página de detalhe ao tocar nela). */
 const EXPLICACAO: Record<Eixo, string> = {
-  risco: 'Quanto a rotação resiste à falta de água no clima deste local. Vem do risco hídrico que a API calcula para as duas safras, nos anos históricos.',
-  fat: 'Quanto a rotação fatura por hectare, com a perda por falta de água neste local descontada. Estimativa da API com médias nacionais (FAO), sem custos de produção.',
-  solo: 'Quanto a rotação protege o solo: dias com cobertura viva e troca de família botânica entre as culturas. É um índice de planejamento da API, não uma medida do solo.',
-  prod: 'Quanto da produtividade a rotação preserva diante da falta de água, pela cultura mais afetada. Calculado pela API para este local.',
+  risco: 'Quanto a rotação resiste à falta de água no clima deste local. Vem do risco hídrico calculado para as duas safras, nos anos históricos.',
+  fat: 'Quanto a rotação fatura por hectare, com a perda por falta de água neste local descontada. Estimativa com médias nacionais (FAO), sem custos de produção.',
+  solo: 'Quanto a rotação protege o solo: dias com cobertura viva e troca de família botânica entre as culturas. É um índice de planejamento, não uma medida do solo.',
+  prod: 'Quanto da produtividade a rotação preserva diante da falta de água, pela cultura mais afetada. Calculado para este local.',
 }
 function Icon({ name }: { name: string }) {
   return <svg className="ic" aria-hidden="true"><use href={`/canvas-icons.svg#${name}`} /></svg>
@@ -77,7 +77,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   // Solo ou clima que não são do talhão (a API usou um ponto guardado distante ou textura padrão)
   const avisosLocal = conj.origem === 'api' ? avisosDeLocal(conj.avisos, conj.solo, conj.propriedadesSolo) : []
   const faltantes = rot?.safras.filter(s => !s.risco).map(s => t(s.nome)).join(', ')
-  const titulo = incompleto ? t('Faltam dados de risco') : cls === 'good' ? t('Favorável no risco geral da API') : t('Atenção à água')
+  const titulo = incompleto ? t('Faltam dados de risco') : cls === 'good' ? t('Favorável no risco geral') : t('Atenção à água')
   const c1 = t(def.ct.c1), c2 = t(def.ct.c2)
   const [route, setRoute] = useState<{ rotation: string; page: Page; moment?: MomentoAtencao; param?: Eixo }>({ rotation: def.id, page: 'overview' })
   const page = route.rotation === def.id ? route.page : 'overview'
@@ -141,7 +141,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
               return (
                 <button key={k} type="button" className={`insp-param bp-linha${api != null && conj.prioridades?.[api] === 1 ? ' on' : ''}`}
                   data-inspector-open={`param-${k}`} aria-label={`${leituraPrioridade(k, nota, f)}. ${t('Ver o que significa')}`}
-                  title={ILUSTRATIVO[k] ? t('Ilustrativo: a API ainda não calcula economia de água') : undefined}
+                  title={ILUSTRATIVO[k] ? t('Ilustrativo: economia de água ainda não calculada') : undefined}
                   onClick={() => abrir('param', `param-${k}`, undefined, k)}>
                   <BarraPrioridade k={k} nota={nota} f={f} meter={false} />
                   <svg className="ic insp-chevron" aria-hidden="true"><use href="/canvas-icons.svg#i-right" /></svg>
@@ -186,7 +186,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
         <section className="insp-section" aria-label={t('Limitações e cuidados')}>
           <h3>{t('Limitações e cuidados')}</h3>
           <div className="insp-group">
-            <Row icon={soloBom ? 'i-okc' : 'i-leaf'} tone={soloBom ? 'good' : 'warn'} label={t('Saúde do solo')} detail={`${t(def.ct.soilWhy)} · ${def.protecaoSolo ? 'API' : t('ilustrativo')}`} origin="soil" onClick={() => abrir('soil', 'soil')} />
+            <Row icon={soloBom ? 'i-okc' : 'i-leaf'} tone={soloBom ? 'good' : 'warn'} label={t('Saúde do solo')} detail={def.protecaoSolo ? t(def.ct.soilWhy) : `${t(def.ct.soilWhy)} · ${t('ilustrativo')}`} origin="soil" onClick={() => abrir('soil', 'soil')} />
             <Row icon="i-bug" tone={def.ct.pest === 'Menor risco' ? 'good' : 'warn'} label={t('Pragas')} detail={`${t(def.ct.pest)} · ${t('ilustrativo')}`} origin="pests" onClick={() => abrir('pests', 'pests')} />
           </div>
         </section>
@@ -214,13 +214,13 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           {page === 'ranking' && <>
             <div className="insp-rank">
               <div className="insp-rank-h">
-                <div><span>{t('Posição no ranking')}</span><small>{rankingTeste ? t('Ordem provisória da API') : t('Entre as opções recebidas')}</small></div>
+                <div><span>{t('Posição no ranking')}</span><small>{rankingTeste ? t('Ordem provisória') : t('Entre as opções recebidas')}</small></div>
                 <strong>{t('{pos} de {total}', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}</strong>
               </div>
             </div>
             {/* Por que nesta posição: média das prioridades ligadas nas escalas da API, contra a vizinha na lista */}
             {porQue && <p className="insp-rank-why">{porQue}</p>}
-            {conj.prioridades?.revenue === 1 && <p className="insp-caption">{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).toLowerCase() })}</p>}
+            {conj.prioridades?.revenue === 1 && <p className="insp-caption">{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).replace(/^./, c => c.toLowerCase()) })}</p>}
           </>}
           {page === 'param' && route.param && (() => {
             const k = route.param
@@ -235,7 +235,7 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             </>
           })()}
           {page === 'soil' && <>{def.protecaoSolo
-            ? <><p className="insp-caption">{t('Proteção do solo planejada, da API · {nota} de 100 ({nivel})', { nota: Math.round(def.scores?.soil_protection ?? def.protecaoSolo.score), nivel: t(def.ct.soil).toLowerCase() })}</p><p>{t(def.ct.soilWhy)}.</p><p>{t('Índice de planejamento (cobertura viva e troca de família botânica), não medida da saúde do solo.')}</p></>
+            ? <><p className="insp-caption">{t('Proteção do solo planejada · {nota} de 100 ({nivel})', { nota: Math.round(def.scores?.soil_protection ?? def.protecaoSolo.score), nivel: t(def.ct.soil).toLowerCase() })}</p><p>{t(def.ct.soilWhy)}.</p><p>{t('Índice de planejamento (cobertura viva e troca de família botânica), não medida da saúde do solo.')}</p></>
             : <><p className="insp-caption">{t('Avaliação ilustrativa · {nivel}', { nivel: t(def.ct.soil) })}</p><p>{t(def.ct.soilWhy)}.</p></>}<h3>{t('O que avaliar')}</h3><p>{t('Confira no calendário os intervalos entre culturas e discuta a cobertura do solo com seu agrônomo.')}</p><p className="insp-caption">{t('Sem avaliação específica do talhão; não explica a posição no ranking.')}</p></>}
           {page === 'pests' && <><p className="insp-caption">{t(def.ct.pest)} · {t('ilustrativo')}</p><p>{t(def.ct.pestWhy)}</p><h3>{t('O que avaliar')}</h3><p>{t('Valide quais pragas ocorrem no talhão antes de definir o manejo. Este exemplo não substitui o monitoramento.')}</p></>}
           {page === 'risk' && <>
@@ -244,11 +244,11 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             <p>{t('A faixa da rotação acompanha a safra mais arriscada, na régua de resiliência exibida. Uma safra sem dado impede uma avaliação completa.')}</p>
             <p>{t('O indicador cobre falta de água, não pragas, geada ou outros riscos.')}</p>
             <p>{rot?.safras.some(s => s.calc.fonteFases === 'local')
-              ? t('A fase de maior déficit é apontada pela API; o percentual de risco não é uma probabilidade de seca nessas datas. As datas da fase são posicionadas no calendário pelos estágios do ciclo, com proporções locais quando os estágios não vieram da API.')
-              : t('A fase de maior déficit é apontada pela API; o percentual de risco não é uma probabilidade de seca nessas datas. As datas da fase são posicionadas no calendário pelos estágios do ciclo recebidos da API.')}</p>
+              ? t('A fase de maior déficit vem do balanço hídrico do talhão; o percentual de risco não é uma probabilidade de seca nessas datas. As datas da fase são posicionadas no calendário pelos estágios do ciclo, com proporções locais quando os estágios não estão disponíveis.')
+              : t('A fase de maior déficit vem do balanço hídrico do talhão; o percentual de risco não é uma probabilidade de seca nessas datas. As datas da fase são posicionadas no calendário pelos estágios do ciclo.')}</p>
           </>}
           {page === 'sources' && <>
-            <p>{conj.origem === 'api' ? t('Rotações e datas: API Entressafras. A ordem é recebida da API: a média das prioridades ligadas nas escalas 0–100 dela. Faturamento: preço ao produtor × produtividade, médias do Brasil (FAOSTAT), descontada a perda hídrica no local e sem custos de produção.') : t('Rotações e datas ilustrativas.')}{rankingTeste ? ` ${t('O ranking ainda é de teste.')}` : ''}</p>
+            <p>{conj.origem === 'api' ? t('A ordem das rotações é a média das prioridades ligadas, em escalas de 0 a 100. Faturamento: preço ao produtor × produtividade, médias do Brasil (FAOSTAT), descontada a perda hídrica no local e sem custos de produção.') : t('Rotações e datas ilustrativas.')}{rankingTeste ? ` ${t('O ranking ainda é de teste.')}` : ''}</p>
             <p>{clima
               ? clima.safras.length
                 ? t('Chuva e temperatura: {fonte}, média de {n} safras ({de} a {ate}).', { fonte: t(clima.fonte), n: clima.safras.length, de: clima.safras[0], ate: clima.safras.at(-1) })
@@ -256,30 +256,30 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
               : t('Clima indisponível. Os dados de risco recebidos são exibidos sem estimativa adicional.')}</p>
             {/* Todos os avisos do servidor, no texto original (inglês): premissas do método, pontos de reserva, MOCK */}
             {conj.avisos.length > 0 && <>
-              <h3>{t('Avisos da API')}</h3>
+              <h3>{t('Avisos sobre os dados')}</h3>
               <ul className="insp-avisos">{conj.avisos.map((a, i) => <li key={i} lang="en">{a}</li>)}</ul>
-              <p className="insp-caption">{t('Texto original do servidor, em inglês.')}</p>
+              <p className="insp-caption">{t('Texto original, em inglês.')}</p>
             </>}
             {/* Textos do backend de clima vêm em português: a tradução usa o texto exato como chave (en/base.ts) */}
             {clima?.aviso_resolucao && <p>{t(clima.aviso_resolucao)}</p>}
-            <p>{t('Requisitos das culturas: catálogo EcoCrop, quando disponível. Proteção do solo e atendimento à demanda de água por fase: API. Pragas, produção e preços são ilustrativos. Receita bruta ilustrativa não representa lucro: os custos não foram considerados.')}</p>
+            <p>{t('Requisitos das culturas: catálogo EcoCrop, quando disponível. Proteção do solo e atendimento à demanda de água por fase: calculados para o talhão. Pragas, produção e preços são ilustrativos. Receita bruta ilustrativa não representa lucro: os custos não foram considerados.')}</p>
             <p>{t('Use estas informações para comparar opções e validar o planejamento com seu agrônomo.')}</p>
           </>}
           {page === 'method' && <>
-            <p>{t('Atendimento = água que a cultura usou ÷ água de que precisava (ETa/ETc), por fase, na média das safras históricas do balanço hídrico da API (ISNA por estágio). A API não entrega valores dia a dia: dentro de uma fase, o valor é o mesmo em todos os decêndios.')}</p>
-            <p>{t('Fases pelos estágios FAO-56 da cultura, nas datas de plantio e colheita da API. Crítico abaixo de 45%; atenção de 45% a menos de 55%. Estes são limiares de apresentação, não limites oficiais de manejo. Alta sensibilidade: Ky da fase igual ou acima de 1 (FAO-33), também da API.')}</p>
-            <p>{t('A classificação geral pode ser favorável e ainda conter uma fase com atendimento baixo. Este panorama não explica o ranking da API e não calcula perda de produtividade ou lâmina de irrigação. Não é previsão do tempo nem medição do solo.')}</p>
+            <p>{t('Atendimento = água que a cultura usou ÷ água de que precisava (ETa/ETc), por fase, na média das safras históricas do balanço hídrico do talhão (ISNA por estágio). Não há valores dia a dia: dentro de uma fase, o valor é o mesmo em todos os decêndios.')}</p>
+            <p>{t('Fases pelos estágios FAO-56 da cultura, nas datas de plantio e colheita recomendadas. Crítico abaixo de 45%; atenção de 45% a menos de 55%. Estes são limiares de apresentação, não limites oficiais de manejo. Alta sensibilidade: Ky da fase igual ou acima de 1 (FAO-33).')}</p>
+            <p>{t('A classificação geral pode ser favorável e ainda conter uma fase com atendimento baixo. Este panorama não explica a ordem das rotações e não calcula perda de produtividade ou lâmina de irrigação. Não é previsão do tempo nem medição do solo.')}</p>
             <a href="https://www.embrapa.br/en/web/agencia-de-informacao-tecnologica/cultivos/soja/pre-producao/caracteristicas-da-especie-e-relacoes-com-o-ambiente/exigencias-climaticas/agua/sintomas-de-falta-de-agua" target="_blank" rel="noreferrer">{t('Referência: resposta da soja à falta de água')}</a>
           </>}
           {page === 'moment' && route.moment && <>
             <p className={`insp-moment-status ${route.moment.estado}`}><Icon name={SELO[route.moment.estado].icon} />{route.moment.estado === 'risk' ? t('Crítico') : t('Atenção')} · {periodoMomento(route.moment)}</p>
-            <h3>{t(route.moment.cultura)}</h3><p>{route.moment.critica ? t('Fase: {fase} · fase de maior déficit na API', { fase: t(route.moment.nomeFase) }) : t('Fase: {fase}', { fase: t(route.moment.nomeFase) })}</p>
+            <h3>{t(route.moment.cultura)}</h3><p>{route.moment.critica ? t('Fase: {fase} · fase de maior déficit', { fase: t(route.moment.nomeFase) }) : t('Fase: {fase}', { fase: t(route.moment.nomeFase) })}</p>
             <dl className="insp-reading"><dt>{t('Atendimento à demanda na fase')}</dt><dd>{Math.round(route.moment.menorAtendimento * 100)}%</dd></dl>
             <p>{t(route.moment.reacao)}</p><h3>{t('O que conferir')}</h3><p>{t(route.moment.acao)}</p>
             <button type="button" className="insp-text-button" onClick={() => onVerPeriodo(route.moment!.de)}>{t('Ver este momento')}<Icon name="i-right" /></button>
             <p className="insp-caption">{route.moment && rot?.safras[route.moment.safra]?.risco?.metodo === 'MOCK'
-              ? t('Média das safras históricas da API · provisório · não é previsão nem medição no campo.')
-              : t('Média das safras históricas da API · não é previsão nem medição no campo.')}</p>
+              ? t('Média das safras históricas · provisório · não é previsão nem medição no campo.')
+              : t('Média das safras históricas · não é previsão nem medição no campo.')}</p>
           </>}
         </div>
       </>}

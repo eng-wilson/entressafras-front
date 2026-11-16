@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 test('marca os períodos críticos nas barras e explica cada um', async ({ page }) => {
   const marcas = page.locator('.rlist .crit')
   await expect(marcas.first()).toBeVisible()
-  await expect(marcas.first()).toHaveAttribute('aria-label', /^Período crítico\. .+: risco hídrico de \d+% \(API\), maior déficit de água nesta fase\. Ver na simulação\.$/)
+  await expect(marcas.first()).toHaveAttribute('aria-label', /^Período crítico\. .+: risco hídrico de \d+%, maior déficit de água nesta fase\. Ver na simulação\.$/)
   await expect(page.locator('.crit-lg')).toContainText('Período crítico')
 })
 

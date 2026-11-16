@@ -14,9 +14,9 @@ export const EN_LOGICA: Record<string, string> = {
   'Histórico favorável': 'Favorable history',
   'Histórico arriscado': 'Risky history',
   'Histórico desfavorável': 'Unfavorable history',
-  'Risco hídrico de {pct}% ({cultura}), da API': 'Water risk of {pct}% ({cultura}), from the API',
+  'Risco hídrico de {pct}% ({cultura})': 'Water risk of {pct}% ({cultura})',
   '{rotulo}. {base}, para estas culturas e datas.': '{rotulo}. {base}, for these crops and dates.',
-  'A API não trouxe o risco hídrico de {cultura}; a tela não faz estimativa própria.': 'The API did not return the water risk for {cultura}; the screen makes no estimate of its own.',
+  'Sem risco hídrico calculado para {cultura}.': 'No water risk calculated for {cultura}.',
   'Sem dado de risco': 'No risk data',
   'Resiliência sem dado': 'Resilience: no data',
   'Resiliência sem dado. {texto}': 'Resilience: no data. {texto}',
@@ -46,17 +46,17 @@ export const EN_LOGICA: Record<string, string> = {
   'Requisitos gerais da espécie; avalie cultivar e condições locais com seu agrônomo.': 'General requirements for the species; assess the cultivar and local conditions with your agronomist.',
 
   // Água para a cultura (soilGauge.ts)
-  'Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica da API': 'Water supply vs. demand in this phase {valor}, {rotulo}, historical average from the API',
-  'Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica da API, provisório': 'Water supply vs. demand in this phase {valor}, {rotulo}, historical average from the API, provisional',
-  'Atendimento à demanda na fase, média das safras históricas da API.': 'Water supply vs. demand in the phase, average of the historical seasons from the API.',
-  'Atendimento à demanda na fase, média das safras históricas da API (provisório).': 'Water supply vs. demand in the phase, average of the historical seasons from the API (provisional).',
+  'Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica': 'Water supply vs. demand in this phase {valor}, {rotulo}, historical average',
+  'Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica, provisório': 'Water supply vs. demand in this phase {valor}, {rotulo}, historical average, provisional',
+  'Atendimento à demanda na fase, média das safras históricas.': 'Water supply vs. demand in the phase, average of the historical seasons.',
+  'Atendimento à demanda na fase, média das safras históricas (provisório).': 'Water supply vs. demand in the phase, average of the historical seasons (provisional).',
   'Confira os momentos de atenção e confirme as condições no campo.': 'Review the watch points and confirm conditions in the field.',
-  'ETa ÷ ETc · fase, média da API': 'ETa ÷ ETc · phase, API average',
-  'ETa ÷ ETc · fase, média da API · provisório': 'ETa ÷ ETc · phase, API average · provisional',
+  'ETa ÷ ETc · fase, média histórica': 'ETa ÷ ETc · phase, historical average',
+  'ETa ÷ ETc · fase, média histórica · provisório': 'ETa ÷ ETc · phase, historical average · provisional',
   'Sem demanda': 'No demand',
   'Atendimento à demanda de água sem dado': 'Water supply vs. demand: no data',
   'Sem cultura no período; demanda de água não avaliada': 'No crop in this period; water demand not assessed',
-  'A API não trouxe o atendimento à demanda desta fase.': 'The API did not return the water supply vs. demand for this phase.',
+  'Sem atendimento à demanda calculado para esta fase.': 'No water supply vs. demand calculated for this phase.',
   'A tela não estima um valor no lugar.': 'The screen does not estimate a value in its place.',
 
   // Chuva (chuva.ts, ROTULO_CHUVA: traduzido na exibição)
@@ -79,19 +79,19 @@ export const EN_LOGICA: Record<string, string> = {
   'Fraca': 'Weak',
 
   // Motivos e explicações (aptidao.ts)
-  'sem risco da API': 'no risk from the API',
-  'risco hídrico de {pct}% (API)': 'water risk of {pct}% (API)',
-  'risco hídrico de {pct}% (API, provisório)': 'water risk of {pct}% (API, provisional)',
-  'A API não trouxe o risco hídrico desta cultura; a tela não faz estimativa própria.': 'The API did not return the water risk for this crop; the screen makes no estimate of its own.',
-  'Risco hídrico de {cultura} calculado pela API Entressafras: em {pct}% das {safras} safras históricas a perda por falta de água passou de {limiar}%.': 'Water risk for {cultura} calculated by the Entressafras API: in {pct}% of the {safras} historical seasons, the loss from lack of water exceeded {limiar}%.',
+  'sem risco calculado': 'no risk calculated',
+  'risco hídrico de {pct}%': 'water risk of {pct}%',
+  'risco hídrico de {pct}% (provisório)': 'water risk of {pct}% (provisional)',
+  'Sem risco hídrico calculado para esta cultura.': 'No water risk calculated for this crop.',
+  'Risco hídrico de {cultura}: em {pct}% das {safras} safras históricas a perda por falta de água passou de {limiar}%.': 'Water risk for {cultura}: in {pct}% of the {safras} historical seasons, the loss from lack of water exceeded {limiar}%.',
   'A perda média estimada por falta de água é de {perda}%.': 'The estimated average loss from lack of water is {perda}%.',
   'Segurança hídrica: {nota} de 100 ({faixa}).': 'Water security: {nota} out of 100 ({faixa}).',
-  'Atenção: o servidor ainda marca este valor como MOCK (provisório, não calculado com o clima do talhão).': 'Attention: the server still marks this value as MOCK (provisional, not calculated with the field climate).',
+  'Atenção: valor provisório, ainda não calculado com o clima do talhão.': 'Attention: provisional value, not yet calculated with the field climate.',
   'aguardando as rotações': 'waiting for the rotations',
   'produção preservada de {p}% (perda por falta de água: {perda}%)': '{p}% of production preserved (loss from lack of water: {perda}%)',
 
   // Períodos críticos (diagnostico.ts)
-  'risco hídrico de {pct}% (API), maior déficit de água nesta fase': 'water risk of {pct}% (API), largest water deficit in this phase',
+  'risco hídrico de {pct}%, maior déficit de água nesta fase': 'water risk of {pct}%, largest water deficit in this phase',
   '{cultura}, {fase} ({periodo}): {frequencia}.': '{cultura}, {fase} ({periodo}): {frequencia}.',
   'Período crítico no {fase} ({periodo}): {frequencia}.': 'Critical period in {fase} ({periodo}): {frequencia}.',
   'Período crítico na {fase} ({periodo}): {frequencia}.': 'Critical period in {fase} ({periodo}): {frequencia}.',
@@ -103,11 +103,11 @@ export const EN_LOGICA: Record<string, string> = {
   'Sem água, a planta cresce menos e cobre menos o solo.': 'Without water, the plant grows less and covers less of the soil.',
   'Sem água, flores abortam e os grãos ficam leves: é a fase em que a produção mais cai.': 'Without water, flowers abort and grains stay light: this is the phase where production drops the most.',
   'Sem água, os grãos podem não terminar de encher.': 'Without water, the grains may not finish filling.',
-  '{problema} Risco hídrico de {pct}% (API), com o maior déficit de água nesta fase.': '{problema} Water risk of {pct}% (API), with the largest water deficit in this phase.',
+  '{problema} Risco hídrico de {pct}%, com o maior déficit de água nesta fase.': '{problema} Water risk of {pct}%, with the largest water deficit in this phase.',
 
   // Atenção no ciclo (atencaoCiclo.ts)
-  'Fase sensível à falta de água para esta cultura (Ky ≥ 1 na API): a produção tende a cair mais que o déficit.': 'Phase sensitive to water shortage for this crop (Ky ≥ 1 in the API): production tends to drop more than the deficit.',
-  'Restrição de água em fase de menor sensibilidade (Ky < 1 na API); não implica a mesma resposta da floração.': 'Water restriction in a less sensitive phase (Ky < 1 in the API); it does not imply the same response as at flowering.',
+  'Fase sensível à falta de água para esta cultura (Ky ≥ 1): a produção tende a cair mais que o déficit.': 'Phase sensitive to water shortage for this crop (Ky ≥ 1): production tends to drop more than the deficit.',
+  'Restrição de água em fase de menor sensibilidade (Ky < 1); não implica a mesma resposta da floração.': 'Water restriction in a less sensitive phase (Ky < 1); it does not imply the same response as at flowering.',
   'Confirme a maturidade no campo antes de alterar o manejo de água.': 'Confirm maturity in the field before changing water management.',
   'Confira a água na zona das raízes. Se houver irrigação, avalie a necessidade com assistência técnica; o índice não define lâmina nem momento de aplicação.': 'Check the water in the root zone. If you irrigate, assess the need with technical assistance; the index does not set the irrigation depth or timing.',
 
@@ -169,7 +169,7 @@ export const EN_LOGICA: Record<string, string> = {
   'A 2ª cultura não cabe aqui: ela precisa ser plantada depois da colheita da 1ª.': 'The 2nd crop does not fit here: it must be planted after the 1st crop is harvested.',
   'A 2ª cultura precisa ser plantada antes do fim da safra.': 'The 2nd crop must be planted before the end of the season.',
   'A colheita precisa ser depois do plantio.': 'Harvest must come after planting.',
-  'Cultura desconhecida no catálogo da API.': 'Crop unknown in the API catalog.',
+  'Cultura desconhecida no catálogo.': 'Crop unknown in the catalog.',
   'Não foi possível simular com estas culturas e datas.': 'Could not simulate with these crops and dates.',
 
   // Histórico do talhão (historico.ts; GRUPOS_CULTURA e PRAGAS estão em onboarding.ts)
@@ -184,5 +184,5 @@ export const EN_LOGICA: Record<string, string> = {
   // avisosApi.ts: solo ou clima que não são do talhão
   'Solo estimado de um ponto a {km} km do talhão. Informe a textura se não for parecida.': 'Soil estimated from a point {km} km from the field. Enter the texture if it is not similar.',
   'Clima de outra região, a {km} km do talhão: os riscos descrevem aquela região.': 'Climate from another region, {km} km from the field: the risks describe that region.',
-  'Solo do local indisponível: a API assumiu textura média. Informe a textura do solo.': 'Local soil unavailable: the API assumed medium texture. Enter the soil texture.',
+  'Solo do local indisponível: usamos textura média. Informe a textura do solo.': 'Local soil unavailable: we used medium texture. Enter the soil texture.',
 }

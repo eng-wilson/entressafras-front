@@ -1,6 +1,7 @@
 import type { EstadoClima, EstadoCultura, Talhao } from '../types'
 import { periodoLabel } from '../logic/periodo'
 import { climaDoPeriodo } from '../logic/clima'
+import { fonteCurta } from '../logic/fonteDado'
 import { memo, useMemo } from 'react'
 import type { Stage } from '../data/mock'
 import { estagioEm } from '../logic/estagios'
@@ -42,6 +43,9 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
   const periodLabel = periodoLabel(idx)
   const periodo = climaDoPeriodo(clima.dados?.decendios ?? null, idx)
   const cargando = clima.status === 'carregando'
+  // Selo da fonte (nome que a API dá em clima.fonte) embaixo dos números que vêm de satélite: chuva e temperatura.
+  const fonte = fonteCurta(clima.dados?.fonte)
+  const selo = fonte && <p className="selo-fonte">{t('Fonte')} · {fonte}</p>
   const cur = estagioEm(fases, idx)
   const crit = criticoEm(diag, idx)
   const alerta = crit && { cls: crit.cls, rotulo: rotuloCritico(crit), texto: legendaCritico(crit) }
@@ -101,6 +105,7 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
           <div className="cena-esq">
             <div className="cena-card">
               <RainGauge chuvaDecendio={periodo.chuvaDecendio} carregando={cargando} />
+              {selo}
             </div>
             <div className="cena-card">
               <SoilMoistureBar soil={soil} />
@@ -109,6 +114,7 @@ export const Simulation = memo(function Simulation({ idx, rot, talhao, fases, di
           <div className="cena-dir">
             <div className="cena-card">
               <TempRangeBar temp={temp} carregando={cargando} carregandoReferencia={!!cur.crop && cultura.status === 'carregando'} />
+              {selo}
             </div>
           </div>
         </section>

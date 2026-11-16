@@ -38,7 +38,7 @@ function solo(talhao: Talhao, api: SoilInfo | undefined): { value: string; dica?
   if (!talhao.textura && api?.source === 'SOILGRIDS_SAXTON_RAWLS_2006') {
     return {
       value: t('{textura} (estimado)', { textura: texturaApi(api.texture_class) }),
-      dica: t('Estimado pela API a partir do local (SoilGrids): {mm} mm de água por metro de raiz. Editar o solo do talhão', { mm: Math.round(api.available_water_mm_per_m) }),
+      dica: t('Estimado a partir do local (SoilGrids): {mm} mm de água por metro de raiz. Editar o solo do talhão', { mm: Math.round(api.available_water_mm_per_m) }),
     }
   }
   return { value: rotuloSolo(talhao) }
@@ -100,7 +100,7 @@ export function Sidebar({ pr, onToggle, talhao, clima, onAcao, onTrocar }: Props
 
       <div className="sec">
         <h3>{t('O que importa')}</h3>
-        <p className="prh">{t('A ordem das rotações segue o que você marcar (calculada pela API). Faturamento é uma estimativa com médias nacionais (FAO), sem custos.')}</p>
+        <p className="prh">{t('A ordem das rotações segue o que você marcar. Faturamento é uma estimativa com médias nacionais (FAO), sem custos.')}</p>
         <div className="list">
           {PRIORITIES.map(({ k, label, icon }) => (
             <div key={k} className="item">

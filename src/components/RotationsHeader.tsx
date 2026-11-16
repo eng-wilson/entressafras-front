@@ -17,7 +17,7 @@ export function RotationsHeader({ mode, onMode, onAdd, addBloqueio = null, cenar
     <div className="mstrip">
       <div className="ms-title">
         <h2 className="h2r">{t('Rotações')}</h2>
-        <p>{t('Safra {ano} · na ordem recomendada pela API', { ano: `${conj.ano}/${String(conj.ano + 1).slice(2)}` })}</p>
+        <p>{t('Safra {ano} · na ordem recomendada', { ano: `${conj.ano}/${String(conj.ano + 1).slice(2)}` })}</p>
       </div>
       <button className="add" type="button" aria-label={t('Criar minha rotação')} title={addBloqueio ?? t('Criar minha rotação')}
         disabled={!!addBloqueio} onClick={onAdd}>

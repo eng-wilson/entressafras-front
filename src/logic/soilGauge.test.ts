@@ -1,13 +1,13 @@
 ﻿import { describe, it, expect } from 'vitest'
 import { soilGauge } from './soilGauge'
 
-describe('atendimento à demanda — ISNA da fase, da API', () => {
+describe('atendimento à demanda — ISNA da fase', () => {
   it.each([[.44, 'risk'], [.45, 'warn'], [.54, 'warn'], [.55, 'good'], [1, 'good']] as const)('classifica %s sem consultar uma tabela por data', (v, cls) => {
     const r = soilGauge(v, true)
     expect(r.cls).toBe(cls)
     expect(r.val).toBe(v.toFixed(2).replace('.', ','))
     expect(r.cx).toBe(v * 268)
-    expect(r.unit).toContain('média da API')
+    expect(r.unit).toContain('média histórica')
   })
   it.each([null, NaN])('mantém o resultado ausente neutro: %s', v => {
     const r = soilGauge(v, true)

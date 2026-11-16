@@ -88,27 +88,27 @@ export function receitaSafra(r: CTRow, n: 0 | 1): number {
 
 export const reais = (v: number) => `R$ ${fmtNumero(v, { maximumFractionDigits: 0 })}/ha`
 
-/** "milho safrinha: risco hídrico de 30% (API, provisório)"; sem risco, "algodão: sem risco da API". */
+/** "milho safrinha: risco hídrico de 30% (API, provisório)"; sem risco, "algodão: sem risco calculado". */
 export const motivoSafra = (s: ResSafra) => `${minuscula(t(s.nome))}: ${resultadoSafra(s)}`
 
-/** Resultado curto de uma safra: "risco hídrico de 30% (API)" ou "sem risco da API". */
+/** Resultado curto de uma safra: "risco hídrico de 30% (API)" ou "sem risco calculado". */
 export const resultadoSafra = (s: ResSafra) =>
-  !s.risco ? t('sem risco da API')
-    : s.risco.metodo === 'MOCK' ? t('risco hídrico de {pct}% (API, provisório)', { pct: pctFmt(s.risco.pct) })
-      : t('risco hídrico de {pct}% (API)', { pct: pctFmt(s.risco.pct) })
+  !s.risco ? t('sem risco calculado')
+    : s.risco.metodo === 'MOCK' ? t('risco hídrico de {pct}% (provisório)', { pct: pctFmt(s.risco.pct) })
+      : t('risco hídrico de {pct}%', { pct: pctFmt(s.risco.pct) })
 
 /** Safra sem risco na resposta da API: a tela não estima nada no lugar. */
-export const SEM_CRITERIO = 'A API não trouxe o risco hídrico desta cultura; a tela não faz estimativa própria.'
+export const SEM_CRITERIO = 'Sem risco hídrico calculado para esta cultura.'
 
 /** Explicação do risco que veio da API, com a ressalva quando o servidor ainda o marca como MOCK. */
 export function detalheApi(s: ResSafra): string {
   const r = s.risco!
   return [
-    t('Risco hídrico de {cultura} calculado pela API Entressafras: em {pct}% das {safras} safras históricas a perda por falta de água passou de {limiar}%.',
+    t('Risco hídrico de {cultura}: em {pct}% das {safras} safras históricas a perda por falta de água passou de {limiar}%.',
       { cultura: minuscula(t(s.nome)), pct: pctFmt(r.pct), safras: r.anosValidos, limiar: r.limiar }),
     r.perda != null ? t('A perda média estimada por falta de água é de {perda}%.', { perda: pctFmt(r.perda) }) : '',
     t('Segurança hídrica: {nota} de 100 ({faixa}).', { nota: s.seguranca!, faixa: t(faixa(s.seguranca!).rotulo).toLowerCase() }),
-    r.metodo === 'MOCK' ? t('Atenção: o servidor ainda marca este valor como MOCK (provisório, não calculado com o clima do talhão).') : '',
+    r.metodo === 'MOCK' ? t('Atenção: valor provisório, ainda não calculado com o clima do talhão.') : '',
   ].filter(Boolean).join(' ')
 }
 

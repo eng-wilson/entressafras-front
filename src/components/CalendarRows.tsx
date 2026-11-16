@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from 'react'
+import { Fragment, useMemo, type ReactNode } from 'react'
 import { rankRotations } from '../logic/rank'
 import { classeSeguranca, rotationStatus } from '../logic/status'
 import type { Resiliencia } from '../logic/resiliencia'
@@ -47,9 +47,11 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
     [res, ROTATIONS],
   )
 
-  // Sort rows in DOM order by rank position (not CSS order)
+  // Ordem na tela: a rotação atual do talhão (última cadastrada) primeiro, para servir de referência; depois as
+  // demais pela posição no ranking. O número de cada linha continua sendo a posição no ranking.
   const sorted = useMemo(
-    () => [...ROTATIONS].sort((a, b) => rpos[ROTATIONS.indexOf(a)] - rpos[ROTATIONS.indexOf(b)]),
+    () => [...ROTATIONS].sort((a, b) =>
+      Number(!!b.ct.atual) - Number(!!a.ct.atual) || rpos[ROTATIONS.indexOf(a)] - rpos[ROTATIONS.indexOf(b)]),
     [rpos, ROTATIONS]
   )
 
@@ -57,22 +59,25 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
     <>
     {rascunho}
     <div className="rlist" role="list" aria-label={t('Rotações de cultura')}>
-      {sorted.map(rot => {
+      {sorted.map((rot, pos) => {
         const ri = ROTATIONS.indexOf(rot)
         const st = statuses[ri]
         const safras = res?.rotacoes[ri].safras
         const rank = rpos[ri] + 1
-        const isLast = rpos[ri] === ROTATIONS.length - 1
+        const isLast = pos === sorted.length - 1
         const criticos = diags?.[ri].criticos ?? []
         const nome = t(rot.ct.c1), depois = minuscula(t(rot.ct.c2))
         const marcada = !!cmp?.sel.includes(ri)
         // Na comparação, a linha marca para comparar; no calendário, seleciona a rotação.
         const acionar = () => (cmp ? cmp.onToggle(ri) : onSel(ri))
 
+        // Separa a rotação do agricultor (no topo) das sugestões da API.
+        const separar = pos === 1 && !!sorted[0].ct.atual
         return (
+          <Fragment key={rot.id}>
+          {separar && <div className="rlist-sep" aria-hidden="true">{t('Sugestões para o seu talhão')}</div>}
           <div
-            key={rot.id}
-            className={`row rsel${rot.salva ? ' saved' : ''}${!cmp && ri === sel ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
+            className={`row rsel${rot.ct.atual ? ' atual' : ''}${rot.salva ? ' saved' : ''}${!cmp && ri === sel ? ' sel' : ''}${isLast ? ' rlast' : ''}`}
             role="listitem"
             onClick={acionar}
           >
@@ -102,7 +107,12 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
               >
                 {nome} <span className="then">{t('depois')}</span> {depois}
               </button>
-              {rot.ct.atual && <span className="tag">{t('Atual')}</span>}
+              {rot.ct.atual && (
+                <span className="tag tag-atual" title={t('A última rotação do histórico do talhão, para comparar com as sugestões.')}>
+                  <svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-repeat" /></svg>
+                  {t('Seu último plantio')}
+                </span>
+              )}
               {rot.salva && <span className="tag">{t('Nova')}</span>}
               {rot.maisPragas && (
                 <span className="pest">
@@ -175,13 +185,14 @@ export function CalendarRows({ res, sel, onSel, diags, idx, rascunho, onRemoverS
               )}
             </div>
           </div>
+          </Fragment>
         )
       })}
     </div>
       {diags?.some(d => d.criticos.length) && (
         <p className="crit-lg">
           <span className="crit-sw" aria-hidden="true" />
-          {t('Período crítico: fase com o maior déficit de água, segundo a API. Clique para ver na simulação.')}
+          {t('Período crítico: fase com o maior déficit de água. Clique para ver na simulação.')}
         </p>
       )}
     </>

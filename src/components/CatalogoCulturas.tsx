@@ -69,7 +69,7 @@ export function CatalogoCulturas({ inicial, onFechar }: { inicial: string; onFec
             </>
           })()}
         </dl>
-        <p className="culturas-nota">{t('Fonte: catálogo EcoCrop e perfis FAO-56 (CropWat), via API Entressafras. Requisitos gerais da espécie, não calibrados por região; a chuva anual não equivale ao consumo de água por ciclo. Ciclos e rotações da simulação permanecem ilustrativos.')}</p>
+        <p className="culturas-nota">{t('Fonte: catálogo EcoCrop e perfis FAO-56 (CropWat). Requisitos gerais da espécie, não calibrados por região; a chuva anual não equivale ao consumo de água por ciclo. Ciclos e rotações da simulação permanecem ilustrativos.')}</p>
       </>}
     </dialog>, document.body,
   )

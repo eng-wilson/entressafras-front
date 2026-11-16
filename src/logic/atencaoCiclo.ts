@@ -78,8 +78,8 @@ export function atencaoCiclo(rot: ResRotacao | null, defs: SafraDef[]): Panorama
       de: q.idx, ate: q.idx, safra: q.safra, cultura: q.cultura, fase: q.fase, nomeFase: q.nomeFase,
       estado: q.estado, sensivel: q.sensivel, critica: q.critica, menorAtendimento: q.atendimento,
       reacao: q.sensivel
-        ? t('Fase sensível à falta de água para esta cultura (Ky ≥ 1 na API): a produção tende a cair mais que o déficit.')
-        : t('Restrição de água em fase de menor sensibilidade (Ky < 1 na API); não implica a mesma resposta da floração.'),
+        ? t('Fase sensível à falta de água para esta cultura (Ky ≥ 1): a produção tende a cair mais que o déficit.')
+        : t('Restrição de água em fase de menor sensibilidade (Ky < 1); não implica a mesma resposta da floração.'),
       acao: maturacao
         ? t('Confirme a maturidade no campo antes de alterar o manejo de água.')
         : t('Confira a água na zona das raízes. Se houver irrigação, avalie a necessidade com assistência técnica; o índice não define lâmina nem momento de aplicação.'),

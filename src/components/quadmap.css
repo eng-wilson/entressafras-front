@@ -2,18 +2,18 @@
    espaçamento de 12 a 16px), com as listas agrupadas e as cores semânticas do painel direito. */
 /* O modal "Por safra" vai para o body (fora de .qmap): recebe as mesmas variáveis. */
 .qmap, .qm-modal {
-  --qm-label: #1d1d1f;
-  --qm-secondary: #636368;
-  --qm-surface: #f5f5f7;
-  --qm-separator: #dfdfe4;
-  --qm-accent: #0a64c2;
-  --qm-on: #0a4fa8;
+  --qm-label: var(--label, #172117);
+  --qm-secondary: var(--label2, #5E6A5C);
+  --qm-surface: var(--side, #FAF8F1);
+  --qm-separator: var(--sep, rgba(31,51,30,.14));
+  --qm-accent: var(--tint, #1F5130);
+  --qm-on: var(--tint, #1F5130);
   --qm-good: #24733d;
   --qm-warn: #805300;
   --qm-risk: #b42332;
   --qm-nd: #6e6e73;
   color: var(--qm-label);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--font-ui, system-ui, sans-serif);
   font-size: 13px;
   line-height: 1.4;
 }
@@ -28,7 +28,7 @@
 .qm-g.centro .qm-chart { position: static; }
 .qm-svg { display: block; width: 100%; height: auto; overflow: visible; }
 .qm-q { fill: #fafafc; }
-.qm-q.on { fill: #e3eefd; }
+.qm-q.on { fill: rgba(166, 206, 57, .16); }
 .qm-ring { fill: none; stroke: rgba(60, 60, 67, .14); }
 .qm-ring.out { stroke: rgba(60, 60, 67, .45); stroke-width: 1.5; }
 .qm-ax { stroke: rgba(60, 60, 67, .4); stroke-width: 1.2; }
@@ -50,22 +50,26 @@
 /* Cards: uma lista agrupada por rotação */
 .qm-side { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
 .qm-cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 10px; align-items: start; }
-.qm-card { background: var(--qm-surface); border-radius: 12px; overflow: clip; transition: box-shadow .15s; }
-.qm-card.on { box-shadow: inset 0 0 0 2px var(--qm-cor); }
-.qm-ch { display: flex; align-items: center; gap: 8px; padding: 10px 12px 0; }
+.qm-card { background: #fff; border-radius: 12px; overflow: clip; box-shadow: inset 0 0 0 1px var(--qm-separator); transition: box-shadow .15s; }
+.qm-card.on { box-shadow: 0 0 0 2px var(--qm-cor); }
+.qm-ch { display: flex; align-items: center; gap: 8px; padding: 12px 14px 0; }
 .qm-num { flex: none; display: grid; place-items: center; width: 20px; height: 20px; border-radius: 10px; background: var(--qm-cor); color: #fff; font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .qm-num.atual { background: #fff; color: var(--qm-cor); box-shadow: inset 0 0 0 2px var(--qm-cor); }
-.qm-nome { flex: 1; min-width: 0; font-weight: 600; overflow-wrap: anywhere; }
-.qm-tipo { margin: 1px 0 0; padding: 0 12px 0 40px; color: var(--qm-secondary); font-size: 12px; }
-.qm-eixos { list-style: none; margin: 0; padding: 4px 0 6px; }
-.qm-eixos li { display: flex; align-items: center; gap: 6px; min-height: 26px; padding: 0 12px; }
-/* Linha de prioridade (BarraPrioridade, escala compacta) */
-.qm-eixos li.bp-linha { min-height: 40px; padding: 4px 12px; gap: 8px; }
+.qm-nome { flex: 1; min-width: 0; font-weight: 700; font-size: 14px; overflow-wrap: anywhere; }
+.qm-tipo { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: 2px 0 0; padding: 0 14px 0 42px; color: var(--qm-secondary); font-size: 12px; }
+.qm-atual { padding: 1px 7px; border-radius: 6px; background: var(--palha, #F3EEDC); color: var(--tint, #1F5130); box-shadow: inset 0 0 0 1px rgba(31, 81, 48, .35); font-weight: 600; }
+/* Prioridades em grade 2×2: cada célula é a linha de prioridade (BarraPrioridade) rearranjada — ícone, nome e
+   faixa em cima, barra embaixo —, com o faturamento em US$/ha logo abaixo quando houver. */
+.qm-eixos { list-style: none; margin: 0; padding: 10px 14px 12px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px; align-items: start; }
+.qm-eixos li.qm-eixo { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; column-gap: 6px; row-gap: 5px; padding: 0; min-height: 0; }
+.qm-eixo .bp-copy { display: contents; }
+.qm-eixo .bp-icone { grid-column: 1; grid-row: 1; }
+.qm-eixo .bp-nome { grid-column: 2; grid-row: 1; font-size: 12.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qm-eixo .bp-faixa { grid-column: 3; grid-row: 1; min-width: 0; font-size: 12px; }
+.qm-eixo .bp-barra { grid-column: 1 / -1; grid-row: 2; }
+.qm-eixo .qm-fat { grid-column: 1 / -1; grid-row: 3; color: var(--qm-secondary); font-size: 11.5px; font-variant-numeric: tabular-nums; }
 .qm-en { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .qm-eixos li.on .qm-en { color: var(--qm-on); font-weight: 600; }
-/* Lucro estimado: sub-linha de Produtividade, recuada e menor */
-.qm-eixos li.qm-fat { min-height: 22px; padding-left: 24px; font-size: 12px; color: var(--qm-secondary); }
-.qm-fat-v { font-weight: 600; color: var(--qm-label); font-variant-numeric: tabular-nums; }
 .qm-dots { display: inline-flex; align-items: center; gap: 3px; }
 .qm-dots i { width: 7px; height: 7px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px currentColor; }
 .qm-dots i.f { background: currentColor; }
@@ -80,9 +84,9 @@
 .qm-disc { display: flex; width: 100%; align-items: center; gap: 8px; min-height: 36px; padding: 0 12px; border: 0; border-top: 1px solid var(--qm-separator); background: transparent; font: inherit; color: var(--qm-accent); font-weight: 600; text-align: left; cursor: pointer; }
 .qm-disc span { flex: 1; }
 .qm-disc svg { width: 12px; height: 12px; transition: transform .15s; }
-.qm-disc:hover { background: #ededf1; }
-.qm-disc:active { background: #e0e5e1; }
-.qm-disc:focus-visible, .qm-more:focus-visible, .qm-escolher:focus-visible { outline: 2px solid #0066cc; outline-offset: -2px; }
+.qm-disc:hover { background: var(--qm-surface); }
+.qm-disc:active { background: #EFEDE2; }
+.qm-disc:focus-visible, .qm-more:focus-visible, .qm-escolher:focus-visible { outline: 2px solid #1F5130; outline-offset: -2px; }
 .qm-modal { width: min(640px, calc(100vw - 32px)); }
 .qm-modal header { align-items: flex-start; }
 .qm-modal h2 { font-size: 17px; font-weight: 600; line-height: 1.3; }

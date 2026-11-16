@@ -26,7 +26,7 @@ describe('diagnostico (fase crítica da API)', () => {
     // A fase III no calendário vem dos estágios FAO-56 da API
     expect(rot.safras[1].calc.decendios.filter(x => x.fase === 2).map(x => x.idx)).toEqual(
       Array.from({ length: p.ate - p.de + 1 }, (_, i) => p.de + i))
-    expect(textoCritico(p)).toMatch(/^Milho safrinha, floração e enchimento de grãos \(.+\): risco hídrico de 45% \(API\)/)
+    expect(textoCritico(p)).toMatch(/^Milho safrinha, floração e enchimento de grãos \(.+\): risco hídrico de 45%/)
     expect(d.limitante).toBe(1)
   })
 
@@ -37,7 +37,7 @@ describe('diagnostico (fase crítica da API)', () => {
     expect(periodoDecisivo(d)).toBe(p.de)
     expect(criticoEm(d, p.de)).toBe(p)
     expect(criticoEm(d, 0)).toBeNull()
-    expect(legendaCritico(p)).toMatch(/flores abortam.*Risco hídrico de 40% \(API\)/)
+    expect(legendaCritico(p)).toMatch(/flores abortam.*Risco hídrico de 40%/)
   })
 
   it('sem clima, o período existe (vem da API) e os déficits ficam sem dado', () => {

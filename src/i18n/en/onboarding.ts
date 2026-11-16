@@ -75,6 +75,7 @@ export const EN_ONBOARDING: Record<string, string> = {
 
   // EstadoVazio
   'Marque seu primeiro talhão': 'Mark your first field',
+  'Primeiro talhão': 'First field',
   'Desenhe no mapa a área onde você planta.': 'Draw on the map the area where you plant.',
   'Desenhar no mapa': 'Draw on the map',
   'Clique em cada canto do talhão. A área é calculada sozinha.': 'Click each corner of the field. The area is calculated automatically.',

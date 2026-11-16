@@ -8,6 +8,8 @@ import { HistoricoModal } from './components/HistoricoModal'
 import { Simulation } from './components/Simulation'
 import { Rotations } from './components/Rotations'
 import { Inspector } from './components/Inspector'
+import { SimboloMarca } from './components/SimboloMarca'
+import { fonteCurta } from './logic/fonteDado'
 import { Onboarding, type ModoOnboarding } from './onboarding/Onboarding'
 import { carregar, salvar } from './services/storage'
 import { reverso } from './services/geocoding'
@@ -82,8 +84,16 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
   const [folha, setFolha] = useState<'solo' | 'historico' | null>(null)
   // Rotações marcadas no modo Comparação (posições no conjunto): começa com a atual (ou a 1ª) e mais uma
   const [cmpSel, setCmpSel] = useState<number[]>([0, 1])
-  const toggleCmp = (i: number) =>
-    setCmpSel(s => (s.includes(i) ? (s.length > 1 ? s.filter(x => x !== i) : s) : [...s, i].sort()))
+  // Marcar uma rotação na comparação também a seleciona: a lateral direita mostra a última marcada. Desmarcar a
+  // selecionada passa a lateral para a última que continua marcada (sempre fica ao menos uma).
+  const toggleCmp = (i: number) => {
+    const marcada = cmpSel.includes(i)
+    if (marcada && cmpSel.length === 1) return
+    const nova = marcada ? cmpSel.filter(x => x !== i) : [...cmpSel, i].sort((a, b) => a - b)
+    setCmpSel(nova)
+    if (!marcada) setState(s => ({ ...s, rot: i }))
+    else if (state.rot === i) setState(s => ({ ...s, rot: nova[nova.length - 1] }))
+  }
   const setIdx  = (idx: number) => setState(s => ({ ...s, idx }))
   const setMode = (mode: 'cal'|'cmp') => setState(s => ({ ...s, mode }))
   const togglePr = (k: keyof AppState['pr']) =>
@@ -352,11 +362,17 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
   }
 
   const pronto = conj && rotOk && fases && conj.rotacoes.length > 0
+  const fonteClima = fonteCurta(clima.dados?.fonte)
   return (
     <ConjuntoContext.Provider value={conj ?? conjVazio}>
     <div className="app">
       <header className="bar">
-        <div className="app-name">Field Shift</div>
+        <div className="app-name"><SimboloMarca />entressafras</div>
+        {talhao && (
+          <p className="bar-ctx">
+            {[t('Talhão {nome}', { nome: talhao.nome }), talhao.local, fonteClima && t('Dados {fonte}', { fonte: fonteClima })].filter(Boolean).join(' · ')}
+          </p>
+        )}
         <div className="bar-dir">
           {onIdioma && <SeletorIdioma onTrocar={onIdioma} />}
           <button className="tbtn" type="button">

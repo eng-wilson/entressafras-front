@@ -32,9 +32,9 @@ export function AtencaoCiclo({ panorama, estado, idx, onNavegar, onAbrirMomento,
     // Só aparece quando a rotação tem algum momento de atenção; sem nenhum, fica oculto (não ocupa o painel).
     <section className="attention-cycle" aria-label={t('Momentos de atenção da rotação')} hidden={estado === 'pronto' && momentos.length === 0}>
       <div className="attention-heading"><h3>{t('Atenção no ciclo')}</h3><button type="button" className="attention-info-button" aria-label={t('Como ler estes momentos')} data-inspector-open="attention-method" onClick={onAbrirMetodo}><svg className="ic" aria-hidden="true"><use href="/canvas-icons.svg#i-info" /></svg></button></div>
-      {estado === 'carregando' && <p className="attention-note" role="status">{t('Aguardando as rotações da API…')}</p>}
-      {estado === 'erro' && <p className="attention-note" role="status">{t('As rotações da API não carregaram. Sem avaliação dos momentos de atenção.')}</p>}
-      {estado === 'sem-clima' && <p className="attention-note">{t('Sem dados da API para avaliar os momentos.')}</p>}
+      {estado === 'carregando' && <p className="attention-note" role="status">{t('Carregando as rotações…')}</p>}
+      {estado === 'erro' && <p className="attention-note" role="status">{t('As rotações não carregaram. Sem avaliação dos momentos de atenção.')}</p>}
+      {estado === 'sem-clima' && <p className="attention-note">{t('Sem dados para avaliar os momentos.')}</p>}
       {estado === 'pronto' && panorama && <>
         <div className="insp-group attention-list">
           {primeiros.map(renderMomento)}

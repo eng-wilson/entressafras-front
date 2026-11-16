@@ -9,6 +9,7 @@ import { EditorSafra } from './EditorSafra'
 import { PassoSolo } from './PassoSolo'
 import { dadosDo, formDe, type Form } from './dados'
 import { Icone } from './Icone'
+import { PadraoMarca } from '../components/PadraoMarca'
 import { t } from '../i18n'
 
 type Props = {
@@ -63,6 +64,7 @@ export function JanelaPassos({ contorno, talhao, passoInicial = 0, onSalvar, onC
   return (
     <div className="ob-modal">
       <section className="ob-sheet" role="dialog" aria-modal="true" aria-labelledby="ob-sheet-t">
+        <PadraoMarca className="ob-padrao ob-padrao-fino" cols={16} linhas={1} semente={31} />
         <div className="ob-sh-top">
           <ol className="ob-passos" aria-label={t('Etapas')}>
             {passos.map((p, i) => (

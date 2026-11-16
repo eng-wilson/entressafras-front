@@ -2,7 +2,7 @@
 export const EN_COMPONENTES: Record<string, string> = {
   // RotationsHeader
   'Rotações': 'Rotations',
-  'Safra {ano} · na ordem recomendada pela API': 'Season {ano} · in the order recommended by the API',
+  'Safra {ano} · na ordem recomendada': 'Season {ano} · in recommended order',
   'Criar minha rotação': 'Create my rotation',
   'Modo de visualização': 'View mode',
   'Calendário': 'Calendar',
@@ -25,14 +25,17 @@ export const EN_COMPONENTES: Record<string, string> = {
   '{a} depois {b}. Selecionar': '{a} then {b}. Select',
   'depois': 'then',
   'Atual': 'Current',
+  'Seu último plantio': 'Your last planting',
+  'A última rotação do histórico do talhão, para comparar com as sugestões.': 'The latest rotation in this field’s history, to compare with the suggestions.',
+  'Sugestões para o seu talhão': 'Suggestions for your field',
   'Nova': 'New',
   'Mais pragas': 'More pests',
   'Remover a rotação salva {a} depois {b}': 'Remove the saved rotation {a} then {b}',
   'Remover': 'Remove',
   '{texto} Clique para ver na simulação.': '{texto} Click to see it in the simulation.',
   'Período crítico. {texto} Ver na simulação.': 'Critical period. {texto} See it in the simulation.',
-  'Período crítico: fase com o maior déficit de água, segundo a API. Clique para ver na simulação.':
-    'Critical period: the phase with the largest water deficit, according to the API. Click to see it in the simulation.',
+  'Período crítico: fase com o maior déficit de água. Clique para ver na simulação.':
+    'Critical period: the phase with the largest water deficit. Click to see it in the simulation.',
 
   // HistoricoModal
   'Histórico do {talhao}': '{talhao} history',
@@ -88,8 +91,8 @@ export const EN_COMPONENTES: Record<string, string> = {
   'Médio': 'Medium',
   'Argiloso': 'Clayey',
   '{textura} (estimado)': '{textura} (estimated)',
-  'Estimado pela API a partir do local (SoilGrids): {mm} mm de água por metro de raiz. Editar o solo do talhão':
-    'Estimated by the API from the location (SoilGrids): {mm} mm of water per meter of root. Edit the field soil',
+  'Estimado a partir do local (SoilGrids): {mm} mm de água por metro de raiz. Editar o solo do talhão':
+    'Estimated from the location (SoilGrids): {mm} mm of water per meter of root. Edit the field soil',
   'Redesenhar o contorno do talhão': 'Redraw the field outline',
   'Solo': 'Soil',
   'Editar o solo do talhão': 'Edit the field soil',
@@ -102,8 +105,8 @@ export const EN_COMPONENTES: Record<string, string> = {
   'Talhão': 'Field',
   'Trocar de talhão ou adicionar um novo': 'Switch fields or add a new one',
   'O que importa': 'What matters',
-  'A ordem das rotações segue o que você marcar (calculada pela API). Faturamento é uma estimativa com médias nacionais (FAO), sem custos.':
-    'The rotation order follows what you select (calculated by the API). Revenue is an estimate from national averages (FAO), without costs.',
+  'A ordem das rotações segue o que você marcar. Faturamento é uma estimativa com médias nacionais (FAO), sem custos.':
+    'The rotation order follows what you select. Revenue is an estimate from national averages (FAO), without costs.',
 
   // Simulation
   'Comparação das rotações marcadas': 'Comparison of the selected rotations',

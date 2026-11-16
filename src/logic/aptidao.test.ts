@@ -31,7 +31,7 @@ describe('aptidao', () => {
     expect([0, 1, 2, 3].map(i => aptidao(i, resApi.rotacoes[i], API).risco)).toEqual([80, 80, 55, 60])
   })
 
-  it('sem risco da API, a resiliência fica sem nota', () => {
+  it('sem risco calculado, a resiliência fica sem nota', () => {
     expect(aptidao(3, rot(3), ROTS).risco).toBeNull()
     expect(aptidao(3, null, ROTS).risco).toBeNull()
     expect(motivo(ROTS[3], 'risco', null)).toBe('aguardando as rotações')
@@ -62,7 +62,7 @@ describe('faixa e motivo', () => {
   it('aponta a safra que limita a rotação, com o risco da API', () => {
     const r = resApi.rotacoes[2]
     expect(safraLimitante(r).nome).toBe('Milho safrinha')
-    expect(motivo(API[2], 'risco', r)).toBe('milho safrinha: risco hídrico de 45% (API, provisório)')
+    expect(motivo(API[2], 'risco', r)).toBe('milho safrinha: risco hídrico de 45% (provisório)')
     expect(motivo(API[2], 'solo', r)).toBe('cobertura viva em 208 de 366 dias; a troca de cultura muda de família botânica')
     expect(motivo(API[2], 'fat', r)).toMatch(/^US\$\s2\.390\/ha com a perda hídrica \(US\$\s2\.510\/ha sem perda\)$/)
     expect(motivoDetalhe('fat', r)).toBe('Estimativa com base em médias nacionais (FAO), sem custos de produção.')
@@ -71,11 +71,11 @@ describe('faixa e motivo', () => {
   it('explica o risco da API e avisa quando ele é MOCK', () => {
     const milho = resApi.rotacoes[2].safras[1]
     expect(detalheSafra(milho)).toBe(
-      'Risco hídrico de milho safrinha calculado pela API Entressafras: em 45% das 10 safras históricas a perda por falta de água passou de 20%. ' +
+      'Risco hídrico de milho safrinha: em 45% das 10 safras históricas a perda por falta de água passou de 20%. ' +
         'A perda média estimada por falta de água é de 14,5%. Segurança hídrica: 55 de 100 (média). ' +
-        'Atenção: o servidor ainda marca este valor como MOCK (provisório, não calculado com o clima do talhão).',
+        'Atenção: valor provisório, ainda não calculado com o clima do talhão.',
     )
-    expect(detalheSafra(rot(0).safras[0])).toMatch(/não trouxe o risco hídrico/)
+    expect(detalheSafra(rot(0).safras[0])).toMatch(/Sem risco hídrico calculado/)
     expect(motivoDetalhe('solo', resApi.rotacoes[0])).toBeNull()
   })
 

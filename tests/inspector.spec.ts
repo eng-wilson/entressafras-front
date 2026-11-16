@@ -82,7 +82,7 @@ test('opção favorável preserva o aviso provisório e não inventa fase críti
   await page.goto('/')
   await page.getByRole('button', { name: /^Soja depois sorgo\./ }).click()
   const insp = painel(page)
-  await expect(insp.getByRole('heading', { name: 'Favorável no risco geral da API', exact: true })).toBeVisible()
+  await expect(insp.getByRole('heading', { name: 'Favorável no risco geral', exact: true })).toBeVisible()
   await expect(insp.locator('.insp-provisional')).toBeVisible()
   // Safras favoráveis: sem motivo embaixo do nome
   await expect(insp.locator('.insp-culture-why')).toHaveCount(0)
@@ -135,4 +135,20 @@ test('painel acessível em celular, tablet e texto ampliado', async ({ page }, t
   await insp.getByRole('button', { name: 'Comparar alternativas' }).click()
   await expect(page.getByRole('checkbox', { name: /^Comparar / }).first()).toBeVisible()
   await expect(page.locator('#rotation-board')).toBeFocused()
+})
+
+test('na comparação, a lateral direita acompanha a rotação marcada', async ({ page }) => {
+  await comRotacoesFixas(page)
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Comparação' }).click()
+  const titulo = painel(page).locator('h2')
+  await expect(titulo).toHaveText('Soja → milho safrinha')
+  // Marcar outra rotação passa a lateral para ela
+  await page.getByRole('button', { name: 'Soja depois sorgo. Comparar' }).click()
+  await expect(page.getByRole('checkbox', { name: 'Comparar Soja depois sorgo' })).toBeChecked()
+  await expect(titulo).toHaveText('Soja → sorgo')
+  // Desmarcar a que está na lateral volta para a última que continua marcada
+  await page.getByRole('button', { name: 'Soja depois sorgo. Tirar da comparação' }).click()
+  await expect(page.getByRole('checkbox', { name: 'Comparar Soja depois sorgo' })).not.toBeChecked()
+  await expect(titulo).toHaveText('Soja → milho safrinha')
 })

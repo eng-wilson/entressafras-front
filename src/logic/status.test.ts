@@ -9,14 +9,14 @@ describe('classeSeguranca (régua única do app: a mesma das prioridades)', () =
 })
 
 describe('rotationStatus', () => {
-  it('sem risco da API → selo neutro, sem estimativa', () => {
+  it('sem risco calculado → selo neutro, sem estimativa', () => {
     expect(rotationStatus([[10, 'soja'], [null, 'teff']])).toMatchObject({ cls: 'nd', label: 'Sem dado de risco' })
   })
   it('risco até 20% → good, "Clima favorável"', () => {
     const r = rotationStatus([[20,'soja']])
     expect(r.cls).toBe('good')
     expect(r.label).toBe('Clima favorável')
-    expect(r.text).toBe('Risco hídrico de 20% (soja), da API')
+    expect(r.text).toBe('Risco hídrico de 20% (soja)')
   })
   it('31–60% → warn, "Clima arriscado"', () => {
     const r = rotationStatus([[40,'milho']])
@@ -36,7 +36,7 @@ describe('rotationStatus', () => {
   it('o selo do calendário não explica o motivo (fica no painel direito)', () => {
     const r = rotationStatus([[10, 'soja'], [40, 'sorgo']])
     expect(r.label).toBe('Clima arriscado')
-    expect(r.text).toBe('Risco hídrico de 40% (sorgo), da API')
+    expect(r.text).toBe('Risco hídrico de 40% (sorgo)')
   })
 })
 

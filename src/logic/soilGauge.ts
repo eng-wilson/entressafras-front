@@ -19,16 +19,16 @@ export function soilGauge(atendimento: number | null, hasCrop: boolean, provisor
     return { ...gradCrop, cls, label:SL[cls][0], icon:SL[cls][1],
       val: fmtPt(wv), cx: wv*TRACK_W,
       aria: provisorio
-        ? t('Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica da API, provisório', { valor: fmtPt(wv), rotulo: SL[cls][0] })
-        : t('Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica da API', { valor: fmtPt(wv), rotulo: SL[cls][0] }),
-      imp: provisorio ? t('Atendimento à demanda na fase, média das safras históricas da API (provisório).')
-        : t('Atendimento à demanda na fase, média das safras históricas da API.'),
+        ? t('Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica, provisório', { valor: fmtPt(wv), rotulo: SL[cls][0] })
+        : t('Atendimento à demanda de água nesta fase {valor}, {rotulo}, média histórica', { valor: fmtPt(wv), rotulo: SL[cls][0] }),
+      imp: provisorio ? t('Atendimento à demanda na fase, média das safras históricas (provisório).')
+        : t('Atendimento à demanda na fase, média das safras históricas.'),
       fix: t('Confira os momentos de atenção e confirme as condições no campo.'), hasCrop: true,
-      m1: 0.45*TRACK_W, m2: 0.55*TRACK_W, unit: provisorio ? t('ETa ÷ ETc · fase, média da API · provisório') : t('ETa ÷ ETc · fase, média da API') }
+      m1: 0.45*TRACK_W, m2: 0.55*TRACK_W, unit: provisorio ? t('ETa ÷ ETc · fase, média histórica · provisório') : t('ETa ÷ ETc · fase, média histórica') }
   }
 
   return { ...gradSoil, cls: 'good', semDado: true, label: hasCrop ? t('Sem dado') : t('Sem demanda'), icon: '#i-info',
     val: '—', cx: 0, aria: hasCrop ? t('Atendimento à demanda de água sem dado') : t('Sem cultura no período; demanda de água não avaliada'),
-    imp: t('A API não trouxe o atendimento à demanda desta fase.'), fix: t('A tela não estima um valor no lugar.'), hasCrop,
-    m1: null, m2: null, unit: 'ETa ÷ ETc · API' }
+    imp: t('Sem atendimento à demanda calculado para esta fase.'), fix: t('A tela não estima um valor no lugar.'), hasCrop,
+    m1: null, m2: null, unit: 'ETa ÷ ETc' }
 }

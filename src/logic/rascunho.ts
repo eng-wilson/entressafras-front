@@ -450,6 +450,6 @@ export function mensagemErro(motivo: string, detalhe: string, nomePorCodigo: (co
   if (/second crop must be planted after the harvest/.test(detalhe)) return t('A 2ª cultura não cabe aqui: ela precisa ser plantada depois da colheita da 1ª.')
   if (/second crop must be planted by the end/.test(detalhe)) return t('A 2ª cultura precisa ser plantada antes do fim da safra.')
   if (/harvest_date must be after/.test(detalhe)) return t('A colheita precisa ser depois do plantio.')
-  if (/unknown crop/.test(detalhe)) return t('Cultura desconhecida no catálogo da API.')
+  if (/unknown crop/.test(detalhe)) return t('Cultura desconhecida no catálogo.')
   return t('Não foi possível simular com estas culturas e datas.')
 }

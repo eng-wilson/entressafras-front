@@ -1,6 +1,6 @@
 // "De onde vêm estes números" de uma safra: SÓ os valores que a API entregou, como vieram (mesmo quando o servidor
 // marca MOCK). Nenhuma conta do front, nenhuma régua local, nenhum valor de reserva: o que a API não trouxe aparece
-// como "não veio". Cada linha diz o campo de origem, para a conferência dos devs ("Campos da API").
+// como "não veio". Cada linha diz o campo de origem, para a conferência dos devs ("Valores calculados").
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import './memoria.css'
@@ -98,24 +98,24 @@ export function MemoriaCalculo({ s, n, rotacao, rotId, api, onFechar }: Props) {
         </div>
         <div className="mc-acoes">
           <label className="mc-dev">
-            <input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} /> {t('Campos da API')}
+            <input type="checkbox" checked={dev} onChange={e => setDev(e.target.checked)} /> {t('Valores calculados')}
           </label>
           <button className="tbtn" type="button" onClick={onFechar}>{t('Fechar')}</button>
         </div>
       </header>
 
       <p className="mc-mock">
-        {t('Só valores recebidos da API Entressafras, como vieram: a tela não faz conta nem completa o que falta.')}
-        {mock && <> <b>{t('O servidor marca este risco como MOCK')}</b>{t(': valores provisórios, não calculados para este talhão.')}</>}
-        {' '}{t('Consumo de água, chuva e receita não estão aqui porque não vêm prontos da API.')}
+        {t('Os valores calculados para o seu talhão, sem ajustes: o que falta fica em branco.')}
+        {mock && <> <b>{t('Risco provisório')}</b>{t(': valores provisórios, não calculados para este talhão.')}</>}
+        {' '}{t('Consumo de água, chuva e faturamento aparecem em outras partes da tela.')}
       </p>
 
       {!api ? (
-        <p className="mc-res nd"><b>{t('Sem dados da API para esta safra.')}</b></p>
+        <p className="mc-res nd"><b>{t('Sem dados para esta safra.')}</b></p>
       ) : (
         <>
           <Bloco dev={dev} titulo={t('Risco hídrico')} origem={`POST /api/rotations/recommendations → ${base}.crop.risk`} linhas={[
-            L(t('Método'), 'method', risk?.method, (v: string) => (v === 'MOCK' ? t('MOCK (provisório)') : v)),
+            L(t('Método'), 'method', risk?.method, (v: string) => (v === 'MOCK' ? t('Provisório') : v)),
             L(t('Validado'), 'validated', risk?.validated, (v: boolean) => (v ? t('sim') : t('não'))),
             L(t('Risco hídrico'), 'risk_percentage', risk?.risk_percentage, pctNum),
             L(t('Limiar de perda de uma safra crítica'), 'loss_threshold_pct', risk?.loss_threshold_pct, pctNum),

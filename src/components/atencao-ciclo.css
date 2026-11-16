@@ -40,7 +40,7 @@
 .attention-moment strong { font-size: var(--insp-body); font-weight: 500; }
 .attention-moment small { display: block; color: var(--insp-secondary); font-size: var(--insp-caption); margin-top: 2px; }
 .attention-moment + .attention-moment::before { content: ''; position: absolute; inset: 0 0 auto 38px; height: 1px; background: var(--insp-separator); }
-.attention-moment.selected { background: #e4ecf8; }
+.attention-moment.selected { background: rgba(166,206,57,.22); }
 .attention-moment:hover { background: #ededf1; }
 .attention-moment:active { background: #dbe7f8; }
 .attention-moment .ic.risk { color: #b42332; }

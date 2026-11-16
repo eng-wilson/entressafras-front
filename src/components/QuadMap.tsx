@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import './quadmap.css'
 import type { RotacaoDef } from '../data/mock'
@@ -73,7 +73,7 @@ function Safra({ r, n, s }: { r: RotacaoDef; n: 0 | 1; s: ResSafra }) {
           {s.seguranca == null ? (
             <>
               <Nota f={SEM_DADO} />
-              <span className="qm-why">{t('a API não trouxe o risco desta cultura')}</span>
+              <span className="qm-why">{t('sem risco calculado para esta cultura')}</span>
             </>
           ) : (
             <>
@@ -127,7 +127,7 @@ function PorSafra({ r, rot, num, onFechar }: { r: RotacaoDef; rot: ResRotacao; n
       <ul className="qm-sfs">
         {rot.safras.map((s, n) => <Safra key={n} r={r} n={n as 0 | 1} s={s} />)}
       </ul>
-      <p className="qm-sfn">{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).toLowerCase() })} {t('Saúde do solo vale para o ciclo inteiro: depende de como as duas safras se combinam.')}</p>
+      <p className="qm-sfn">{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).replace(/^./, c => c.toLowerCase()) })} {t('Saúde do solo vale para o ciclo inteiro: depende de como as duas safras se combinam.')}</p>
     </dialog>,
     document.body,
   )
@@ -158,7 +158,7 @@ export function QuadMap({ sel, pr, res }: Props) {
     <section className="field qmap" aria-labelledby="t-qmap">
       <header className="qm-h">
         <h2 id="t-qmap">{t('Aptidão por prioridade')}</h2>
-        <p>{t('Quanto mais perto do canto, melhor naquela prioridade. Quadrantes em azul: prioridades ligadas.')}</p>
+        <p>{t('Quanto mais perto do canto, melhor naquela prioridade. Quadrantes em verde: prioridades ligadas.')}</p>
       </header>
 
       {/* Com 3 ou mais, os cards ocupam duas linhas: o gráfico fica centrado na altura deles. */}
@@ -166,7 +166,7 @@ export function QuadMap({ sel, pr, res }: Props) {
         <div className="qm-chart">
           {/* O viewBox corta a margem vazia acima dos rótulos de cima e abaixo dos de baixo. */}
           <svg className="qm-svg" viewBox={`0 12 ${S} ${S - 16}`} role="img" aria-label={t('Mapa de aptidão. {resumo}', { resumo })}>
-            {/* quadrantes: prioridade marcada pelo agricultor ganha fundo azul */}
+            {/* quadrantes: prioridade marcada pelo agricultor ganha fundo verde */}
             {ORDEM.map(k => {
               const [dx, dy] = DIR[k]
               return <rect key={k} x={dx < 0 ? L : C} y={dy < 0 ? L : C} width={R} height={R} className={`qm-q${pr[k] ? ' on' : ''}`} />
@@ -242,9 +242,11 @@ export function QuadMap({ sel, pr, res }: Props) {
                   <div className="qm-ch">
                     <span className={`qm-num${atual ? ' atual' : ''}`} aria-hidden="true">{i + 1}</span>
                     <span className="qm-nome">{nomeRot(rots[i])}</span>
-                    {atual && <span className="ct-tag">{t('Atual')}</span>}
                   </div>
-                  <p className="qm-tipo">{origem(rots, i)}</p>
+                  <p className="qm-tipo">
+                    {atual && <span className="qm-atual">{t('Seu último plantio')}</span>}
+                    {origem(rots, i)}
+                  </p>
                   <ul className="qm-eixos">
                     {ORDEM.map(k => {
                       const m = motivo(rots[i], k, rot)
@@ -253,18 +255,16 @@ export function QuadMap({ sel, pr, res }: Props) {
                       // Valor em US$/ha por trás da nota de faturamento; só quando a API o envia
                       const fat = k === 'fat' ? rots[i].faturamento?.ajustado ?? null : null
                       return (
-                        <Fragment key={k}>
-                          {/* Mesma linha do painel direito (ícone, nome, barra, faixa), na escala do card */}
-                          <li className={`bp-linha bp-compacto${pr[k] ? ' on' : ''}`} title={dica || undefined}>
-                            <BarraPrioridade k={k} nota={a[k]} f={faixaDaNota(a[k])} />
-                          </li>
+                        // Uma célula da grade 2×2: ícone e nome, faixa à direita, barra embaixo (mesma linha do painel
+                        // direito, rearranjada pelo CSS). O faturamento em US$/ha fica dentro da própria célula.
+                        <li key={k} className={`qm-eixo bp-linha bp-compacto${pr[k] ? ' on' : ''}`} title={dica || undefined}>
+                          <BarraPrioridade k={k} nota={a[k]} f={faixaDaNota(a[k])} />
                           {fat != null && (
-                            <li className="qm-fat" title={t(RESSALVA_FATURAMENTO)}>
-                              <span className="qm-en">{t('Faturamento com perda hídrica')}</span>
-                              <span className="qm-fat-v">{usdFmt(fat)}/ha</span>
-                            </li>
+                            <span className="qm-fat" title={t(RESSALVA_FATURAMENTO)}>
+                              {t('{valor}/ha com perda hídrica', { valor: usdFmt(fat) })}
+                            </span>
                           )}
-                        </Fragment>
+                        </li>
                       )
                     })}
                   </ul>

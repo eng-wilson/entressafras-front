@@ -20,7 +20,7 @@ export const rotuloCritico = (p: PeriodoCritico) => `${nivel(p.cls)} · ${motivo
 /** Selo neutro da rotação com uma safra sem risco na resposta da API: sem nota, com o motivo. */
 export type StatusSemCriterio = { cls: 'nd'; label: string; title: string; text: string; aria: string }
 export function statusSemCriterio(crop: string): StatusSemCriterio {
-  const text = t('A API não trouxe o risco hídrico de {cultura}; a tela não faz estimativa própria.', { cultura: t(crop) })
+  const text = t('Sem risco hídrico calculado para {cultura}.', { cultura: t(crop) })
   return { cls: 'nd', label: t('Sem dado de risco'), title: t('Resiliência sem dado'), text, aria: t('Resiliência sem dado. {texto}', { texto: text }) }
 }
 
@@ -34,7 +34,7 @@ export function rotationStatus(entries: [number | null, string][]): StatusResult
   if (sem) return statusSemCriterio(sem[1])
   const [pct, crop] = (entries as [number, string][]).slice().sort((a, b) => b[0] - a[0])[0]
   const cls = classeSeguranca(segurancaDoRisco(pct))
-  const base = t('Risco hídrico de {pct}% ({cultura}), da API', { pct: pctFmt(pct), cultura: t(crop) })
+  const base = t('Risco hídrico de {pct}% ({cultura})', { pct: pctFmt(pct), cultura: t(crop) })
   const label = cls === 'good' ? t('Clima favorável') : cls === 'warn' ? t('Clima arriscado') : t('Clima desfavorável')
   return {
     cls, icon: ICONS[cls],
