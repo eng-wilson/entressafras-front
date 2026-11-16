@@ -8,7 +8,7 @@ afterEach(() => definirIdioma('pt'))
 
 describe('textos do cenário de clima', () => {
   it('em português, rótulo pelo id, sem ano; id desconhecido usa o label da API sem o ano', () => {
-    expect(rotuloCenario(atual)).toBe('Clima atual (30 anos)')
+    expect(rotuloCenario(atual)).toBe('Média dos últimos 30 anos')
     expect(rotuloCenario(quente)).toBe('Mais quente')
     expect(rotuloCenario(seco)).toBe('Mais quente e seco')
     expect(rotuloCenario({ ...seco, id: 'ssp585', label: '2050: much hotter' })).toBe('Much hotter')
@@ -23,7 +23,7 @@ describe('textos do cenário de clima', () => {
 
   it('em inglês, rótulo pelo id (sem ano) e description da API', () => {
     definirIdioma('en')
-    expect(rotuloCenario(atual)).toBe('Current climate (30 years)')
+    expect(rotuloCenario(atual)).toBe('Last 30 years average')
     expect(rotuloCenario(seco)).toBe('Warmer and drier')
     expect(descricaoCenario(seco)).toBe(seco.description)
   })

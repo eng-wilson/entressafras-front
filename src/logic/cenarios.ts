@@ -7,12 +7,12 @@ import { idioma, numero } from '../i18n'
 import { CENARIO_PADRAO } from '../services/cenarios'
 
 const ROTULOS_PT: Record<string, string> = {
-  historical: 'Clima atual (30 anos)',
+  historical: 'Média dos últimos 30 anos',
   warmer: 'Mais quente',
   warmer_drier: 'Mais quente e seco',
 }
 const ROTULOS_EN: Record<string, string> = {
-  historical: 'Current climate (30 years)',
+  historical: 'Last 30 years average',
   warmer: 'Warmer',
   warmer_drier: 'Warmer and drier',
 }

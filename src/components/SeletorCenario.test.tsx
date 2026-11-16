@@ -10,7 +10,7 @@ it('lista os cenários na ordem da API e avisa a troca', () => {
   const onTrocar = vi.fn()
   render(<SeletorCenario lista={CENARIOS_FIXTURE} selecionado="historical" onTrocar={onTrocar} info={null} carregando={false} />)
   const sel = screen.getByRole('combobox') as HTMLSelectElement
-  expect([...sel.options].map(o => o.textContent)).toEqual(['Clima atual (30 anos)', 'Mais quente', 'Mais quente e seco'])
+  expect([...sel.options].map(o => o.textContent)).toEqual(['Média dos últimos 30 anos', 'Mais quente', 'Mais quente e seco'])
   expect(sel.value).toBe('historical')
   fireEvent.change(sel, { target: { value: 'warmer_drier' } })
   expect(onTrocar).toHaveBeenCalledWith('warmer_drier')
