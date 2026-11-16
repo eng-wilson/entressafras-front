@@ -79,7 +79,7 @@ export const EN_ONBOARDING: Record<string, string> = {
   'Desenhe no mapa a área onde você planta.': 'Draw on the map the area where you plant.',
   'Desenhar no mapa': 'Draw on the map',
   'Clique em cada canto do talhão. A área é calculada sozinha.': 'Click each corner of the field. The area is calculated automatically.',
-  'Usar um talhão de exemplo (Rio Verde, GO)': 'Use a sample field (Rio Verde, GO)',
+  'Usar um talhão de exemplo (Sorriso, MT)': 'Use a sample field (Sorriso, MT)',
   'Talhão exemplo': 'Sample field',
 
   // HudDesenho
@@ -105,11 +105,7 @@ export const EN_ONBOARDING: Record<string, string> = {
   '· calculada pelo contorno': '· calculated from the outline',
 
   // Onboarding
-  'Sem acesso à sua localização: mostrando Rio Verde, GO. Use a busca para achar sua fazenda.':
-    'No access to your location: showing Rio Verde, GO. Use the search to find your farm.',
   'Nada encontrado para "{busca}". Tente o nome da cidade ou navegue pelo mapa.': 'Nothing found for "{busca}". Try the city name or browse the map.',
-  'Este navegador não informa a localização.': 'This browser does not provide location.',
-  'Não foi possível obter a sua localização.': 'Could not get your location.',
   'Nenhum talhão ainda': 'No fields yet',
   '{n} talhão': '{n} field',
   '{n} talhões': '{n} fields',
@@ -125,7 +121,6 @@ export const EN_ONBOARDING: Record<string, string> = {
   'Seus talhões': 'Your fields',
   'Escolha um talhão aqui ou no mapa.': 'Choose a field here or on the map.',
   'Desenhar novo talhão': 'Draw new field',
-  'Ir para minha localização': 'Go to my location',
   // MapaTalhao (atribuição do mapa de satélite)
   'Imagem © Esri': 'Imagery © Esri',
 
