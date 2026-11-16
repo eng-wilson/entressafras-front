@@ -1,14 +1,17 @@
 import { useConjunto } from '../state/conjunto'
 import { t } from '../i18n'
+import { SeletorCenario, type CenarioUi } from './SeletorCenario'
 type Props = {
   mode: 'cal' | 'cmp'; onMode: (m: 'cal' | 'cmp') => void
   /** Abre o rascunho "Nova rotação" (ou foca o que já está aberto). */
   onAdd: () => void
   /** Motivo para não criar outra (ex.: já há 3 salvas); null = habilitado. */
   addBloqueio?: string | null
+  /** Seletor de cenário de clima; ausente = sem seletor. */
+  cenario?: CenarioUi
 }
 
-export function RotationsHeader({ mode, onMode, onAdd, addBloqueio = null }: Props) {
+export function RotationsHeader({ mode, onMode, onAdd, addBloqueio = null, cenario }: Props) {
   const conj = useConjunto()
   return (
     <div className="mstrip">
@@ -36,6 +39,7 @@ export function RotationsHeader({ mode, onMode, onAdd, addBloqueio = null }: Pro
           </button>
         ))}
       </div>
+      {cenario && <SeletorCenario {...cenario} />}
     </div>
   )
 }

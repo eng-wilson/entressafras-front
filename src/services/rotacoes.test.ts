@@ -2,8 +2,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ROTACOES_FIXTURE } from '../data/rotacoesFixture'
 import { SIMULACAO_1_CULTURA } from '../data/simulacaoFixture1'
+import { CENARIOS_FIXTURE } from '../data/cenariosFixture'
 import {
-  AVISO_SALVAS_INVALIDAS, CHAVE_CACHE_ROTACOES, ErroRotacoes, TTL_ROTACOES, apagarRotacoes, chaveRotacoes, guardarRotacoes, lerRotacoes,
+  AVISO_CENARIO_INVALIDO, AVISO_SALVAS_INVALIDAS, CHAVE_CACHE_ROTACOES, ErroRotacoes, TTL_ROTACOES, apagarRotacoes, chaveRotacoes, guardarRotacoes, lerRotacoes,
   limparMemoriaRotacoes, recomendarRotacoes, rotacoesValidas, soloDaTextura,
 } from './rotacoes'
 
@@ -148,5 +149,37 @@ describe('rotações do agricultor em custom_rotations', () => {
     expect(JSON.parse(f.mock.calls[1][1].body).custom_rotations).toBeUndefined()
     expect(r.custom_rotations).toEqual([])
     expect(r.warnings).toContain(AVISO_SALVAS_INVALIDAS)
+  })
+})
+
+describe('cenário de clima (climate_scenario)', () => {
+  it('clima atual: pedido e chave de cache iguais aos de antes', async () => {
+    const f = resposta(ROTACOES_FIXTURE)
+    vi.stubGlobal('fetch', f)
+    await recomendarRotacoes(pedido(null, { cenario: 'historical' }))
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ location: ponto, priorities: todas })
+    expect(chaveRotacoes(pedido('medium', { cenario: 'historical' }))).toBe(chaveRotacoes(pedido('medium')))
+  })
+  it('outro cenário vai no pedido e muda a chave do cache', async () => {
+    const f = resposta({ ...ROTACOES_FIXTURE, climate_scenario: CENARIOS_FIXTURE[2] })
+    vi.stubGlobal('fetch', f)
+    const r = await recomendarRotacoes(pedido('medium', { cenario: 'warmer_drier' }))
+    expect(JSON.parse(f.mock.calls[0][1].body)).toMatchObject({ climate_scenario: 'warmer_drier' })
+    expect(r.climate_scenario?.id).toBe('warmer_drier')
+    expect(chaveRotacoes(pedido('medium', { cenario: 'warmer_drier' }))).not.toBe(chaveRotacoes(pedido('medium')))
+  })
+  it('422 com cenário: repete no clima atual e avisa', async () => {
+    const f = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ detail: [] }), { status: 422 }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(ROTACOES_FIXTURE), { status: 200 }))
+    vi.stubGlobal('fetch', f)
+    const r = await recomendarRotacoes(pedido('medium', { cenario: 'ssp585' }))
+    expect(JSON.parse(f.mock.calls[1][1].body).climate_scenario).toBeUndefined()
+    expect(r.warnings).toContain(AVISO_CENARIO_INVALIDO)
+  })
+  it('validação aceita resposta sem climate_scenario e recusa um malformado', () => {
+    expect(rotacoesValidas(ROTACOES_FIXTURE)).toBe(true)
+    expect(rotacoesValidas({ ...ROTACOES_FIXTURE, climate_scenario: CENARIOS_FIXTURE[1] })).toBe(true)
+    expect(rotacoesValidas({ ...ROTACOES_FIXTURE, climate_scenario: { id: 'warmer' } })).toBe(false)
   })
 })

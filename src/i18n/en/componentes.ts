@@ -132,4 +132,10 @@ export const EN_COMPONENTES: Record<string, string> = {
   'Temperatura': 'Temperature',
   'a': 'to',
   'mínima e máxima do decêndio': '10-day minimum and maximum',
+  // Cenário de clima
+  'Clima': 'Climate',
+  'Cenários de clima futuro: usamos os 30 anos reais ajustados pelas projeções climáticas (+temperatura, −chuva). Não é uma previsão do próximo ano.':
+    'Future climate scenarios: the 30 observed years adjusted by climate projections (+temperature, −rainfall). Not a forecast for next year.',
+  'Recalculando o risco para o cenário {cenario}…': 'Recalculating the risk for the {cenario} scenario…',
+  'O cenário climático não está disponível; mostrando o clima atual.': 'The climate scenario is not available; showing the current climate.',
 }

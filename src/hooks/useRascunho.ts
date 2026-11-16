@@ -26,7 +26,7 @@ export type EditorRascunho = {
 }
 
 /** `extra`: as mesmas prioridades e histórico da recomendação, para o rank do rascunho ser comparável ao da lista. */
-export function useRascunho(ponto: Ponto | null, solo: SoilType | null, ano: number, extra?: { prioridades: Priorities; historico: number[] }): EditorRascunho {
+export function useRascunho(ponto: Ponto | null, solo: SoilType | null, ano: number, extra?: { prioridades: Priorities; historico: number[]; cenario?: string }): EditorRascunho {
   const [aberto, setAberto] = useState(false)
   const [rascunho, setRascunho] = useState<Rascunho>(RASCUNHO_VAZIO)
   const [editado, setEditado] = useState(false)

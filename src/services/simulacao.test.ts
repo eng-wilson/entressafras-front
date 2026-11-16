@@ -91,6 +91,11 @@ describe('pedido de simulação alinhado ao da recomendação', () => {
     expect(corpo).not.toHaveProperty('soil_type')
     expect(corpo).toMatchObject({ priorities: { water_security: 1, productivity: 0, soil_protection: 1, revenue: 1 }, crop_history: [1150, 2175] })
   })
+  it('manda o mesmo cenário de clima da recomendação; no clima atual, nada', () => {
+    expect(corpoSimulacao({ ...base, solo: null, cenario: 'warmer_drier' })).toMatchObject({ climate_scenario: 'warmer_drier' })
+    expect(corpoSimulacao({ ...base, solo: null, cenario: 'historical' })).not.toHaveProperty('climate_scenario')
+    expect(corpoSimulacao({ ...base, solo: null })).not.toHaveProperty('climate_scenario')
+  })
   it('com textura, manda soil_type; sem histórico, não manda crop_history', () => {
     const corpo = corpoSimulacao({ ...base, solo: 'clayey', historico: [] })
     expect(corpo).toMatchObject({ soil_type: 'clayey' })

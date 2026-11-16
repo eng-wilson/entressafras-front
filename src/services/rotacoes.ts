@@ -3,6 +3,7 @@
 // Se o servidor marcar valores como MOCK em `warnings` ou em `risk.method`, a tela os mostra como provisórios.
 import type { CustomCropInput, Ponto, Priorities, RotationRecommendations, SoilType, Textura } from '../types'
 import { API_URL } from './clima'
+import { CENARIO_PADRAO, cenarioValido } from './cenarios'
 import { t } from '../i18n'
 
 export type MotivoErroRotacoes = 'rede' | 'http' | 'parametros' | 'resposta_invalida'
@@ -70,6 +71,7 @@ export function rotacoesValidas(x: unknown): x is RotationRecommendations {
   if (!objeto(x.soil) || !SOLOS.includes(x.soil.texture_class as string) || !finito(x.soil.available_water_mm_per_m)) return false
   if (!objeto(x.priorities)) return false
   if (x.rotations.length < 1 || x.rotations.length > 4) return false
+  if (x.climate_scenario !== undefined && !cenarioValido(x.climate_scenario)) return false
   return x.rotations.every(rotacaoValida) && customValidas(x.custom_rotations)
 }
 
@@ -92,16 +94,35 @@ export type PedidoRotacoes = {
   ponto: Ponto; solo: SoilType | null; historico: number[]; prioridades: Priorities; ano?: number
   /** Rotações do agricultor (até 3), simuladas e ranqueadas junto; voltam em `custom_rotations`. */
   custom?: CustomCropInput[][]
+  /** Id de GET /api/clima/scenarios; ausente ou 'historical' = clima atual (o pedido fica como antes). */
+  cenario?: string
 }
+
+/** O cenário só vai no pedido quando não é o clima atual: com ele, corpo e cache ficam iguais aos de antes. */
+export const cenarioDoPedido = (c: string | undefined) => (c && c !== CENARIO_PADRAO ? c : null)
 
 /** Aviso quando as rotações salvas não passam mais na API (ex.: catálogo mudou): a recomendação sai sem elas. */
 export const AVISO_SALVAS_INVALIDAS = 'As rotações salvas não puderam ser simuladas de novo e ficaram fora do ranking.'
+
+/** Aviso quando a API não aceita o cenário escolhido (422): a recomendação sai com o clima atual. */
+export const AVISO_CENARIO_INVALIDO = 'O cenário climático não está disponível; mostrando o clima atual.'
 
 /**
  * Rotações recomendadas para o ponto e o solo. Lança ErroRotacoes; se cancelado, repassa o AbortError.
  * Se as rotações salvas derrubarem o pedido (422), repete sem elas e avisa: a recomendação não pode sumir por causa delas.
  */
 export async function recomendarRotacoes(p: PedidoRotacoes, signal?: AbortSignal): Promise<RotationRecommendations> {
+  if (!cenarioDoPedido(p.cenario)) return comSalvas(p, signal)
+  try {
+    return await comSalvas(p, signal)
+  } catch (e) {
+    if (!(e instanceof ErroRotacoes) || e.motivo !== 'parametros') throw e
+    const dados = await comSalvas({ ...p, cenario: CENARIO_PADRAO }, signal)
+    return { ...dados, warnings: [...dados.warnings, t(AVISO_CENARIO_INVALIDO)] }
+  }
+}
+
+async function comSalvas(p: PedidoRotacoes, signal?: AbortSignal): Promise<RotationRecommendations> {
   if (!p.custom?.length) return pedirRotacoes(p, signal)
   try {
     return await pedirRotacoes(p, signal)
@@ -120,6 +141,7 @@ async function pedirRotacoes(p: PedidoRotacoes, signal?: AbortSignal): Promise<R
     priorities: p.prioridades,
     ...(p.ano ? { agricultural_year: p.ano } : {}),
     ...(p.custom?.length ? { custom_rotations: p.custom.map(crops => ({ crops })) } : {}),
+    ...(cenarioDoPedido(p.cenario) ? { climate_scenario: p.cenario } : {}),
   }
   let r: Response
   try {
@@ -158,7 +180,8 @@ const memoria = new Map<string, Entrada>()
 const bits = (q: Priorities) => `${q.water_security}${q.productivity}${q.soil_protection}${q.revenue}`
 export const chaveRotacoes = (p: PedidoRotacoes) =>
   `${p.ponto.lat.toFixed(2)},${p.ponto.lon.toFixed(2)},${p.solo ?? 'auto'},${p.historico.join('-')},${bits(p.prioridades)},${p.ano ?? ''}` +
-  (p.custom?.length ? `,${JSON.stringify(p.custom)}` : '')
+  (p.custom?.length ? `,${JSON.stringify(p.custom)}` : '') +
+  (cenarioDoPedido(p.cenario) ? `,cen=${p.cenario}` : '')
 
 function tabela(): Record<string, Entrada> {
   try {

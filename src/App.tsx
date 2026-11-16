@@ -14,6 +14,10 @@ import { reverso } from './services/geocoding'
 import { classeDaTextura } from './logic/solo'
 import type { ConjuntoRotacoes } from './data/mock'
 import { useRotacoes } from './hooks/useRotacoes'
+import { useCenarios } from './hooks/useCenarios'
+import { CENARIO_PADRAO } from './services/cenarios'
+import { AVISO_CENARIO_INVALIDO } from './services/rotacoes'
+import { rotuloCenario } from './logic/cenarios'
 import { conjuntoDaApi, historicoEcoCrop, mesmasCulturas, prioridadesApi, rotacaoAtualEcoCrop, type SalvaMeta } from './logic/rotacoesApi'
 import { soloDaTextura } from './services/rotacoes'
 import { ConjuntoContext } from './state/conjunto'
@@ -108,6 +112,10 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
     const custom = [...(comAtual && atualCustom ? [atualCustom] : []), ...salvas.map(s => s.culturas)]
     return custom.length ? { ano: anoAgricola, custom } : null
   }, [comAtual, atualCustom, salvas, anoAgricola])
+  // Cenário de clima (GET /api/clima/scenarios): todo o risco da recomendação e da simulação passa a usá-lo.
+  // Começa sempre no clima atual; com ele os pedidos ficam iguais aos de antes.
+  const cenarios = useCenarios()
+  const [cenario, setCenario] = useState(CENARIO_PADRAO)
   // Textura só vai à API quando o agricultor a informou; sem ela, a API estima o solo pelo local (SoilGrids).
   const recomendadas = useRotacoes({
     ponto: talhao?.centro ?? null,
@@ -115,6 +123,7 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
     historico: historicoEcoCrop(historico),
     prioridades: prioridadesApi(state.pr),
     salvas: pedidoSalvas,
+    cenario,
   })
   // Trocando só as prioridades, a resposta anterior segue na tela até a nova ordem chegar (useRotacoes).
   const resposta = recomendadas.dados ?? recomendadas.anterior
@@ -128,9 +137,27 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
   const atualizando = !conjNovo && recomendadas.status === 'carregando' && !!ultimo && ultimo.talhao === talhaoId
   const conj = conjNovo ?? (atualizando ? ultimo!.conj : null)
   const dadosRec = resposta ?? (atualizando ? ultimo!.dados : null)
+  // Mensagem para leitores de tela (rotação salva, removida, cenário recusado).
+  const [anuncio, setAnuncio] = useState('')
+  // O seletor acompanha o cenário que a API usou (ex.: cenário recusado → clima atual), uma vez por resposta.
+  const cenarioResposta = recomendadas.status === 'ok' ? recomendadas.dados.climate_scenario?.id ?? CENARIO_PADRAO : null
+  const [respostaVista, setRespostaVista] = useState<RotationRecommendations | null>(null)
+  if (recomendadas.status === 'ok' && recomendadas.dados !== respostaVista) {
+    setRespostaVista(recomendadas.dados)
+    if (cenarioResposta && cenarioResposta !== cenario) {
+      setCenario(cenarioResposta)
+      if (cenarioResposta === CENARIO_PADRAO) setAnuncio(t(AVISO_CENARIO_INVALIDO))
+    }
+  }
+  const cenarioExibido = dadosRec?.climate_scenario?.id ?? CENARIO_PADRAO
+  const trocandoCenario = recomendadas.status === 'carregando' && cenarioExibido !== cenario
+  const infoEscolhido = cenarios.find(c => c.id === cenario) ?? null
+  const cenarioUi = {
+    lista: cenarios, selecionado: cenario, onTrocar: setCenario, carregando: trocandoCenario,
+    info: dadosRec?.climate_scenario ?? null,
+  }
   // Depois de salvar: selecionar a rotação nova quando ela voltar da API, e anunciar a posição.
   const [salvaPendente, setSalvaPendente] = useState<string | null>(null)
-  const [anuncio, setAnuncio] = useState('')
   // Conjunto novo: a rotação recém-salva é selecionada; senão a seleção e as marcadas da comparação acompanham as
   // mesmas rotações (pelo id) quando a API só reordenou; rotação que sumiu volta à inicial (a atual ou a 1ª).
   const [conjVisto, setConjVisto] = useState<ConjuntoRotacoes | null>(null)
@@ -209,7 +236,7 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
     talhao?.centro ?? null,
     talhao?.texturaInformada === false ? null : soloDaTextura(textura),
     conj?.ano ?? anoAgricola,
-    { prioridades: prioridadesApi(state.pr), historico: historicoEcoCrop(historico) },
+    { prioridades: prioridadesApi(state.pr), historico: historicoEcoCrop(historico), cenario },
   )
   const catalogo = useCulturasSimulaveis(editor.aberto)
   const faixa = useMemo(
@@ -353,7 +380,9 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
         )}
         {recomendadas.status === 'carregando' && !atualizando && (
           <p className="aviso" role="status">
-            {recomendadas.anterior ? t('Reordenando as rotações pelas prioridades marcadas…') : t('Buscando as rotações recomendadas para o talhão… a primeira consulta de um local pode levar alguns minutos.')}
+            {trocandoCenario && recomendadas.anterior
+              ? t('Recalculando o risco para o cenário {cenario}…', { cenario: infoEscolhido ? rotuloCenario(infoEscolhido) : cenario })
+              : recomendadas.anterior ? t('Reordenando as rotações pelas prioridades marcadas…') : t('Buscando as rotações recomendadas para o talhão… a primeira consulta de um local pode levar alguns minutos.')}
           </p>
         )}
         {atualizando && <p className="aviso" role="status">{t('Atualizando o ranking com as suas rotações…')}</p>}
@@ -366,7 +395,7 @@ export default function App({ onIdioma }: { onIdioma?: (i: Idioma) => void } = {
           rot={state.rot} onRot={selecionar} diags={diags}
           onIdx={setIdx} onMode={setMode} decendios={clima.dados?.decendios ?? null}
           onAdd={abrirRascunho} addBloqueio={editor.aberto ? null : addBloqueio}
-          faixa={faixa} onRemoverSalva={removerRotacaoSalva}
+          faixa={faixa} onRemoverSalva={removerRotacaoSalva} cenario={cenarioUi}
           rascunho={editor.aberto ? (
             <DraftRow editor={editor} catalogo={catalogo} onSalvar={salvarRascunho}
               bloqueioSalvar={addBloqueio ?? (editor.sim.status === 'ok' && !datasCompletas ? t('Aguarde a simulação') : null)} />

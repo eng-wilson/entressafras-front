@@ -19,9 +19,13 @@ const CARREGANDO: EstadoRotacoes = { status: 'carregando', dados: null }
 /** Rotações salvas pelo agricultor, enviadas em custom_rotations com o ano agrícola das datas delas. */
 export type SalvasDoPedido = { ano: number; custom: CustomCropInput[][] } | null
 
-type Entrada = { ponto: Ponto | null; solo: SoilType | null; historico: number[]; prioridades: Priorities; salvas?: SalvasDoPedido }
+type Entrada = {
+  ponto: Ponto | null; solo: SoilType | null; historico: number[]; prioridades: Priorities; salvas?: SalvasDoPedido
+  /** Cenário de clima (id de /api/clima/scenarios); fora do `base`: a lista anterior fica na tela durante a troca. */
+  cenario?: string
+}
 
-export function useRotacoes({ ponto, solo, historico, prioridades, salvas = null }: Entrada): EstadoRotacoes & {
+export function useRotacoes({ ponto, solo, historico, prioridades, salvas = null, cenario }: Entrada): EstadoRotacoes & {
   recarregar: () => void
   /** Resposta anterior do mesmo talhão (outras prioridades), exibida enquanto a nova carrega; null se não há. */
   anterior: RotationRecommendations | null
@@ -36,10 +40,12 @@ export function useRotacoes({ ponto, solo, historico, prioridades, salvas = null
     ? {
         ponto: { lat, lon }, solo, historico: hist ? hist.split('-').map(Number) : [],
         prioridades: JSON.parse(prioridadesJson) as Priorities, ...JSON.parse(extraJson),
+        ...(cenario ? { cenario } : {}),
       }
     : null
   const chave = pedido ? chaveRotacoes(pedido) : null
-  // Mesmo talhão, solo, histórico e salvas: a resposta anterior ainda descreve as mesmas rotações candidatas.
+  // Mesmo talhão, solo, histórico e salvas: a resposta anterior ainda descreve as mesmas rotações candidatas
+  // (com outras prioridades ou outro cenário de clima).
   const base = pedido ? `${pedido.ponto.lat.toFixed(2)},${pedido.ponto.lon.toFixed(2)},${solo ?? 'auto'},${hist},${extraJson}` : null
 
   const [tentativa, setTentativa] = useState(0)
