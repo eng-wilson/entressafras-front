@@ -289,8 +289,20 @@ export type SoilProperties = {
   sampled_location: Ponto
   distance_km: number
 }
+/** Cenário de clima (GET /api/clima/scenarios): os 30 anos observados ajustados por deltas de projeção. */
+export type ClimateScenarioInfo = {
+  id: string
+  label: string
+  delta_temp_c: number
+  rain_change_pct: number
+  onset_delay_days: number
+  description: string
+  source: string
+}
 export type RotationRecommendations = {
   agricultural_year: number
+  /** Cenário usado no risco; ausente em respostas antigas (= clima atual). */
+  climate_scenario?: ClimateScenarioInfo
   soil_type: SoilType
   soil: SoilInfo
   soil_properties?: SoilProperties | null
@@ -347,6 +359,7 @@ export type PlantingSweep = {
 }
 export type RotationSimulationResponse = {
   agricultural_year: number
+  climate_scenario?: ClimateScenarioInfo
   soil_type: SoilType
   /** Solo usado na simulação (textura informada ou estimada pelo local); a API manda desde a publicação do /simulate. */
   soil?: SoilInfo

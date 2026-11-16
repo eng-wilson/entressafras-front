@@ -13,7 +13,7 @@ import { chaveFaixa, pontoDoSweep } from '../logic/rascunho'
 const TEMPO_LIMITE_MS = 180_000
 export const DEBOUNCE_MS = 200
 
-export type BaseSimulacao = { ponto: Ponto; solo: SoilType | null; ano: number; prioridades?: Priorities; historico?: number[] }
+export type BaseSimulacao = { ponto: Ponto; solo: SoilType | null; ano: number; prioridades?: Priorities; historico?: number[]; cenario?: string }
 export type ErroSimulacao = { motivo: string; detalhe: string }
 
 export type EstadoSimulacao = {
@@ -44,7 +44,7 @@ const VAZIO: Interno = { chave: null, dados: null, enviado: null, faixas: [], er
 
 export function useSimulacao(base: BaseSimulacao | null, culturas: CustomCropInput[] | null): EstadoSimulacao {
   const chaveBase = base
-    ? `${base.ponto.lat},${base.ponto.lon},${base.solo ?? 'auto'},${base.ano},${JSON.stringify(base.prioridades ?? null)},${(base.historico ?? []).join('-')}`
+    ? `${base.ponto.lat},${base.ponto.lon},${base.solo ?? 'auto'},${base.ano},${JSON.stringify(base.prioridades ?? null)},${(base.historico ?? []).join('-')},${base.cenario ?? ''}`
     : null
   const chave = chaveBase && culturas ? `${chaveBase}|${JSON.stringify(culturas)}` : null
   const chavesFaixa = useMemo(
@@ -54,7 +54,7 @@ export function useSimulacao(base: BaseSimulacao | null, culturas: CustomCropInp
   const [tentativa, setTentativa] = useState(0)
   const [st, setSt] = useState<Interno>(VAZIO)
 
-  // Outro talhão, solo ou ano: nada do anterior vale.
+  // Outro talhão, solo, ano ou cenário de clima: nada do anterior vale.
   const [baseVista, setBaseVista] = useState(chaveBase)
   if (baseVista !== chaveBase) {
     setBaseVista(chaveBase)

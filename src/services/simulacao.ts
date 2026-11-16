@@ -3,7 +3,8 @@
 // memória: cada arrasto gera um pedido novo, e a resposta vale para o ponto, o solo e o ano do pedido.
 import type { CustomCropInput, Ponto, Priorities, RotationSimulationResponse, SoilType } from '../types'
 import { API_URL } from './clima'
-import { ErroRotacoes, culturaValida } from './rotacoes'
+import { ErroRotacoes, cenarioDoPedido, culturaValida } from './rotacoes'
+import { cenarioValido } from './cenarios'
 
 const objeto = (v: unknown): v is Record<string, unknown> => !!v && typeof v === 'object' && !Array.isArray(v)
 const finito = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v)
@@ -32,6 +33,7 @@ function sweepValido(s: unknown, n: number) {
  */
 export function simulacaoValida(x: unknown): x is RotationSimulationResponse {
   if (!objeto(x) || !Number.isInteger(x.agricultural_year) || !Array.isArray(x.warnings)) return false
+  if (x.climate_scenario !== undefined && !cenarioValido(x.climate_scenario)) return false
   const r = x.rotation
   if (!objeto(r) || typeof r.id !== 'string' || !Number.isInteger(r.rank) || !Number.isInteger(r.ranked_among)) return false
   if (typeof r.would_be_recommended !== 'boolean' || !Array.isArray(r.checks) || !r.checks.every(c => typeof c === 'string')) return false
@@ -65,6 +67,8 @@ export type PedidoSimulacao = {
   historico?: number[]
   culturas: CustomCropInput[]
   sweep: boolean
+  /** O mesmo cenário de clima da recomendação; ausente ou 'historical' = clima atual. */
+  cenario?: string
 }
 
 export const corpoSimulacao = (p: PedidoSimulacao) => ({
@@ -75,6 +79,7 @@ export const corpoSimulacao = (p: PedidoSimulacao) => ({
   ...(p.historico?.length ? { crop_history: p.historico } : {}),
   rotation: { crops: p.culturas.map(c => ({ code: c.code, ...(c.planting_date ? { planting_date: c.planting_date } : {}), ...(c.harvest_date ? { harvest_date: c.harvest_date } : {}) })) },
   sweep: p.sweep,
+  ...(cenarioDoPedido(p.cenario) ? { climate_scenario: p.cenario } : {}),
 })
 
 // DOMException nem sempre é instância de Error (jsdom): basta o nome.
