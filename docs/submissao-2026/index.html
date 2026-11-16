@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entressafras — Space Apps 2026 submission</title>
+<!-- Pré-visualização da submissão no molde da página de 2025 (Farmatro). Cada bloco <section class="campo"> é um campo
+     do formulário do Space Apps; o rótulo cinza ("Campo: …") não entra no texto colado. Imagens em img/.
+     Summary, Project Demonstration e Project são campos simples preenchidos direto no formulário: não estão aqui. -->
+<style>
+  :root { --red: #e0301e; --blue: #0b57d0; --ink: #1b1b1b; --muted: #5f6368; --line: #dadce0; }
+  body { margin: 0; background: #fff; color: var(--ink); font: 15px/1.6 "Fira Sans", "Segoe UI", system-ui, sans-serif; }
+  .page { max-width: 1040px; margin: 0 auto; padding: 32px 16px 64px; display: grid; grid-template-columns: minmax(0, 1fr) 260px; gap: 40px; align-items: start; }
+  @media (max-width: 860px) { .page { grid-template-columns: minmax(0, 1fr); } aside { order: -1; } }
+  h1 { margin: 0 0 18px; color: var(--blue); font-size: 30px; letter-spacing: .01em; }
+  h2 { margin: 34px 0 12px; color: var(--red); font-size: 22px; font-weight: 500; text-transform: uppercase; letter-spacing: .02em; }
+  h3 { margin: 30px 0 10px; color: var(--red); font-size: 20px; font-weight: 800; text-transform: uppercase; }
+  h4 { margin: 24px 0 8px; font-size: 15px; font-weight: 700; }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  li ul { margin-top: 6px; list-style: circle; }
+  figure { margin: 18px 0 22px; }
+  figure img { display: block; width: 100%; height: auto; border-radius: 6px; border: 1px solid var(--line); }
+  figcaption { margin-top: 6px; font-size: 13px; color: var(--muted); }
+  code { font: 13px/1.4 ui-monospace, Consolas, monospace; background: #f1f3f4; padding: 1px 5px; border-radius: 4px; }
+  hr { border: 0; border-top: 1px solid var(--line); margin: 30px 0; }
+  a { color: var(--blue); }
+  .campo { position: relative; }
+  .rotulo { display: inline-block; margin-top: 30px; font: 600 11px/1 ui-monospace, Consolas, monospace; letter-spacing: .06em; text-transform: uppercase; color: #fff; background: #80868b; padding: 4px 7px; border-radius: 4px; }
+  .pendente { background: #fff4e5; border: 1px dashed #e8a33d; padding: 2px 6px; border-radius: 4px; }
+  aside { position: sticky; top: 24px; border: 1px solid var(--line); border-radius: 6px; padding: 14px 16px; font-size: 13px; }
+  aside h2 { margin: 0 0 8px; color: var(--ink); font-size: 15px; font-weight: 700; text-transform: none; }
+  aside ol { padding-left: 18px; margin: 0; }
+  aside li { margin-bottom: 4px; }
+</style>
+</head>
+<body>
+<div class="page">
+<main>
+
+<h1>ENTRESSAFRAS</h1>
+
+<!-- ===================== CAMPO: PROJECT DETAILS (texto rico) ===================== -->
+<section class="campo" id="details">
+<span class="rotulo">Campo: Project Details (texto rico, com imagens)</span>
+<h2>Project Details</h2>
+
+<figure>
+  <img src="img/03-principal.png" alt="Entressafras main screen: an isometric soybean field in Sorriso, Mato Grosso, with 10-day rain and temperature from NASA POWER, the rotation calendar below and the selected rotation explained on the right.">
+</figure>
+
+<h3>What if farmers could test their next harvest before planting it?</h3>
+<p>Every planting season begins with a decision that can shape a farmer's entire year: what to grow, and when to plant it. Rainfall is becoming less predictable, dry spells can strike during critical growth stages, and leaving fields unprotected between harvests accelerates soil degradation. Farmers understand these risks. What they often lack is an accessible way to test their decisions against historical evidence before committing their land.</p>
+<p>Named after the Portuguese word for <em>"between harvests,"</em> Entressafras lets them do exactly that.</p>
+
+<h3>How Entressafras works</h3>
+<p>Entressafras helps farmers answer three questions: <strong>What should I plant next? When should I plant it? And what could go wrong?</strong></p>
+
+<figure>
+  <img src="img/01-onboarding.png" alt="Onboarding: the farmer marks the first field on the map.">
+</figure>
+
+<h4>The decision workflow:</h4>
+<ul>
+  <li>The farmer draws the field on the map, sets the soil texture and records what was planted last season. That rotation becomes the reference every suggestion is compared with.</li>
+  <li>The farmer chooses what matters most: <strong>water security, productivity, soil protection or revenue</strong>. The ranking of rotations follows those priorities.</li>
+  <li>Moving through the agricultural calendar, the farmer watches each crop grow on an isometric field, with 10-day rainfall, temperature and crop water supply from NASA data beside it.</li>
+  <li>Critical periods are marked on each rotation: the growth stage that suffered the largest water deficit across past seasons. One click takes the simulation there.</li>
+  <li>Farmers can build their own rotation, choosing crops and planting dates, and evaluate it with the same simulation.</li>
+</ul>
+
+<figure>
+  <img src="img/04-floracao.png" alt="The simulation moved to February: second-crop corn growing, with the critical flowering period highlighted on the rotation bar.">
+</figure>
+
+<h4>For each rotation, farmers can explore:</h4>
+<ul>
+  <li><strong>Historical performance:</strong> in how many of the last 30 seasons each crop would have faced a serious water-related yield loss.</li>
+  <li><strong>Planting windows:</strong> which dates expose crops to greater water-deficit risk during sensitive growth stages.</li>
+  <li><strong>Soil protection:</strong> how long the soil stays covered and whether the rotation changes plant family.</li>
+  <li><strong>Trade-offs:</strong> scores from 0 to 100 for productivity, water security, soil protection and optional revenue, side by side.</li>
+  <li><strong>Climate scenarios:</strong> how each rotation would behave in an illustrative warmer, or warmer and drier, climate.</li>
+</ul>
+
+<h3>Test any rotation you want, before planting it</h3>
+<p><strong>Entressafras does not limit farmers to our suggestions. Any crop rotation a farmer has in mind can be built and tested, on their own field, against 30 seasons of NASA data, before a single seed goes into the ground.</strong></p>
+
+<figure>
+  <img src="img/07-rotacao-propria.png" alt="Custom rotation editor: the farmer builds soybean followed by second-crop corn, drags the bars to set planting and harvest dates, and sees the risk of each planting date, the days of bare soil and the simulation scores.">
+</figure>
+
+<ul>
+  <li><strong>Any crops, in any order:</strong> the farmer picks the first and second crop from the catalog and can swap or remove either one.</li>
+  <li><strong>Any dates:</strong> dragging the edges of each bar sets planting and harvest. The calendar is colored by the historical risk of planting in each 10-day period, and the region's usual planting date is marked.</li>
+  <li><strong>The same science as our suggestions:</strong> the rotation runs through the same 30-season FAO-56 water balance, with the same 0–100 scores for productivity, water security and soil protection.</li>
+  <li><strong>Honest feedback:</strong> it shows how many days the soil stays bare between crops and whether the rotation would pass the same family, calendar and temperature filters our recommendations use.</li>
+  <li><strong>Side by side with everything else:</strong> once saved, the rotation joins the ranking and can be compared with the farmer's last planting and with our suggestions.</li>
+</ul>
+<p><strong>The farmer's own idea gets the same evidence as ours. That is what turns a recommendation tool into a decision rehearsal.</strong></p>
+
+<figure>
+  <img src="img/05-comparacao.png" alt="Comparison view: the farmer's current rotation against the top suggestion, on a four-priority chart and in score cards.">
+</figure>
+
+<hr>
+
+<h4>Benefits</h4>
+<p>The primary benefit of Entressafras is that farmers don't have to choose between trusting their experience and trusting the data: <strong>it helps them use both.</strong></p>
+<ul>
+  <li><strong>Better-informed decisions:</strong> compare the current rotation with alternatives supported by 30 years of historical climate data, without expertise in climate science or GIS.</li>
+  <li><strong>Reduced exposure to climate risk:</strong> identify planting dates associated with greater historical water deficit and test rotations under warmer and drier scenarios before committing to a crop.</li>
+  <li><strong>Improved soil stewardship:</strong> weigh soil-cover duration and crop diversity alongside productivity.</li>
+  <li><strong>Accessible science:</strong> Earth observation data becomes an interactive experience built around agricultural decisions.</li>
+</ul>
+
+<h4>Our Creative Approach</h4>
+<p>Entressafras's creativity lies in five ideas:</p>
+<ol>
+  <li><strong>A living field instead of a scientific dashboard:</strong> environmental data becomes an animated agricultural landscape, connecting weather, crop stages and stress in one view.</li>
+  <li><strong>A decision rehearsal instead of a static recommendation:</strong> farmers test rotations and planting dates against 30 historical seasons and compare them with their current practice.</li>
+  <li><strong>Risk explained through real-world context:</strong> "water shortage in 45% of seasons, mostly during flowering and grain filling," instead of an abstract index.</li>
+  <li><strong>Recommendations controlled by the farmer:</strong> there is no universally best rotation. Farmers choose which trade-offs matter, and the system explains how those priorities change the ranking.</li>
+  <li><strong>Many Earth data sources, one experience:</strong> NASA POWER drives the crop-water simulation, SMAP adds satellite-informed soil-moisture context, and global soil and crop datasets tie it all to field operations.</li>
+</ol>
+
+<figure>
+  <img src="img/06-por-safra.png" alt="By-crop detail of a rotation: climate resilience, water use against average rain, and reference revenue for each crop.">
+</figure>
+
+<hr>
+
+<h3>How the simulation works</h3>
+<ol>
+  <li><strong>Historical climate — NASA POWER:</strong> daily rainfall, temperature, humidity, wind and solar radiation. Reference evapotranspiration by FAO-56 Penman–Monteith (Hargreaves when data are missing). The calendar groups the last ten seasons into ten-day planning periods.</li>
+  <li><strong>Soil — ISRIC SoilGrids and NASA SMAP:</strong> sand, clay and organic carbon for the top 100 cm, turned into available water with Saxton &amp; Rawls (2006) pedotransfer equations. SMAP Level-4 soil moisture (about 9 km) is shown in the climate calendar for context.</li>
+  <li><strong>Crop requirements — FAO and GGCMI:</strong> FAO-56 crop coefficients, stages, root depth and depletion tolerance; FAO-33 yield response to water; FAO EcoCrop temperature limits; GGCMI regional planting calendars. Candidate rotations pair crops from different botanical families.</li>
+  <li><strong>Historical water balance:</strong> a daily FAO-56 soil-water balance over 30 seasons, with fallow and crops in sequence and soil water carried from one crop to the next.
+    <ul>
+      <li><code>ETr = Ks × Kc × ET0</code> and <code>Dr(t) = Dr(t−1) − P + ET</code>, bounded between 0 and the available water.</li>
+      <li><code>ISNA = ΣETr / ΣETc</code>; <code>yield loss = Ky × (1 − ISNA)</code>. Water risk is the share of seasons in which loss exceeds 20%.</li>
+      <li>Soil protection: <code>70 × share of the season with a living crop + 30 × share of transitions that change plant family</code>, following USDA NRCS practice standards 340 and 328.</li>
+    </ul>
+  </li>
+  <li><strong>Climate scenarios:</strong> the historical series is adjusted with the delta method (+1.0 °C, or +1.5 °C with 10% less rain and a rainy season starting 10 days later) and evapotranspiration is recomputed. These are illustrative, not projections.</li>
+</ol>
+
+<hr>
+
+<h3>Technical details and considerations</h3>
+<ul>
+  <li><strong>Tools &amp; Technologies:</strong> React 19, TypeScript, Vite, Leaflet, HTML Canvas 2D and Web Workers (frontend); Python 3.13, FastAPI, Uvicorn, Pydantic, pandas and httpx, with Google Earth Engine for SMAP and deployment on Railway (backend); Vitest, Testing Library, Playwright, pytest, Ruff and Oxlint (testing).
+    <ul>
+      <li><strong>Scientific validity:</strong> historical simulations are not forecasts. The method relies on FAO-56, FAO-33 and Saxton &amp; Rawls, and the interface tells farmers that NASA POWER (about 50 km) and SMAP (about 9 km) are coarser than a single field.</li>
+      <li><strong>Uncertainty and missing data:</strong> crop risk is reported as unknown with fewer than five valid seasons, and SMAP fields are omitted when unavailable, so incomplete results never look like reliable recommendations.</li>
+      <li><strong>Agronomic feasibility:</strong> crop-family diversity, regional calendars, temperature suitability and stage sensitivity constrain the rotations considered.</li>
+      <li><strong>Farmer-centered design:</strong> familiar agricultural concepts, plain-language explanations and accessible visual signals, in English and Portuguese.</li>
+      <li><strong>Known limitations:</strong> single soil layer, no runoff or irrigation, FAO reference parameters not yet calibrated for Brazilian cultivars, illustrative climate scenarios, and soil-health indicators that are proxies. Recommendations still require local agronomic judgment.</li>
+    </ul>
+  </li>
+</ul>
+
+<h3>Intended impact</h3>
+<p>We demonstrate Entressafras on a field in Sorriso, Mato Grosso, Brazil, a key soybean and second-crop corn region where planting windows and water availability shape every season. Because it relies on globally available Earth observation data combined with regional crop parameters and calendars, the approach can be adapted to other regions facing uncertain rainfall and soil degradation.</p>
+<p>Next, we want to evaluate the recommendations with farmers and agronomists, compare results with Brazil's official agricultural climate-risk zoning (ZARC), calibrate crop parameters for local cultivars and use SMAP to initialize and check the simulated soil water.</p>
+<p><strong>Our measure of success is not how much data the platform processes, but whether farmers can turn that data into decisions they understand and trust.</strong></p>
+</section>
+
+<!-- ===================== CAMPO: USE OF AI ===================== -->
+<section class="campo" id="ai">
+<span class="rotulo">Campo: Use of Artificial Intelligence (AI)</span>
+<h2>Use of Artificial Intelligence (AI)</h2>
+<p>The team used Artificial Intelligence as a tool to accelerate development:</p>
+<ol>
+  <li><strong>Claude Code for code assistance:</strong> it helped write, test and debug parts of the frontend, all of which were reviewed and adapted by the developers. <span class="pendente">[confirmar e completar com as ferramentas usadas no backend]</span></li>
+  <li><span class="pendente">[se houver: ferramenta usada para os sprites/ilustrações e o que foi editado à mão]</span></li>
+</ol>
+<p>In short, AI was used as a support tool to increase productivity, but the project's concept, scientific method, design and final execution are the team's original work.</p>
+</section>
+
+<!-- ===================== CAMPO: NASA DATA ===================== -->
+<section class="campo" id="nasa">
+<span class="rotulo">Campo: NASA Data</span>
+<h2>NASA Data</h2>
+<p><a href="https://power.larc.nasa.gov/">NASA POWER</a></p>
+<p><a href="https://nsidc.org/data/spl4smgp">SMAP Level-4 Surface and Root-Zone Soil Moisture (SPL4SMGP)</a></p>
+</section>
+
+<!-- ===================== CAMPO: SPACE AGENCY PARTNER & OTHER DATA ===================== -->
+<section class="campo" id="other">
+<span class="rotulo">Campo: Space Agency Partner &amp; Other Data</span>
+<h2>Space Agency Partner &amp; Other Data</h2>
+<p><a href="https://soilgrids.org/">ISRIC SoilGrids</a></p>
+<p><a href="https://www.fao.org/4/x0490e/x0490e00.htm">FAO-56 Crop Evapotranspiration</a></p>
+<p><a href="https://www.fao.org/faostat/">FAOSTAT</a></p>
+<p><a href="https://github.com/eng-wilson/entressafras-front">GitHub Repository — Frontend</a></p>
+<p><a href="https://github.com/eng-wilson/entressafras-backend">GitHub Repository — Backend</a></p>
+</section>
+
+</main>
+
+<aside>
+  <h2>Outline</h2>
+  <ol>
+    <li><a href="#details">Project Details</a></li>
+    <li><a href="#ai">Use of Artificial Intelligence (AI)</a></li>
+    <li><a href="#nasa">NASA Data</a></li>
+    <li><a href="#other">Space Agency Partner &amp; Other Data</a></li>
+  </ol>
+</aside>
+</div>
+</body>
+</html>

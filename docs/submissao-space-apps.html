@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entressafras — Project submission</title>
+</head>
+<body>
+
+<h1>Entressafras — What if farmers could test their next harvest before planting it?</h1>
+
+<p>Every planting season begins with a decision that can shape a farmer's entire year: what to grow, and when to plant it.</p>
+
+<p>But rainfall is becoming less predictable, dry spells can strike during critical growth stages, and leaving fields unprotected between harvests can accelerate soil degradation. Farmers understand these risks. What they often lack is an accessible way to test their decisions against historical evidence before committing their land.</p>
+
+<p><strong>Entressafras turns NASA Earth observation data into a decision-making experience.</strong> Instead of asking farmers to interpret complex climate charts, it lets them compare crop rotations against 30 years of historical seasons and visualize how their fields might respond to different planting decisions.</p>
+
+<p>Named after the Portuguese word for <em>"between harvests,"</em> Entressafras helps farmers prepare for the next season while protecting the resources they depend on.</p>
+
+<h2>What does it do?</h2>
+
+<p>Entressafras is an interactive crop-rotation decision-support tool that helps farmers answer three questions: <strong>What should I plant next? When should I plant it? And what could go wrong?</strong></p>
+
+<p>Farmers select their location, identify their crops, and choose what matters most to them: water security, productivity, soil protection, or revenue.</p>
+
+<p>Entressafras compares alternative rotation strategies against the farmer's existing approach, ranking them according to those priorities.</p>
+
+<p>For each strategy, farmers can explore:</p>
+<ul>
+  <li><strong>Historical performance:</strong> How often each crop would have faced a serious water-related yield loss across the last 30 seasons, according to the model.</li>
+  <li><strong>Planting windows:</strong> Which dates expose crops to greater water-deficit risk during sensitive growth stages.</li>
+  <li><strong>Soil protection:</strong> How long the soil remains covered and whether the rotation introduces different plant families.</li>
+  <li><strong>Trade-offs:</strong> Comparative scores from 0 to 100 for productivity, water security, soil protection, and optional revenue.</li>
+  <li><strong>Climate scenarios:</strong> How each rotation would behave in an illustrative warmer, or warmer and drier, climate.</li>
+  <li><strong>Explainable recommendations:</strong> Plain-language explanations of why a strategy ranks higher, what evidence supports it, and where uncertainty remains.</li>
+</ul>
+
+<p>Farmers can also create custom rotations by selecting crops and planting dates, evaluate them with the same simulation, and see which planting dates would have performed best and worst.</p>
+
+<p>The goal isn't to replace the farmer's judgment. It's to let them explore the consequences of a decision before making it.</p>
+
+<h2>How does it work?</h2>
+
+<p>Entressafras combines NASA Earth observations, global agricultural datasets, and crop-water simulation into a single workflow.</p>
+
+<h3>1. Historical climate — NASA POWER</h3>
+<p>We retrieve daily NASA POWER data on rainfall, temperature, humidity, wind, and solar radiation. Using the FAO-56 Penman–Monteith method (or Hargreaves when data are missing), we estimate reference evapotranspiration, the daily water demand of the atmosphere.</p>
+<p>Rotation simulations use the last 30 seasons. The climate calendar organizes the last ten seasons into ten-day planning periods, so farmers can compare planting dates against historical dry periods rather than a single seasonal average.</p>
+
+<h3>2. Soil conditions — ISRIC SoilGrids and NASA SMAP</h3>
+<p>SoilGrids provides sand, clay, and organic carbon for the top 100 cm. Using Saxton &amp; Rawls (2006) pedotransfer equations, we estimate how much water the soil can hold for each crop's roots.</p>
+<p>NASA SMAP Level-4 soil moisture (2015 onward, about 9 km resolution) appears in the climate calendar, showing how wet the surface and root zone have typically been in each ten-day period compared with normal. SMAP L4 is a model estimate informed by satellite observations. It is currently displayed for context and does not yet feed the simulation.</p>
+<p>These are regional and modeled estimates, not substitutes for laboratory soil analysis.</p>
+
+<h3>3. Crop requirements — FAO and GGCMI</h3>
+<p>FAO-56 provides crop coefficients, growth stages, root depth, and tolerance to water depletion. FAO-33 provides each crop's yield response to water deficit. FAO EcoCrop temperature limits exclude crops unsuited to the local climate, and GGCMI regional calendars set planting dates and cycle lengths.</p>
+<p>Candidate rotations pair crops from different botanical families, with planting dates within 30 days of the regional calendar. Detailed simulation is limited to crops with sufficient available parameters.</p>
+
+<h3>4. Historical simulation and ranking</h3>
+<p>For each eligible rotation and planting date, Entressafras runs a FAO-56 daily soil-water balance across 30 historical seasons. Fallow and crop periods are simulated in sequence, and soil water carries over from one crop to the next.</p>
+<ul>
+  <li><code>ETr = Ks × Kc × ET0</code>, where Ks drops below 1 when soil depletion exceeds the crop's tolerance.</li>
+  <li><code>Dr(t) = Dr(t−1) − P + ET</code>, bounded between 0 and the soil's available water.</li>
+</ul>
+<p>Water shortfall becomes an estimated yield loss through the FAO-33 response factor:</p>
+<p><code>ISNA = ΣETr / ΣETc</code>; <code>yield loss = Ky × (1 − ISNA)</code></p>
+<p>The model also identifies the growth stage that suffers the most. Water risk is the share of seasons in which estimated loss exceeds 20%.</p>
+<p>Each rotation receives four 0–100 scores. Productivity and water security reflect the weaker crop of the rotation. Soil protection combines living cover and crop-family diversity (<code>70 × share of the season with a living crop + 30 × share of transitions that change plant family</code>), following USDA NRCS practice standards 340 and 328. An optional revenue score uses FAOSTAT average prices and yields for Brazil.</p>
+<p>The farmer's priorities determine how these scores influence the final ranking. These results represent modeled historical scenarios, not guaranteed yields or future weather forecasts.</p>
+
+<h3>5. Climate scenarios</h3>
+<p>To explore how rotations might hold up in a changing climate, the historical series can be adjusted before simulation using the delta method: +1.0 °C, or +1.5 °C with 10% less rainfall and a rainy season starting 10 days later. Evapotranspiration is recomputed for each scenario. These values are illustrative, not projections.</p>
+
+<h3>6. Interactive visualization</h3>
+<p>Instead of showing farmers a conventional scientific dashboard, Entressafras transforms their field into an interactive isometric landscape.</p>
+<p>As farmers move through the agricultural calendar, they watch crops progress through their growth stages and see visual representations of modeled water stress.</p>
+<p>Rainfall, temperature, SMAP soil moisture, and planting windows appear alongside the field, connecting climate conditions directly to crop development.</p>
+<p>A comparison view makes it possible to evaluate alternative strategies side by side.</p>
+
+<h2>What benefits does it have?</h2>
+<ul>
+  <li><strong>Better-informed decisions:</strong> Farmers can compare their existing crop rotation with alternatives supported by 30 years of historical climate data, without needing expertise in climate science or geographic information systems.</li>
+  <li><strong>Reduced exposure to climate risk:</strong> By identifying planting dates associated with greater historical water deficit, and testing rotations under warmer and drier scenarios, farmers can explore adjustments before committing to a crop.</li>
+  <li><strong>Improved soil stewardship:</strong> Entressafras encourages farmers to consider soil-cover duration and crop diversity alongside potential productivity, helping them identify practices associated with better long-term soil protection.</li>
+  <li><strong>Accessible scientific information:</strong> Complex Earth observation data becomes an understandable, interactive experience built around agricultural decisions rather than scientific measurements alone.</li>
+</ul>
+<p>Most importantly, farmers don't have to choose between trusting their experience and trusting the data. <strong>Entressafras helps them use both.</strong></p>
+
+<h2>What is the intended impact?</h2>
+<p>Our ambition is to make NASA Earth observation data a practical part of everyday agricultural planning.</p>
+<p>We demonstrate Entressafras using a field in Sorriso, Mato Grosso, Brazil, an important soybean and second-crop corn production region where planting windows and water availability strongly influence agricultural decisions.</p>
+<p>The system is designed to help farmers compare their current practices with alternatives, understand the risks behind each option, and explore changes before planting.</p>
+<p>Its wider potential extends to other agricultural regions where farmers face uncertain rainfall, constrained water resources, and soil degradation. Because it relies on globally available Earth observation datasets combined with region-specific crop parameters and planting calendars, the approach can be adapted to additional locations.</p>
+<p>Our next objectives are to:</p>
+<ul>
+  <li>evaluate its recommendations with farmers and agronomists;</li>
+  <li>compare results with Brazil's official agricultural climate-risk zoning (ZARC);</li>
+  <li>calibrate crop parameters for local cultivars;</li>
+  <li>use SMAP to initialize and check the simulated soil water;</li>
+  <li>assess whether the interface helps users make better-informed decisions.</li>
+</ul>
+<p>Our measure of success is not how much data the platform processes, but whether farmers can turn that data into decisions they understand and trust.</p>
+
+<h2>What tools, coding languages, hardware, or software did you use?</h2>
+<ul>
+  <li><strong>Frontend:</strong> React 19, TypeScript, Vite, Leaflet, HTML Canvas 2D, and Web Workers. The interactive field uses isometric crop sprites representing development stages and modeled stress conditions.</li>
+  <li><strong>Backend:</strong> Python 3.13, FastAPI, Uvicorn, Pydantic, pandas, and httpx, with Google Earth Engine for SMAP retrieval and deployment on Railway.</li>
+  <li><strong>NASA datasets:</strong> NASA POWER for 30 seasons of daily agroclimatic data driving the simulation, and SMAP Level-4 (SPL4SMGP) for satellite-informed soil-moisture context in the climate calendar.</li>
+  <li><strong>Additional agricultural datasets:</strong> ISRIC SoilGrids 2.0, FAO-56 and FAO-33 crop parameters, FAO EcoCrop, FAOSTAT, and GGCMI regional crop calendars.</li>
+  <li><strong>Testing and quality:</strong> Vitest, Testing Library, Playwright, pytest, Ruff, and Oxlint.</li>
+  <li><strong>Design:</strong> The user experience was developed through interactive prototyping and translated into implementation specifications.</li>
+</ul>
+
+<h2>How is the project creative?</h2>
+
+<h3>1. A living field instead of a scientific dashboard</h3>
+<p>Entressafras transforms environmental data into an animated agricultural landscape. Farmers can visually connect weather conditions, crop-development stages, and potential stress rather than interpret multiple disconnected charts.</p>
+
+<h3>2. A decision rehearsal instead of a static recommendation</h3>
+<p>The system doesn't simply tell farmers which crop to plant. It lets them test different rotations and planting dates against 30 historical seasons, compare alternatives with current practices, and explore trade-offs before making a decision.</p>
+
+<h3>3. Risk explained through real-world context</h3>
+<p>Instead of presenting only abstract risk indices, Entressafras expresses modeled outcomes in relatable terms, such as in how many of the last 30 seasons a crop would have suffered a serious water-related loss, and which growth stage was most affected.</p>
+
+<h3>4. Recommendations controlled by the farmer</h3>
+<p>There is no universally best rotation. A strategy that prioritizes productivity may not be the same one that maximizes soil protection or water security.</p>
+<p>Farmers determine which trade-offs matter most, and the system explains how those priorities affect the results.</p>
+
+<h3>5. Multiple Earth data sources translated into one experience</h3>
+<p>NASA POWER drives the crop-water simulation, SMAP adds satellite-informed soil-moisture context, and global soil and crop datasets connect atmospheric conditions, soil-water dynamics, and agricultural operations.</p>
+
+<p>The innovation is not simply bringing more scientific data into farming. <strong>It is making that data understandable and actionable at the moment farmers need to make a decision.</strong></p>
+
+<h2>What factors did your team consider?</h2>
+<ul>
+  <li><strong>Scientific validity and transparency:</strong> Historical simulations are not forecasts. The method relies on established references (FAO-56, FAO-33, Saxton &amp; Rawls), and its assumptions are documented. NASA POWER (about 50 km grid cells) and SMAP (about 9 km) represent conditions at resolutions coarser than an individual field, and the interface communicates these limitations. SMAP Level-4 soil moisture is a model-based estimate informed by satellite observations.</li>
+  <li><strong>Uncertainty and missing data:</strong> The system distinguishes modeled estimates from observations. Crop risk is reported as unknown when fewer than five valid seasons are available, and SMAP fields are omitted when the data cannot be retrieved, so incomplete results are not presented as reliable recommendations.</li>
+  <li><strong>Agronomic feasibility:</strong> Crop-family diversity, regional planting calendars, temperature suitability, crop-water requirements, and growth-stage sensitivity constrain the rotations considered.</li>
+  <li><strong>Farmer-centered design:</strong> The interface favors familiar agricultural concepts, plain-language explanations, accessible visual signals, and understandable comparisons over complex scientific terminology.</li>
+  <li><strong>Performance and reliability:</strong> Climate and soil-moisture data are cached to reduce repeated requests to external data services, with preloaded datasets supporting the demonstration environment.</li>
+  <li><strong>Known limitations:</strong> The water balance assumes a single soil layer, no runoff or irrigation, and starts each simulation at 20% of soil water capacity. Seasonal yield-response factors are used for yield loss. Crop parameters rely on FAO reference values not yet calibrated for Brazilian cultivars, climate scenarios are illustrative, and results have not yet been validated against ZARC. Soil-health indicators are proxies rather than direct measurements of long-term outcomes. Recommendations require local agronomic judgment before implementation.</li>
+  <li><strong>Open science and reproducibility:</strong> The solution uses documented, openly available datasets and methods, including NASA POWER, NASA SMAP, ISRIC SoilGrids, FAO-56, FAO-33, FAO EcoCrop, FAOSTAT, GGCMI, USDA NRCS practice standards, and the IPCC delta method.</li>
+</ul>
+
+<p><strong>Entressafras is designed as a decision-support tool, not an autonomous agronomist.</strong> Its role is to make evidence accessible while keeping farmers in control.</p>
+
+</body>
+</html>
