@@ -77,7 +77,8 @@ test('comparação: mesmas linhas do calendário, faturamento da API no card, co
       sand_pct: 31.5, silt_pct: 16.5, clay_pct: 52, texture_class: 'clayey',
       sampled_location: { lat: -12.54, lon: -55.72 }, distance_km: 0.2,
     }
-    delete resp.rotations[1].water_adjusted_revenue_usd_ha
+    // A comparação abre com a 1ª e a atual do talhão (a 3ª, soja → milho safrinha): é ela que fica sem o dado
+    delete resp.rotations[2].water_adjusted_revenue_usd_ha
     return r.fulfill({ json: resp })
   })
   await page.goto('/')

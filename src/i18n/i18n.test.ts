@@ -60,3 +60,12 @@ describe('t() e formatos', () => {
     expect([1, 2, 3, 4, 11, 12, 13, 21].map(n => ordinal(n))).toEqual(['1st', '2nd', '3rd', '4th', '11th', '12th', '13th', '21st'])
   })
 })
+
+describe('textos do backend em português (clima)', () => {
+  it('o aviso de resolução e a fonte do clima, exatamente como a API manda, têm tradução', async () => {
+    const { CLIMA_T07 } = await import('../../tests/fixtures/clima')
+    definirIdioma('en')
+    expect(t(CLIMA_T07.aviso_resolucao)).not.toBe(CLIMA_T07.aviso_resolucao)
+    expect(t(CLIMA_T07.fonte)).not.toBe(CLIMA_T07.fonte)
+  })
+})

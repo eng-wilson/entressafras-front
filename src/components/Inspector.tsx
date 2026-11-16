@@ -54,7 +54,7 @@ function decendio(idx: number, curto = false) {
   return curto ? t('{ini}–{fim} {mes}', { ini, fim, mes }) : t('{ini} a {fim} {mes}', { ini, fim, mes })
 }
 const minuscula = (s: string) => s.charAt(0).toLowerCase() + s.slice(1)
-const TITULOS = { param: 'Prioridade', dates: 'Datas e requisitos', soil: 'Saúde do solo', pests: 'Pragas', risk: 'Como interpretar o risco', sources: 'Origem e limites dos dados', method: 'Como ler estes momentos', moment: 'Momento de atenção' }
+const TITULOS = { ranking: 'Posição no ranking', param: 'Prioridade', dates: 'Datas e requisitos', soil: 'Saúde do solo', pests: 'Pragas', risk: 'Como interpretar o risco', sources: 'Origem e limites dos dados', method: 'Como ler estes momentos', moment: 'Momento de atenção' }
 type Page = 'overview' | keyof typeof TITULOS
 type Props = {
   atencao: Pick<AtencaoCicloProps, 'panorama' | 'estado' | 'idx'>
@@ -70,7 +70,6 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
   const lim = rot ? safraLimitante(rot) : null
   const incompleto = !rot || rot.seguranca == null
   const cls = !incompleto && lim?.seguranca != null ? classeSeguranca(lim.seguranca) : 'none'
-  const fase = diag?.decisivo ?? null
   const culturaSelecionada = def.safras.findIndex(s => atencao.idx >= s.de && atencao.idx <= s.ate)
   const provisorio = rot?.safras.some(s => s.risco?.metodo === 'MOCK') ?? false
   const rankingTeste = conj.avisos.some(a => /\bMOCK\b/i.test(a))
@@ -115,7 +114,15 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
       {page === 'overview' ? <>
         <header className="insp-header">
           <p className="insp-kicker">{t('Rotação selecionada')}</p>
-          <h2 tabIndex={-1}>{c1} <span className="insp-sequence" aria-label={t('seguida de')}>→</span> {minuscula(c2)}</h2>
+          {/* Nome e posição na mesma linha; tocar na posição abre o porquê dela */}
+          <div className="insp-title-row">
+            <h2 tabIndex={-1}>{c1} <span className="insp-sequence" aria-label={t('seguida de')}>→</span> {minuscula(c2)}</h2>
+            <button type="button" className="insp-rank-pill" data-inspector-open="ranking"
+              aria-label={`${t('{pos} de {total} opções recebidas', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}. ${t('Ver por que nesta posição')}`}
+              onClick={() => abrir('ranking', 'ranking')}>
+              {t('{pos} de {total}', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}
+            </button>
+          </div>
           <span className="insp-sr" role="status" aria-atomic="true">{t('Rotação selecionada: {c1} seguida de {c2}. {titulo}.', { c1, c2, titulo })}</span>
         </header>
         <section className={`insp-decision ${cls}`} aria-labelledby="insp-decision-title">
@@ -124,14 +131,6 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
           {provisorio && <p className="insp-provisional"><Icon name="i-info" /><span><strong>{t('Provisório')}</strong> · {t('sem cálculo para este talhão')}</span></p>}
           {avisosLocal.map(a => <p key={a.tipo} className="insp-provisional insp-local" role="note"><Icon name="i-alert" /><span>{textoAvisoLocal(a)}</span></p>)}
         </section>
-        <div className="insp-rank">
-          <div className="insp-rank-h">
-            <div><span>{t('Posição no ranking')}</span><small>{rankingTeste ? t('Ordem provisória da API') : t('Entre as opções recebidas')}</small></div>
-            <strong aria-label={t('{pos} de {total} opções recebidas', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}>{t('{pos} de {total}', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}</strong>
-          </div>
-          {/* Por que nesta posição: média das prioridades ligadas nas escalas da API, contra a vizinha na lista */}
-          {porQue && <p className="insp-rank-why">{porQue}{conj.prioridades?.revenue === 1 && <> <span>{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).toLowerCase() })}</span></>}</p>}
-        </div>
         {/* Como a rotação atende às 4 prioridades neste talhão: visual, quase sem texto */}
         <section className="insp-section" aria-label={t('Prioridades na sua região')}>
           <h3>{t('Prioridades na sua região')}</h3>
@@ -159,18 +158,26 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
               const estado = sf?.seguranca != null ? classeSeguranca(sf.seguranca) : 'none'
               const nome = t(d.nome)
               const vars = { ord: ordinal(n + 1), nome, plantio: decendio(d.de), fim: decendio(d.ate) }
+              // Tocar na safra leva ao período crítico dela no calendário (ou ao plantio, se não há período crítico)
+              const critico = diag?.criticos.find(p => p.safra === n) ?? null
+              // Safra arriscada ou desfavorável: o motivo em uma frase curta (no máximo 3 linhas na tela)
+              const porque = (estado === 'warn' || estado === 'risk') && sf?.risco
+                ? critico
+                  ? t('Falta de água em {pct}% das safras, sobretudo na fase de {fase}.', { pct: pctFmt(sf.risco.pct), fase: t(critico.nomeFase).toLowerCase() })
+                  : t('Falta de água em {pct}% das safras históricas.', { pct: pctFmt(sf.risco.pct) })
+                : null
+              const rotulo = d.cobertura
+                ? t('Ver a {ord} safra ({nome}) no calendário. Plantio {plantio}; fim do ciclo {fim}.', vars)
+                : t('Ver a {ord} safra ({nome}) no calendário. Plantio {plantio}; colheita {fim}.', vars)
               return <button key={`${d.ref}-${n}`} type="button" className={`insp-culture-row${culturaSelecionada === n ? ' selected' : ''}`} aria-pressed={culturaSelecionada === n}
-                aria-label={d.cobertura
-                  ? t('Ver a {ord} safra ({nome}) no calendário. Plantio {plantio}; fim do ciclo {fim}.', vars)
-                  : t('Ver a {ord} safra ({nome}) no calendário. Plantio {plantio}; colheita {fim}.', vars)}
-                onClick={() => onNavegarPeriodo(d.de)}>
+                aria-label={porque ? `${rotulo} ${porque}${critico ? ` ${t('Período crítico: {periodo}.', { periodo: critico.rotulo })}` : ''}` : rotulo}
+                onClick={() => (critico ? onVerPeriodo(critico.de) : onNavegarPeriodo(d.de))}>
                 <span className={`insp-culture-dot ${estado}`} aria-hidden="true" />
                 {/* Compacta: safra, cultura e selo. Datas e risco ficam no aria-label e em "Datas e requisitos". */}
-                <span className="insp-culture-copy"><small className="insp-culture-ord">{ordSafra(n, d.cobertura)}</small><strong>{nome}</strong></span>
+                <span className="insp-culture-copy"><small className="insp-culture-ord">{ordSafra(n, d.cobertura)}</small><strong>{nome}</strong>{porque && <small className={`insp-culture-why ${estado}`}>{porque}</small>}</span>
                 <Selo safra={sf} compact />
               </button>
             })}
-            {fase && <Row icon="i-calendar" label={t('Ver fase no calendário')} onClick={() => onVerPeriodo(fase.de)} />}
             {conj.rotacoes.length > 1 && <Row icon="i-layers" label={t('Comparar alternativas')} onClick={onComparar} />}
           </div>
         </section>
@@ -204,6 +211,17 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             <dl className="insp-dates"><div><dt>{t('Plantio')}</dt><dd>{decendio(d.de)}</dd></div><div><dt>{d.cobertura ? t('Fim do ciclo') : t('Colheita')}</dt><dd>{decendio(d.ate)}</dd></div></dl>
             <button className="insp-text-button" type="button" onClick={() => onVerDados(d.ref)}>{t('Consultar requisitos de {nome}', { nome: t(d.nome) })}<Icon name="i-right" /></button>
           </section>)}
+          {page === 'ranking' && <>
+            <div className="insp-rank">
+              <div className="insp-rank-h">
+                <div><span>{t('Posição no ranking')}</span><small>{rankingTeste ? t('Ordem provisória da API') : t('Entre as opções recebidas')}</small></div>
+                <strong>{t('{pos} de {total}', { pos: ordinal(rotIdx + 1), total: conj.rotacoes.length })}</strong>
+              </div>
+            </div>
+            {/* Por que nesta posição: média das prioridades ligadas nas escalas da API, contra a vizinha na lista */}
+            {porQue && <p className="insp-rank-why">{porQue}</p>}
+            {conj.prioridades?.revenue === 1 && <p className="insp-caption">{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).toLowerCase() })}</p>}
+          </>}
           {page === 'param' && route.param && (() => {
             const k = route.param
             const api = PARAMETROS.find(p => p.k === k)!.api
@@ -233,8 +251,8 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
             <p>{conj.origem === 'api' ? t('Rotações e datas: API Entressafras. A ordem é recebida da API: a média das prioridades ligadas nas escalas 0–100 dela. Faturamento: preço ao produtor × produtividade, médias do Brasil (FAOSTAT), descontada a perda hídrica no local e sem custos de produção.') : t('Rotações e datas ilustrativas.')}{rankingTeste ? ` ${t('O ranking ainda é de teste.')}` : ''}</p>
             <p>{clima
               ? clima.safras.length
-                ? t('Chuva e temperatura: {fonte}, média de {n} safras ({de} a {ate}).', { fonte: clima.fonte, n: clima.safras.length, de: clima.safras[0], ate: clima.safras.at(-1) })
-                : t('Chuva e temperatura: {fonte}, média de {n} safras.', { fonte: clima.fonte, n: clima.safras.length })
+                ? t('Chuva e temperatura: {fonte}, média de {n} safras ({de} a {ate}).', { fonte: t(clima.fonte), n: clima.safras.length, de: clima.safras[0], ate: clima.safras.at(-1) })
+                : t('Chuva e temperatura: {fonte}, média de {n} safras.', { fonte: t(clima.fonte), n: clima.safras.length })
               : t('Clima indisponível. Os dados de risco recebidos são exibidos sem estimativa adicional.')}</p>
             {/* Todos os avisos do servidor, no texto original (inglês): premissas do método, pontos de reserva, MOCK */}
             {conj.avisos.length > 0 && <>
@@ -242,7 +260,8 @@ export function Inspector({ clima, onVerDados, onVerPeriodo, onNavegarPeriodo, o
               <ul className="insp-avisos">{conj.avisos.map((a, i) => <li key={i} lang="en">{a}</li>)}</ul>
               <p className="insp-caption">{t('Texto original do servidor, em inglês.')}</p>
             </>}
-            {clima?.aviso_resolucao && <p>{clima.aviso_resolucao}</p>}
+            {/* Textos do backend de clima vêm em português: a tradução usa o texto exato como chave (en/base.ts) */}
+            {clima?.aviso_resolucao && <p>{t(clima.aviso_resolucao)}</p>}
             <p>{t('Requisitos das culturas: catálogo EcoCrop, quando disponível. Proteção do solo e atendimento à demanda de água por fase: API. Pragas, produção e preços são ilustrativos. Receita bruta ilustrativa não representa lucro: os custos não foram considerados.')}</p>
             <p>{t('Use estas informações para comparar opções e validar o planejamento com seu agrônomo.')}</p>
           </>}

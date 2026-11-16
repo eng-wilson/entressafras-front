@@ -1,5 +1,5 @@
 import type { CTRow, RotacaoDef } from '../data/mock'
-import type { Priority } from '../types'
+import type { Priority, RotationCrop } from '../types'
 import type { ResRotacao, ResSafra } from './resiliencia'
 import { numero as fmtNumero, pctFmt, t, usdFmt } from '../i18n'
 
@@ -133,6 +133,17 @@ export function motivo(r: RotacaoDef, k: Eixo, rot: ResRotacao | null): string |
       : t('{ajustado}/ha com a perda hídrica', { ajustado: usdFmt(f.ajustado) })
   }
   return null
+}
+
+/**
+ * Faturamento de referência de uma safra, da API (US$/ha): o bruto e o mesmo com a perda por falta de água da
+ * cultura (a mesma conta que a API faz para a rotação). null quando a API não traz dados econômicos da cultura.
+ */
+export function faturamentoSafra(c: RotationCrop | undefined): { bruto: number; ajustado: number | null } | null {
+  const bruto = c?.economics?.gross_revenue_usd_ha
+  if (bruto == null) return null
+  const perda = c!.crop.risk.estimated_yield_loss_pct
+  return { bruto, ajustado: perda == null ? null : bruto * (1 - perda / 100) }
 }
 
 /** Ressalva do faturamento da API, junto de toda nota ou valor dele. */

@@ -19,7 +19,7 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
   await expect(insp).not.toContainText('Por que ficou')
   await expect(insp.locator('.insp-provisional')).toContainText('sem cálculo para este talhão')
   // Esta rotação não tem momento de atenção: a seção fica oculta (só aparece quando há)
-  await expect(insp.locator('.insp-rank-why')).toBeVisible({ timeout: 30000 })
+  await expect(insp.locator('.insp-rank-pill')).toBeVisible({ timeout: 30000 })
   await expect(insp.locator('section.attention-cycle')).toBeHidden()
   await expect(insp.locator('.insp-risk-chart, .insp-cycle-chart')).toHaveCount(0)
   await expect(page.getByRole('complementary', { name: 'Ajustes' }).getByRole('region', { name: 'Momentos de atenção da rotação' })).toHaveCount(0)
@@ -37,8 +37,11 @@ test('explica o risco e conecta comparação e fase à mesma rotação', async (
   // Na comparação, o calendário some: o período simulado não muda nada nela.
   await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toHaveCount(0)
 
-  // A ação deve voltar ao calendário e à fase do milho, mesmo quando acionada a partir da comparação.
-  await insp.getByRole('button', { name: 'Ver fase no calendário' }).click()
+  // Tocar na safra arriscada leva ao período crítico dela no calendário, mesmo a partir da comparação;
+  // embaixo do nome, o motivo em uma frase curta.
+  const milho = insp.getByRole('button', { name: /^Ver a 2ª safra \(Milho safrinha\) no calendário/ })
+  await expect(milho.locator('.insp-culture-why')).toHaveText(/^Falta de água em 45% das safras, sobretudo na fase de floração e enchimento de grãos\.$/)
+  await milho.click()
   await expect(tabela).toHaveCount(0)
   await expect(page.getByRole('slider', { name: 'Arraste para simular um período' })).toBeFocused()
   await expect(page.locator('.dec i.zc.zcur')).toHaveCount(1)
@@ -72,7 +75,7 @@ test('uma safra sem risco não produz conclusão favorável', async ({ page }) =
   await expect(insp).toContainText('O risco de Milho safrinha não foi informado')
   await insp.getByRole('button', { name: 'Datas e requisitos' }).click()
   await expect(insp.locator('.insp-status.none')).toHaveText('Sem dado')
-  await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
+  await expect(insp.locator('.insp-culture-why')).toHaveCount(0)
 })
 
 test('opção favorável preserva o aviso provisório e não inventa fase crítica', async ({ page }) => {
@@ -81,7 +84,8 @@ test('opção favorável preserva o aviso provisório e não inventa fase críti
   const insp = painel(page)
   await expect(insp.getByRole('heading', { name: 'Favorável no risco geral da API', exact: true })).toBeVisible()
   await expect(insp.locator('.insp-provisional')).toBeVisible()
-  await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
+  // Safras favoráveis: sem motivo embaixo do nome
+  await expect(insp.locator('.insp-culture-why')).toHaveCount(0)
 })
 
 test('risco calculado sem fase e sem clima mantém os limites explícitos', async ({ page }) => {
@@ -100,7 +104,8 @@ test('risco calculado sem fase e sem clima mantém os limites explícitos', asyn
   // O panorama vem do atendimento por fase da API, não do clima: a falha do clima não o apaga nem o substitui
   await expect(insp.locator('section.attention-cycle')).toBeHidden()
   await expect(insp.locator('.insp-provisional')).toHaveCount(0)
-  await expect(insp.getByRole('button', { name: 'Ver fase no calendário' })).toHaveCount(0)
+  // Sem fase crítica da API, o motivo fica só no risco
+  await expect(insp.locator('.insp-culture-why')).toHaveText('Falta de água em 45% das safras históricas.')
   await insp.getByRole('button', { name: 'Origem e limites dos dados' }).click()
   await expect(insp).toContainText('Clima indisponível')
   await expect(insp).toContainText('Os dados de risco recebidos são exibidos sem estimativa adicional')
@@ -112,7 +117,7 @@ test('painel acessível em celular, tablet e texto ampliado', async ({ page }, t
   await page.getByRole('link', { name: 'Entender esta rotação e os próximos passos' }).click()
   const insp = painel(page)
   await expect(insp).toBeInViewport()
-  await expect(insp.locator('.insp-rank')).toBeVisible({ timeout: 30000 })
+  await expect(insp.locator('.insp-rank-pill')).toBeVisible({ timeout: 30000 })
   for (const width of [390, 768]) {
     await page.setViewportSize({ width, height: 900 })
     const limites = await insp.evaluate(el => {

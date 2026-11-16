@@ -5,7 +5,7 @@ import type { RotacaoDef } from '../data/mock'
 import { useConjunto } from '../state/conjunto'
 import {
   aptidao, COR_ROT, detalheSafra, faixa, faixaDaNota, motivo, motivoDetalhe, NOME_EIXO as NOME, nomeRot,
-  PISO, RESSALVA_FATURAMENTO, resultadoSafra, reais, receitaSafra, type Eixo, type Faixa,
+  PISO, RESSALVA_FATURAMENTO, resultadoSafra, faturamentoSafra, type Eixo, type Faixa,
 } from '../logic/aptidao'
 import { BarraPrioridade } from './BarraPrioridade'
 import type { Resiliencia, ResRotacao, ResSafra } from '../logic/resiliencia'
@@ -56,9 +56,10 @@ function Nota({ f }: { f: Faixa | typeof SEM_DADO }) {
   )
 }
 
-/** Uma safra da rotação: resiliência (do clima), consumo de água e receita. */
+/** Uma safra da rotação: resiliência (do clima), consumo de água e faturamento de referência (todos da API). */
 function Safra({ r, n, s }: { r: RotacaoDef; n: 0 | 1; s: ResSafra }) {
-  const receita = receitaSafra(r.ct, n)
+  // O mesmo faturamento da API que os cards mostram, aqui por cultura (antes: produção e preço fixos do front)
+  const fat = faturamentoSafra(r.safras[n]?.api)
   const [memoria, setMemoria] = useState(false)
   return (
     <li className="qm-sf">
@@ -85,9 +86,11 @@ function Safra({ r, n, s }: { r: RotacaoDef; n: 0 | 1; s: ResSafra }) {
           <span className="qm-en">{t('Consumo de água')}</span>
           <span className="qm-why qm-span">{s.consumo == null ? t('sem dado') : t('~{mm} mm no ciclo', { mm: s.consumo })}{s.chuva != null && ` · ${t('chove ~{mm} mm em média', { mm: s.chuva })}`}</span>
         </li>
-        <li>
-          <span className="qm-en">{t('Receita')}</span>
-          <span className="qm-why qm-span">{receita ? reais(receita) : t('não é vendida')}</span>
+        <li title={t(RESSALVA_FATURAMENTO)}>
+          <span className="qm-en">{t(NOME.fat)}</span>
+          <span className="qm-why qm-span">{!fat ? t('sem faturamento de referência para esta cultura')
+            : fat.ajustado != null ? t('{ajustado}/ha com a perda hídrica ({bruto}/ha sem perda)', { ajustado: usdFmt(fat.ajustado), bruto: usdFmt(fat.bruto) })
+              : t('{bruto}/ha sem a perda hídrica (risco desconhecido)', { bruto: usdFmt(fat.bruto) })}</span>
         </li>
       </ul>
       <button type="button" className="qm-more" onClick={() => setMemoria(true)}>{t('De onde vêm estes números')}</button>
@@ -124,7 +127,7 @@ function PorSafra({ r, rot, num, onFechar }: { r: RotacaoDef; rot: ResRotacao; n
       <ul className="qm-sfs">
         {rot.safras.map((s, n) => <Safra key={n} r={r} n={n as 0 | 1} s={s} />)}
       </ul>
-      <p className="qm-sfn">{t('Faturamento e saúde do solo valem para o ciclo inteiro: dependem de como as duas safras se combinam.')}</p>
+      <p className="qm-sfn">{t('Faturamento: {ressalva}', { ressalva: t(RESSALVA_FATURAMENTO).toLowerCase() })} {t('Saúde do solo vale para o ciclo inteiro: depende de como as duas safras se combinam.')}</p>
     </dialog>,
     document.body,
   )

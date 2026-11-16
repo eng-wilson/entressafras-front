@@ -349,4 +349,14 @@ export const EN_PAINEL: Record<string, string> = {
   // Inspector: avisos da API na página de origem dos dados
   'Avisos da API': 'API notices',
   'Texto original do servidor, em inglês.': 'Original server text, in English.',
+  // Inspector: motivo curto de uma safra arriscada ou desfavorável
+  'Falta de água em {pct}% das safras, sobretudo na fase de {fase}.': 'Water shortage in {pct}% of seasons, mostly during {fase}.',
+  'Período crítico: {periodo}.': 'Critical period: {periodo}.',
+  'Falta de água em {pct}% das safras históricas.': 'Water shortage in {pct}% of historical seasons.',
+  // Inspector: posição no ranking como etiqueta no topo
+  'Ver por que nesta posição': 'See why it is in this position',
+  // Por safra: faturamento de referência da API por cultura
+  'sem faturamento de referência para esta cultura': 'no reference revenue for this crop',
+  '{bruto}/ha sem a perda hídrica (risco desconhecido)': '{bruto}/ha without water loss (unknown risk)',
+  'Saúde do solo vale para o ciclo inteiro: depende de como as duas safras se combinam.': 'Soil health applies to the whole cycle: it depends on how the two crops combine.',
 }

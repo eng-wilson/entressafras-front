@@ -202,7 +202,22 @@ export type CropCalendarInfo = {
   data_source?: string | null
   grid_cell?: Ponto | null
 }
-export type RotationCrop = { crop: CropWithRisk; planting_date: string; harvest_date: string; calendar: CropCalendarInfo }
+/** Valor de referência com a fonte (FAOSTAT, Banco Mundial). */
+export type SourcedValue = { value: number; unit: string; period?: string | null; area?: string | null; source?: string | null; url?: string | null }
+/** Economia de referência de uma cultura: médias nacionais (FAOSTAT), faturamento bruto, sem custos. */
+export type CropEconomics = {
+  farm_gate_price: SourcedValue
+  crop_yield: SourcedValue
+  /** crop_yield / 1000 × farm_gate_price, US$/ha. */
+  gross_revenue_usd_ha: number
+  international_price?: SourcedValue | null
+  estimate?: boolean
+}
+export type RotationCrop = {
+  crop: CropWithRisk; planting_date: string; harvest_date: string; calendar: CropCalendarInfo
+  /** Faturamento de referência da cultura (FAOSTAT); null fora das culturas com dados econômicos. */
+  economics?: CropEconomics | null
+}
 /** Proteção do solo planejada: índice de planejamento (cobertura viva e troca de família), não medida de saúde do solo. */
 export type SoilProtection = {
   score: number
